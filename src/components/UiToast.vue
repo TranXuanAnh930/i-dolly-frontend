@@ -2,8 +2,7 @@
   <div
     class="ui-toast component"
     :class="classList"
-    role="alert"
-    @click="remove">
+    role="alert">
     <span class="ui-toast__icon">
       <svg v-if="item.type === 'success'" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10.5 8 14.5 16 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <svg v-else-if="item.type === 'error'" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M6 6 14 14M14 6 6 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
@@ -14,7 +13,7 @@
 
     <span class="ui-toast__message">{{ item.message }}</span>
 
-    <button type="button" class="ui-toast__close" :aria-label="$t('common.close')" @click.stop="remove">
+    <button type="button" class="ui-toast__close" :aria-label="$t('common.close')" @click="remove">
       <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3 13 13M13 3 3 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
     </button>
 
@@ -66,7 +65,6 @@ export default {
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  cursor: pointer;
   padding: 14px 34px 14px 14px;
   background: $color-white;
   border-radius: 14px;

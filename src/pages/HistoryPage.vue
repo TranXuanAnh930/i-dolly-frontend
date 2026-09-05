@@ -24,9 +24,13 @@
             :class="{ 'is-unread': !item.read }"
             @click="notifications.markRead(item.id)">
             <span class="item__icon" :class="`item__icon--${item.type}`">
-              <svg v-if="item.type === 'purchase'" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <svg v-if="item.type === 'order'" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                 <path d="M5 6.5h10l-.8 8.5a1.5 1.5 0 0 1-1.5 1.4H7.3a1.5 1.5 0 0 1-1.5-1.4L5 6.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
                 <path d="M7 6.5V5a3 3 0 0 1 6 0v1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              <svg v-else-if="item.type === 'ticket'" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <path d="M3 7.5V6a1.5 1.5 0 0 1 1.5-1.5h11A1.5 1.5 0 0 1 17 6v1.5a1.5 1.5 0 0 0 0 3V14a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 14v-3.5a1.5 1.5 0 0 0 0-3Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                <path d="M11 5v10" stroke="currentColor" stroke-width="1.5" stroke-dasharray="1.6 1.6" stroke-linecap="round"/>
               </svg>
               <svg v-else-if="item.type === 'lottery-won'" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                 <path fill="currentColor" d="M10 2 11.9 7.1 17.5 7.5 13.2 11 14.5 16.5 10 13.3 5.5 16.5 6.8 11 2.5 7.5 8.1 7.1 10 2Z"/>
@@ -212,7 +216,8 @@ export default {
     height: 18px;
   }
 
-  &--purchase {
+  &--order,
+  &--ticket {
     background: $color-brand-tint;
     color: $color-brand;
   }

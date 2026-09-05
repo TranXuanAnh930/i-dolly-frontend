@@ -26,44 +26,60 @@
         <button type="submit" class="save-btn">{{ $t('account.saveChanges') }}</button>
       </form>
 
-      <div class="panel">
-        <h2 class="panel__title">{{ $t('account.preferences') }}</h2>
+      <form class="panel" @submit.prevent="changePassword">
+        <h2 class="panel__title">{{ $t('account.password') }}</h2>
         <div class="section-rule"></div>
 
-        <div class="pref-list">
-          <label class="pref">
-            <span class="pref__text">
-              <span class="pref__title">{{ $t('account.lotteryAlertsTitle') }}</span>
-              <span class="pref__desc">{{ $t('account.lotteryAlertsDesc') }}</span>
-            </span>
-            <span class="switch" :class="{ 'is-on': prefs.lotteryAlerts }" @click="prefs.lotteryAlerts = !prefs.lotteryAlerts">
-              <span class="switch__knob"></span>
-            </span>
-          </label>
-
-          <label class="pref">
-            <span class="pref__text">
-              <span class="pref__title">{{ $t('account.orderReceiptsTitle') }}</span>
-              <span class="pref__desc">{{ $t('account.orderReceiptsDesc') }}</span>
-            </span>
-            <span class="switch" :class="{ 'is-on': prefs.orderReceipts }" @click="prefs.orderReceipts = !prefs.orderReceipts">
-              <span class="switch__knob"></span>
-            </span>
-          </label>
-
-          <label class="pref">
-            <span class="pref__text">
-              <span class="pref__title">{{ $t('account.releaseAlertsTitle') }}</span>
-              <span class="pref__desc">{{ $t('account.releaseAlertsDesc') }}</span>
-            </span>
-            <span class="switch" :class="{ 'is-on': prefs.releaseAlerts }" @click="prefs.releaseAlerts = !prefs.releaseAlerts">
-              <span class="switch__knob"></span>
-            </span>
+        <div class="field-grid">
+          <label class="field field--full">
+            <span class="field__label">{{ $t('account.currentPassword') }}</span>
+            <input :type="showPasswords ? 'text' : 'password'" v-model="password.current" autocomplete="current-password">
           </label>
         </div>
 
-        <button type="button" class="save-btn" @click="savePreferences">{{ $t('account.savePreferences') }}</button>
-      </div>
+        <div class="field-grid field-grid--spaced">
+          <label class="field">
+            <span class="field__label">{{ $t('account.newPassword') }}</span>
+            <input :type="showPasswords ? 'text' : 'password'" v-model="password.next" autocomplete="new-password">
+          </label>
+          <label class="field">
+            <span class="field__label">{{ $t('account.confirmNewPassword') }}</span>
+            <input :type="showPasswords ? 'text' : 'password'" v-model="password.confirm" autocomplete="new-password">
+          </label>
+        </div>
+
+        <button type="button" class="show-password-toggle" @click="showPasswords = !showPasswords">
+          {{ showPasswords ? $t('common.hidePassword') : $t('common.showPassword') }}
+        </button>
+
+        <p class="form-error" v-if="passwordError" :key="passwordError">{{ passwordError }}</p>
+
+        <button type="submit" class="save-btn">{{ $t('account.changePassword') }}</button>
+      </form>
+
+      <form class="panel" @submit.prevent="saveAddress">
+        <h2 class="panel__title">{{ $t('account.shippingAddress') }}</h2>
+        <div class="section-rule"></div>
+
+        <div class="field-grid">
+          <label class="field field--full">
+            <span class="field__label">{{ $t('common.address') }}</span>
+            <input type="text" v-model="address.street" :placeholder="$t('common.streetAddress')" autocomplete="street-address">
+          </label>
+          <label class="field">
+            <span class="field__label">{{ $t('common.city') }}</span>
+            <input type="text" v-model="address.city" :placeholder="$t('common.city')" autocomplete="address-level2">
+          </label>
+          <label class="field">
+            <span class="field__label">{{ $t('common.postalCode') }}</span>
+            <input type="text" v-model="address.postalCode" placeholder="000-0000" autocomplete="postal-code">
+          </label>
+        </div>
+
+        <p class="form-error" v-if="addressError" :key="addressError">{{ addressError }}</p>
+
+        <button type="submit" class="save-btn">{{ $t('account.saveAddress') }}</button>
+      </form>
     </div>
   </div>
 </template>
@@ -81,11 +97,19 @@ export default {
         name: '',
         email: ''
       },
-      prefs: {
-        lotteryAlerts: true,
-        orderReceipts: true,
-        releaseAlerts: false
-      }
+      password: {
+        current: '',
+        next: '',
+        confirm: ''
+      },
+      showPasswords: false,
+      passwordError: '',
+      address: {
+        street: '',
+        city: '',
+        postalCode: ''
+      },
+      addressError: ''
     }
   },
 
@@ -101,8 +125,34 @@ export default {
       useUserStore().setCurrentUser({ ...this.$currentUser, ...this.profile })
       useToastStore().add({ type: 'success', message: this.$t('account.profileSaved') })
     },
-    savePreferences () {
-      useToastStore().add({ type: 'success', message: this.$t('account.preferencesSaved') })
+    changePassword () {
+      if (!this.password.current.trim()) {
+        this.passwordError = this.$t('account.errorCurrentPassword')
+        return
+      }
+      if (this.password.next.length < 6) {
+        this.passwordError = this.$t('register.errorPasswordLength')
+        return
+      }
+      if (this.password.next !== this.password.confirm) {
+        this.passwordError = this.$t('register.errorPasswordMatch')
+        return
+      }
+
+      // No real "change password" endpoint yet — mocked, same as the rest
+      // of this page.
+      this.passwordError = ''
+      this.password = { current: '', next: '', confirm: '' }
+      useToastStore().add({ type: 'success', message: this.$t('account.passwordChanged') })
+    },
+    saveAddress () {
+      if (!this.address.street.trim() || !this.address.city.trim() || !this.address.postalCode.trim()) {
+        this.addressError = this.$t('account.errorAddress')
+        return
+      }
+
+      this.addressError = ''
+      useToastStore().add({ type: 'success', message: this.$t('account.addressSaved') })
     }
   }
 }
@@ -176,12 +226,20 @@ export default {
   @include media_mobile {
     grid-template-columns: 1fr;
   }
+
+  &--spaced {
+    margin-top: 14px;
+  }
 }
 
 .field {
   display: flex;
   flex-direction: column;
   gap: 6px;
+
+  &--full {
+    grid-column: 1 / -1;
+  }
 }
 
 .field__label {
@@ -231,72 +289,31 @@ export default {
   }
 }
 
-.pref-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.pref {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 14px 0;
-  border-bottom: 1px solid $color-line;
+.show-password-toggle {
+  display: block;
+  margin-top: 10px;
+  border: none;
+  background: none;
+  padding: 0;
   cursor: pointer;
-
-  &:last-child {
-    border-bottom: none;
-  }
-}
-
-.pref__text {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.pref__title {
   font-family: $font-content;
   font-weight: 700;
-  font-size: 13.5px;
-  color: $color-ink;
+  font-size: 12.5px;
+  color: $color-brand;
+
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
-.pref__desc {
+.form-error {
+  margin-top: 14px;
+  background: #fdeaf1;
+  color: $color-error;
+  border-radius: 12px;
+  padding: 10px 14px;
   font-family: $font-content;
-  font-size: 12px;
-  color: $color-gray-500;
-}
-
-.switch {
-  flex: none;
-  width: 42px;
-  height: 24px;
-  border-radius: 999px;
-  background: $color-gray-100;
-  position: relative;
-  transition: background .15s ease;
-
-  &.is-on {
-    background: $color-brand;
-  }
-}
-
-.switch__knob {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: $color-white;
-  box-shadow: 0 1px 3px rgba($color-ink, .3);
-  transition: transform .15s ease;
-
-  .is-on & {
-    transform: translateX(18px);
-  }
+  font-size: 13px;
+  font-weight: 700;
 }
 </style>

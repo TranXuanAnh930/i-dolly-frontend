@@ -51,6 +51,9 @@
                 <router-link :to="{ name: 'members' }" class="menu__link">{{ $t('nav.members') }}</router-link>
               </li>
               <li>
+                <router-link :to="{ name: 'groups' }" class="menu__link">{{ $t('nav.groups') }}</router-link>
+              </li>
+              <li>
                 <router-link :to="{ name: 'store' }" class="menu__link">{{ $t('nav.store') }}</router-link>
               </li>
             </template>

@@ -13,7 +13,7 @@
           </div>
 
           <div class="hero__info">
-            <p class="hero__unit" v-if="group">{{ group.name }}</p>
+            <router-link class="hero__unit" v-if="group" :to="`/groups/${group.id}`">{{ group.name }}</router-link>
             <h1 class="hero__name" :style="{ color: color.hex }">{{ member.name }}</h1>
             <p class="hero__tagline" v-if="group && group.description">{{ group.description }}</p>
           </div>
@@ -43,20 +43,20 @@
 
       <p class="description" v-if="description">{{ description }}</p>
 
-      <div v-if="bandmates.length" class="bandmates">
-        <h2 class="bandmates__title">{{ $t('idolDetail.alsoIn', { name: group.name }) }}</h2>
+      <div v-if="relatedIdols.length" class="bandmates">
+        <h2 class="bandmates__title">{{ relatedTitle }}</h2>
         <div class="bandmates__list">
           <router-link
-            v-for="bandmate in bandmates"
-            :key="bandmate.id"
-            :to="`/members/${bandmate.id}`"
+            v-for="peer in relatedIdols"
+            :key="peer.id"
+            :to="`/members/${peer.id}`"
             class="bandmate-row">
-            <div class="bandmate-row__portrait" :style="{ backgroundColor: colorFor(bandmate).hex }">
-              <img v-if="photoFor(bandmate)" :src="photoFor(bandmate)" :alt="bandmate.name" class="bandmate-row__photo">
-              <IdolPortrait v-else :name="bandmate.name" v-bind="fallbackPortraitFor(bandmate, colorFor(bandmate).hex)" :accent="colorFor(bandmate).hex"/>
+            <div class="bandmate-row__portrait" :style="{ backgroundColor: colorFor(peer).hex }">
+              <img v-if="photoFor(peer)" :src="photoFor(peer)" :alt="peer.name" class="bandmate-row__photo">
+              <IdolPortrait v-else :name="peer.name" v-bind="fallbackPortraitFor(peer, colorFor(peer).hex)" :accent="colorFor(peer).hex"/>
             </div>
             <div class="bandmate-row__info">
-              <span class="bandmate-row__name">{{ bandmate.name }}</span>
+              <span class="bandmate-row__name">{{ peer.name }}</span>
             </div>
           </router-link>
         </div>
@@ -131,6 +131,20 @@ export default {
       // correctly returning no bandmates.
       if (!this.member || !this.member.group_id) return []
       return this.idolsStore.membersOfGroup(this.member.group_id).filter(idol => idol.id !== this.member.id)
+    },
+    // Solo idols get the solo-roster equivalent of bandmates — other idols
+    // with no group_id of their own.
+    soloPeers () {
+      if (!this.member || this.member.group_id) return []
+      return this.idolsStore.soloIdols.filter(idol => idol.id !== this.member.id)
+    },
+    relatedIdols () {
+      return this.member && this.member.group_id ? this.bandmates : this.soloPeers
+    },
+    relatedTitle () {
+      return this.member && this.member.group_id
+        ? this.$t('idolDetail.alsoIn', { name: this.group.name })
+        : this.$t('idolDetail.otherSoloIdols')
     }
   },
 
@@ -222,12 +236,19 @@ export default {
 }
 
 .hero__unit {
+  display: inline-block;
   font-family: $font-content;
   font-weight: 700;
   font-size: 13px;
   letter-spacing: .08em;
   text-transform: uppercase;
   color: $color-gray-500;
+  text-decoration: none;
+
+  &:hover {
+    color: $color-brand;
+    text-decoration: underline;
+  }
 }
 
 .hero__name {
@@ -244,7 +265,6 @@ export default {
   font-family: $font-content;
   font-size: 14px;
   color: $color-font-main;
-  max-width: 48ch;
 }
 
 .content {

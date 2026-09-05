@@ -31,6 +31,9 @@ export const useIdolsStore = defineStore('idols', {
     // (always a string) against idol.id (a number straight from the API).
     idolById: (state) => (id) => state.idols.find(idol => String(idol.id) === String(id)),
     membersOfGroup: (state) => (groupId) => state.idols.filter(idol => idol.group_id === groupId),
+    // Idols with no group_id — used to surface "other solo idols" on a solo
+    // idol's own detail page, the solo equivalent of membersOfGroup.
+    soloIdols: (state) => state.idols.filter(idol => !idol.group_id),
 
     positionsForIdol: (state) => (idolId) => state.positionsByIdol[idolId] || [],
     // The role shown front-and-center on a card — the is_primary credit,

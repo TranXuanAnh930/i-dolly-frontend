@@ -65,20 +65,32 @@ export const useCatalogStore = defineStore('catalog', {
 
     // album_details ties to exactly one of idol_id / group_id (never
     // both) — resolve whichever is set against the idols store so a card
-    // can show/filter by artist without a second fetch.
-    artistForAlbum: () => (album) => {
+    // can show/filter by artist without a second fetch. Merch (lightsticks,
+    // hoodies, tote bags) carries no album_details row and no relational
+    // link at all — the API gives us nothing but the product name, which
+    // is always idol/group-name-prefixed ("Sakura Prism Official
+    // Lightstick", "Rin Amane Solo Penlight"), so that's the fallback.
+    artistForAlbum: () => (release) => {
       const idolsStore = useIdolsStore()
-      const detail = album && album.album
-      if (!detail) return null
-      if (detail.group_id) {
-        const group = idolsStore.groupById(detail.group_id)
-        return group ? { type: 'group', id: group.id, name: group.name } : null
+      const detail = release && release.album
+      if (detail) {
+        if (detail.group_id) {
+          const group = idolsStore.groupById(detail.group_id)
+          return group ? { type: 'group', id: group.id, name: group.name } : null
+        }
+        if (detail.idol_id) {
+          const idol = idolsStore.idolById(detail.idol_id)
+          return idol ? { type: 'idol', id: idol.id, name: idol.name } : null
+        }
+        return null
       }
-      if (detail.idol_id) {
-        const idol = idolsStore.idolById(detail.idol_id)
-        return idol ? { type: 'idol', id: idol.id, name: idol.name } : null
-      }
-      return null
+      if (!release || !release.name) return null
+      const candidates = [
+        ...idolsStore.groups.map(group => ({ type: 'group', id: group.id, name: group.name })),
+        ...idolsStore.idols.map(idol => ({ type: 'idol', id: idol.id, name: idol.name }))
+      ].sort((a, b) => b.name.length - a.name.length) // longest name first, so e.g. a group name can't shadow a member's own longer name
+      const match = candidates.find(candidate => release.name.startsWith(candidate.name))
+      return match ? { type: match.type, id: match.id, name: match.name } : null
     },
 
     // A release's theme color: the real idol/group color when one resolves

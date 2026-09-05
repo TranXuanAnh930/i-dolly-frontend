@@ -3,7 +3,11 @@ import { defineStore } from 'pinia'
 const STORAGE_KEY = 'i-dolly-notifications'
 
 // seeded so the dropdown/history page have something to show on first visit —
-// purchase notifications are added for real from Checkout
+// order/ticket/lottery notifications are added for real from Checkout and
+// TicketPurchasePage. `detail` carries the structured data their /history
+// detail pages render (see OrderDetailsPage/TicketDetailsPage/
+// LotteryResultDetailsPage) — these seed entries have no real concert id to
+// link to, so their detail pages just render without a "view event" link.
 const SEED = [
   {
     id: 'seed-lottery-1',
@@ -11,7 +15,8 @@ const SEED = [
     titleKey: 'notifications.seedLotteryResultTitle',
     messageKey: 'notifications.seedLotteryWonMessage',
     messageParams: { event: 'Nova Iris Anniversary Live 2026' },
-    to: '/events/nova-anniversary-2026',
+    detail: { orderNumber: 'LOT-100234', concertTitle: 'Nova Iris Anniversary Live 2026', tier: 'Regular', qty: 1 },
+    to: '/history/lottery/LOT-100234',
     timestamp: '2026-09-01T10:00:00',
     read: false
   },
@@ -21,7 +26,8 @@ const SEED = [
     titleKey: 'notifications.seedLotteryResultTitle',
     messageKey: 'notifications.seedLotteryLostMessage',
     messageParams: { event: 'Starlight Aria x Nova Iris: Collab Night' },
-    to: '/events/aria-nova-collab-night',
+    detail: { orderNumber: 'LOT-100118', concertTitle: 'Starlight Aria x Nova Iris: Collab Night', tier: 'Vip', qty: 2 },
+    to: '/history/lottery/LOT-100118',
     timestamp: '2026-08-28T14:30:00',
     read: true
   }
@@ -57,18 +63,25 @@ export const useNotificationStore = defineStore('notifications', {
     },
     unreadCount (state) {
       return state.items.filter(item => !item.read).length
-    }
+    },
+    // detail pages (OrderDetailsPage/TicketDetailsPage/LotteryResultDetailsPage)
+    // are routed by order/entry number rather than the internal notification
+    // id, since that's what the confirmation screen and history list both
+    // already show the user.
+    byOrderNumber: (state) => (orderNumber) => state.items.find(item => item.detail && item.detail.orderNumber === orderNumber)
   },
 
   actions: {
     add (notification) {
-      this.items.unshift({
+      const item = {
         id: `n-${Date.now()}`,
         read: false,
         timestamp: new Date().toISOString(),
         ...notification
-      })
+      }
+      this.items.unshift(item)
       saveItems(this.items)
+      return item
     },
     markRead (id) {
       const item = this.items.find(i => i.id === id)

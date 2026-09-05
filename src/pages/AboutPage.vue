@@ -76,7 +76,6 @@ export default {
   font-style: italic;
   font-size: clamp(30px, 5vw, 44px);
   color: $color-brand;
-  max-width: 16ch;
 }
 
 .hero__sub {
@@ -84,7 +83,6 @@ export default {
   font-family: $font-content;
   font-size: 14px;
   color: $color-font-main;
-  max-width: 46ch;
 }
 
 .content {

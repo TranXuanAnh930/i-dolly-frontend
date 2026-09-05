@@ -137,7 +137,6 @@ export default {
   font-family: $font-content;
   font-size: 14px;
   color: $color-font-main;
-  max-width: 52ch;
 }
 
 .content {
@@ -145,7 +144,8 @@ export default {
 }
 
 .panel {
-  max-width: 560px;
+  max-width: 720px;
+  margin: 0 auto;
   background: $color-white;
   border-radius: 20px;
   padding: 24px;
@@ -238,6 +238,8 @@ export default {
 }
 
 .confirmation {
+  max-width: 720px;
+  margin: 0 auto;
   text-align: center;
   padding: 70px 20px;
   background: $color-white;

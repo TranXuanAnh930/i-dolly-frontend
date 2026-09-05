@@ -1,9 +1,12 @@
 <template>
-  <div class="release-card">
+  <router-link :to="`/products/${release.id}`" class="release-card">
     <div class="cover" :style="!coverPhoto ? { background: `linear-gradient(155deg, ${color.hex} 0%, rgba(0,0,0,.38) 115%)` } : null">
       <img v-if="coverPhoto" :src="coverPhoto" :alt="release.name" class="cover__photo">
       <span v-else class="cover__watermark" :style="{ color: color.text }">{{ release.name.charAt(0) }}</span>
       <span class="cover__type">{{ release.category }}</span>
+      <span v-if="stockStatus !== 'in'" class="cover__stock" :class="`cover__stock--${stockStatus}`">
+        {{ stockStatus === 'out' ? $t('store.outOfStock') : $t('store.lowStock', { count: release.quantity }) }}
+      </span>
     </div>
 
     <div class="body">
@@ -16,34 +19,30 @@
       <p class="blurb">{{ release.description }}</p>
 
       <div class="footer">
-        <span class="price">${{ formattedPrice }}</span>
-        <button type="button" class="add-to-cart-btn" :class="{ 'is-added': justAdded }" @click="addToCart">
-          {{ justAdded ? $t('store.addedToCart') : $t('store.addToCart') }}
-        </button>
+        <span class="price-block">
+          <span class="price">&yen;{{ formattedPrice }}</span>
+          <span class="price-tax">{{ $t('store.taxIncluded', { price: formattedTaxedPrice }) }}</span>
+        </span>
+        <span class="details-link">{{ $t('store.viewDetails') }} &rarr;</span>
       </div>
     </div>
-  </div>
+  </router-link>
 </template>
 
 <script>
 import { parseISO } from 'date-fns'
 
 import { useCatalogStore } from '@/store/catalog'
-import { useCartStore } from '@/store/cart'
 import { resolveMediaUrl } from '@/utils/media'
 import { formatDate, formatNumber } from '@/utils/format'
+import { stockStatus } from '@/utils/stock'
+import { withTax } from '@/utils/tax'
 
 export default {
   name: 'ReleaseCard',
 
   props: {
     release: { type: Object, required: true }
-  },
-
-  data () {
-    return {
-      justAdded: false
-    }
   },
 
   computed: {
@@ -68,7 +67,13 @@ export default {
       return parts.join(' · ')
     },
     formattedPrice () {
-      return formatNumber(this.release.price, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      return formatNumber(this.release.price)
+    },
+    formattedTaxedPrice () {
+      return formatNumber(withTax(this.release.price))
+    },
+    stockStatus () {
+      return stockStatus(this.release.quantity)
     },
     genres () {
       return useCatalogStore().genresForRelease(this.release.id)
@@ -77,19 +82,6 @@ export default {
 
   created () {
     useCatalogStore().fetchGenresForProduct(this.release.id)
-  },
-
-  beforeUnmount () {
-    clearTimeout(this.addedTimer)
-  },
-
-  methods: {
-    addToCart () {
-      useCartStore().addItem(this.release.id)
-      this.justAdded = true
-      clearTimeout(this.addedTimer)
-      this.addedTimer = setTimeout(() => { this.justAdded = false }, 1500)
-    }
   }
 }
 </script>
@@ -101,6 +93,8 @@ export default {
   background: $color-white;
   border-radius: 16px;
   overflow: hidden;
+  text-decoration: none;
+  color: inherit;
   box-shadow: 0 2px 4px 0 rgba($color-gray-500, .12), 0 0 1px 1px rgba($color-gray-500, .05);
   transition: transform .15s ease, box-shadow .15s ease;
 
@@ -145,6 +139,27 @@ export default {
   font-weight: 700;
   font-size: 11px;
   color: $color-ink;
+}
+
+.cover__stock {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 11px;
+
+  &--out {
+    background: rgba(255, 255, 255, .9);
+    color: $color-error;
+  }
+
+  &--low {
+    background: rgba(255, 255, 255, .9);
+    color: #b06a00;
+  }
 }
 
 .body {
@@ -212,6 +227,13 @@ export default {
   border-top: 1px solid $color-line;
 }
 
+.price-block {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
 .price {
   font-family: $font-content;
   font-weight: 700;
@@ -220,26 +242,19 @@ export default {
   font-variant-numeric: tabular-nums;
 }
 
-.add-to-cart-btn {
-  border: none;
-  border-radius: 999px;
-  padding: 8px 16px;
-  background: $color-brand;
-  color: $color-white;
+.price-tax {
+  font-family: $font-content;
+  font-size: 10.5px;
+  color: $color-gray-400;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.details-link {
   font-family: $font-content;
   font-weight: 700;
   font-size: 12.5px;
+  color: $color-brand;
   white-space: nowrap;
-  cursor: pointer;
-  transition: background .12s ease, transform .12s ease;
-
-  &:hover {
-    background: $color-brand-deep;
-    transform: translateY(-1px);
-  }
-
-  &.is-added {
-    background: #1fa876;
-  }
 }
 </style>

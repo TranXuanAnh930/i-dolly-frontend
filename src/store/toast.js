@@ -17,7 +17,6 @@ export const useToastStore = defineStore('toast', {
         duration: payload.duration || 5000
       }
       if (payload.type === 'error') {
-        toast.duration = 0
         console.error(payload.message)
       }
       this.toastsList.push(toast)

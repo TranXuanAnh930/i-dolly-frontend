@@ -302,7 +302,15 @@ export default {
         titleKey: 'ticketPurchase.notifLotteryTitle',
         messageKey: 'ticketPurchase.notifLotteryMessage',
         messageParams: { orderNumber: this.orderNumber, tier: this.tierLabel(this.selectedTier), title: this.concert.title },
-        to: '/history'
+        detail: {
+          orderNumber: this.orderNumber,
+          concertId: this.concert.id,
+          concertTitle: this.concert.title,
+          tier: this.tierLabel(this.selectedTier),
+          qty: this.qty,
+          total: this.total
+        },
+        to: `/history/lottery/${this.orderNumber}`
       })
     },
     placeOrder () {
@@ -321,11 +329,19 @@ export default {
       this.step = 3
 
       useNotificationStore().add({
-        type: 'purchase',
+        type: 'ticket',
         titleKey: 'ticketPurchase.notifPurchaseTitle',
         messageKey: 'ticketPurchase.notifPurchaseMessage',
         messageParams: { orderNumber: this.orderNumber, title: this.concert.title, amount: `¥${formatNumber(this.total)}` },
-        to: '/history'
+        detail: {
+          orderNumber: this.orderNumber,
+          concertId: this.concert.id,
+          concertTitle: this.concert.title,
+          tier: this.tierLabel(this.selectedTier),
+          qty: this.qty,
+          total: this.total
+        },
+        to: `/history/tickets/${this.orderNumber}`
       })
     }
   }

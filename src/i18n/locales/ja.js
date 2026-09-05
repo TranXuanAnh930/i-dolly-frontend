@@ -23,6 +23,7 @@ export default {
   nav: {
     events: 'イベント',
     members: 'メンバー',
+    groups: 'ユニット',
     store: 'ストア',
     login: 'ログイン',
     logout: 'ログアウト',
@@ -56,7 +57,7 @@ export default {
   },
 
   events: {
-    eyebrow: 'スクールアイドルチケット',
+    eyebrow: 'アイドルチケット',
     title: '次のライブを見つけよう',
     sub: '先着販売も抽選も、6ユニットが同じステージへ。',
     searchPlaceholder: 'イベント・ユニット・会場を検索…',
@@ -82,7 +83,7 @@ export default {
   },
 
   members: {
-    eyebrow: 'スクールアイドル名鑑',
+    eyebrow: 'アイドル名鑑',
     title: 'メンバーを見る',
     sub: '18人のアイドル、6ユニット。気になる顔をタップして次のライブをチェック。',
     filterByUnit: 'ユニットで絞り込む',
@@ -103,6 +104,11 @@ export default {
     noResults: '条件に一致するアイテムが見つかりません。',
     addToCart: 'カートに入れる',
     addedToCart: '追加しました ✓',
+    viewDetails: '詳細',
+    inStock: '在庫あり',
+    lowStock: '残り{count}点',
+    outOfStock: '在庫切れ',
+    taxIncluded: '（税込 ¥{price}）',
     trackCountOne: '{count}曲',
     trackCountOther: '{count}曲'
   },
@@ -121,7 +127,8 @@ export default {
     emptyHint: 'ストアをチェックしてお気に入りを見つけよう。',
     goToStore: 'ストアへ',
     unitPrice: '{price}（1点あたり）',
-    removeItem: '削除'
+    removeItem: '削除',
+    itemAdded: '{name}をカートに追加しました'
   },
 
   checkout: {
@@ -164,15 +171,17 @@ export default {
     profile: 'プロフィール',
     saveChanges: '変更を保存',
     profileSaved: 'プロフィールを更新しました。',
-    preferences: '通知設定',
-    savePreferences: '設定を保存',
-    preferencesSaved: '設定を保存しました。',
-    lotteryAlertsTitle: '抽選のお知らせ',
-    lotteryAlertsDesc: 'フォロー中のユニットの抽選開始をメールでお知らせします。',
-    orderReceiptsTitle: '注文の領収書',
-    orderReceiptsDesc: '注文完了時に領収書をメールで送信します。',
-    releaseAlertsTitle: '新譜のお知らせ',
-    releaseAlertsDesc: 'ストアに新しいアルバムやシングルが追加されたらお知らせします。'
+    password: 'パスワード',
+    currentPassword: '現在のパスワード',
+    newPassword: '新しいパスワード',
+    confirmNewPassword: '新しいパスワード（確認）',
+    changePassword: 'パスワードを変更',
+    passwordChanged: 'パスワードを更新しました。',
+    errorCurrentPassword: '現在のパスワードを入力してください。',
+    shippingAddress: '配送先住所',
+    saveAddress: '住所を保存',
+    addressSaved: '配送先住所を保存しました。',
+    errorAddress: '住所・市区町村・郵便番号を入力してください。'
   },
 
   guidelines: {
@@ -198,7 +207,7 @@ export default {
   about: {
     eyebrow: 'I-Dollyについて',
     title: 'I-Dollyとは',
-    sub: '6つのスクールアイドルユニットのチケット・抽選・新譜をひとつの場所で。',
+    sub: '6つのアイドルユニットのチケット・抽選・新譜をひとつの場所で。',
     intro: 'I-Dollyは、6つの異なるファンクラブ、6つのチケット窓口、6つのリリースカレンダーを一本化するために生まれました。Starlight Ariaのアリーナツアーから、デビューしたばかりのMint Paradeまで、すべてのユニットのチケット購入・抽選応募・アルバム購入を1つのアカウントで行えます。',
     statUnits: 'ユニット',
     statIdols: 'アイドル',
@@ -298,6 +307,7 @@ export default {
     hometown: '出身地',
     birthday: '誕生日',
     alsoIn: '{name}の他のメンバー',
+    otherSoloIdols: '他のソロアイドル',
     notFound: 'そのメンバーが見つかりませんでした。'
   },
 
@@ -343,5 +353,59 @@ export default {
     notifLotteryMessage: 'エントリー番号 {orderNumber}（{tier} · {title}）を受け付けました。',
     notifPurchaseTitle: 'チケットが確定しました',
     notifPurchaseMessage: '注文番号 {orderNumber}（{title}・{amount}）が確定しました。'
+  },
+
+  productDetail: {
+    backToStore: 'ストア',
+    notFound: 'その商品が見つかりませんでした。',
+    recommendations: 'あわせてチェックしたいアイテム'
+  },
+
+  orderDetails: {
+    backToHistory: '履歴',
+    title: 'ご注文内容',
+    items: '商品',
+    total: '合計',
+    notFound: 'その注文が見つかりませんでした。'
+  },
+
+  ticketDetails: {
+    backToHistory: '履歴',
+    title: 'チケット詳細',
+    event: 'イベント',
+    tier: '種別',
+    quantity: '枚数',
+    total: '合計',
+    viewEvent: 'イベントを見る',
+    notFound: 'そのチケットの注文が見つかりませんでした。'
+  },
+
+  lotteryDetails: {
+    backToHistory: '履歴',
+    title: '抽選応募',
+    event: 'イベント',
+    tier: '種別',
+    quantity: '枚数',
+    viewEvent: 'イベントを見る',
+    statusPending: '結果待ち',
+    statusWon: '当選',
+    statusLost: '落選',
+    notFound: 'その抽選応募が見つかりませんでした。'
+  },
+
+  groupDetail: {
+    debut: '{date}デビュー',
+    members: 'メンバー',
+    events: 'イベント',
+    products: 'ストア',
+    notFound: 'そのユニットが見つかりませんでした。'
+  },
+
+  groupsPage: {
+    eyebrow: 'アイドルユニット',
+    title: 'ユニットを見る',
+    sub: '6ユニット、それぞれのメンバー。気になるユニットをタップしてメンバー・公演・リリースをチェック。',
+    resultCount: '{count}ユニット',
+    noResults: 'ユニットはまだありません。'
   }
 }

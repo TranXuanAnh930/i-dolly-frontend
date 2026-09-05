@@ -48,7 +48,7 @@ export default {
 
 <style lang="scss" scoped>
 .ui-toast-list.component {
-  top: 20px;
+  bottom: 20px;
   right: 20px;
   width: 340px;
   max-width: calc(100vw - 24px);
@@ -60,27 +60,22 @@ export default {
   pointer-events: none;
 
   @include media_mobile {
-    top: 12px;
+    bottom: 12px;
     right: 12px;
     left: 12px;
     width: auto;
   }
 }
 
-.toast-move,
 .toast-enter-active,
 .toast-leave-active {
   transition: transform .3s cubic-bezier(.32, .72, 0, 1), opacity .3s ease;
 }
 
-.toast-enter-from {
-  opacity: 0;
-  transform: translate(24px, -8px) scale(.96);
-}
-
+.toast-enter-from,
 .toast-leave-to {
   opacity: 0;
-  transform: translate(24px, 0) scale(.96);
+  transform: translate(24px, 8px) scale(.96);
 }
 
 .toast-leave-active {

@@ -7,7 +7,9 @@
         <router-link to="/events" class="back-link">&larr; {{ $t('eventDetail.backToEvents') }}</router-link>
 
         <div class="hero__tags">
-          <UnitPill v-for="group in performingGroups" :key="group.id" :unit="unitFor(group)"/>
+          <router-link v-for="group in performingGroups" :key="group.id" :to="`/groups/${group.id}`" class="unit-link">
+            <UnitPill :unit="unitFor(group)"/>
+          </router-link>
           <StatusBadge :status="concert.status"/>
         </div>
 
@@ -59,7 +61,10 @@
               <span class="tier__name">{{ tierLabel(tier) }}</span>
               <span class="tier__note">{{ tier.sale_method === 'lottery' ? $t('eventDetail.lotteryLabel') : $t('eventDetail.directSaleLabel') }} &middot; {{ $t('eventDetail.leftSuffix', { count: remaining(tier) }) }}</span>
             </div>
-            <span class="tier__price">&yen;{{ formatNumber(tier.price) }}</span>
+            <span class="tier__price-block">
+              <span class="tier__price">&yen;{{ formatNumber(tier.price) }}</span>
+              <span class="tier__price-tax">{{ $t('store.taxIncluded', { price: formatNumber(withTax(tier.price)) }) }}</span>
+            </span>
           </div>
         </div>
 
@@ -96,7 +101,7 @@
             </ul>
           </details>
 
-          <details class="accordion-item">
+          <details class="accordion-item" open>
             <summary>
               {{ $t('eventDetail.qa') }}
               <svg class="accordion-item__chevron" viewBox="0 0 20 20"><path d="M5 7.5 10 12.5 15 7.5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -139,6 +144,7 @@ import { useIdolsStore } from '@/store/idols'
 import { resolveMediaUrl } from '@/utils/media'
 import { fallbackPortraitFor } from '@/utils/idolPortrait'
 import { formatDate, formatNumber } from '@/utils/format'
+import { withTax } from '@/utils/tax'
 import UnitPill from '@/components/UnitPill.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import IdolPortrait from '@/components/IdolPortrait.vue'
@@ -257,6 +263,7 @@ export default {
 
   methods: {
     formatNumber,
+    withTax,
     fallbackPortraitFor,
     colorFor (idol) {
       return this.idolsStore.colorForIdol(idol)
@@ -315,6 +322,16 @@ export default {
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.unit-link {
+  display: inline-flex;
+  text-decoration: none;
+  transition: transform .12s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+  }
 }
 
 .hero__title {
@@ -499,11 +516,27 @@ export default {
   color: $color-gray-400;
 }
 
+.tier__price-block {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
 .tier__price {
   font-family: $font-content;
   font-weight: 900;
   font-size: 16px;
   color: $color-ink;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.tier__price-tax {
+  font-family: $font-content;
+  font-size: 11px;
+  color: $color-gray-400;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }

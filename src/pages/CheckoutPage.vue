@@ -100,6 +100,7 @@
 import { useCartStore } from '@/store/cart'
 import { useCatalogStore } from '@/store/catalog'
 import { useNotificationStore } from '@/store/notifications'
+import { useToastStore } from '@/store/toast'
 import { formatNumber } from '@/utils/format'
 
 export default {
@@ -157,12 +158,19 @@ export default {
       this.orderNumber = `ID-${Math.floor(100000 + Math.random() * 900000)}`
       this.orderPlaced = true
 
+      useToastStore().add({ type: 'success', message: this.$t('checkout.orderPlaced') })
+
       useNotificationStore().add({
-        type: 'purchase',
+        type: 'order',
         titleKey: 'checkout.notificationTitle',
         messageKey: 'checkout.notificationMessage',
         messageParams: { orderNumber: this.orderNumber, amount: formatNumber(this.subtotal) },
-        to: '/history'
+        detail: {
+          orderNumber: this.orderNumber,
+          lines: this.lines.map(line => ({ productId: line.productId, name: line.product.name, qty: line.qty, price: line.product.price })),
+          subtotal: this.subtotal
+        },
+        to: `/history/orders/${this.orderNumber}`
       })
 
       this.cart.clear()

@@ -3,10 +3,16 @@ import eventDetailPage from '../pages/EventDetailPage.vue'
 import ticketPurchasePage from '../pages/TicketPurchasePage.vue'
 import membersPage from '../pages/MembersPage.vue'
 import idolDetailPage from '../pages/IdolDetailPage.vue'
+import groupsPage from '../pages/GroupsPage.vue'
+import groupDetailPage from '../pages/GroupDetailPage.vue'
 import storePage from '../pages/StorePage.vue'
+import productDetailPage from '../pages/ProductDetailPage.vue'
 import cartPage from '../pages/CartPage.vue'
 import checkoutPage from '../pages/CheckoutPage.vue'
 import historyPage from '../pages/HistoryPage.vue'
+import orderDetailsPage from '../pages/OrderDetailsPage.vue'
+import ticketDetailsPage from '../pages/TicketDetailsPage.vue'
+import lotteryResultDetailsPage from '../pages/LotteryResultDetailsPage.vue'
 import accountSettingsPage from '../pages/AccountSettingsPage.vue'
 import guidelinesPage from '../pages/GuidelinesPage.vue'
 import aboutPage from '../pages/AboutPage.vue'
@@ -55,7 +61,7 @@ export const routes = [
     name: 'event-tickets',
     component: ticketPurchasePage,
     props: true,
-    meta: { title: `${DOMAIN_TITLE} | tickets` }
+    meta: { isAuth: true, title: `${DOMAIN_TITLE} | tickets` }
   },
   {
     path: '/members',
@@ -71,10 +77,30 @@ export const routes = [
     meta: { title: `${DOMAIN_TITLE} | member` }
   },
   {
+    path: '/groups',
+    name: 'groups',
+    component: groupsPage,
+    meta: { title: `${DOMAIN_TITLE} | groups` }
+  },
+  {
+    path: '/groups/:id',
+    name: 'group-detail',
+    component: groupDetailPage,
+    props: true,
+    meta: { title: `${DOMAIN_TITLE} | group` }
+  },
+  {
     path: '/store',
     name: 'store',
     component: storePage,
     meta: { title: `${DOMAIN_TITLE} | store` }
+  },
+  {
+    path: '/products/:id',
+    name: 'product-detail',
+    component: productDetailPage,
+    props: true,
+    meta: { title: `${DOMAIN_TITLE} | product` }
   },
   {
     path: '/cart',
@@ -86,13 +112,34 @@ export const routes = [
     path: '/checkout',
     name: 'checkout',
     component: checkoutPage,
-    meta: { title: `${DOMAIN_TITLE} | checkout` }
+    meta: { isAuth: true, title: `${DOMAIN_TITLE} | checkout` }
   },
   {
     path: '/history',
     name: 'history',
     component: historyPage,
     meta: { title: `${DOMAIN_TITLE} | history` }
+  },
+  {
+    path: '/history/orders/:orderNumber',
+    name: 'order-details',
+    component: orderDetailsPage,
+    props: true,
+    meta: { title: `${DOMAIN_TITLE} | order` }
+  },
+  {
+    path: '/history/tickets/:orderNumber',
+    name: 'ticket-details',
+    component: ticketDetailsPage,
+    props: true,
+    meta: { title: `${DOMAIN_TITLE} | ticket` }
+  },
+  {
+    path: '/history/lottery/:orderNumber',
+    name: 'lottery-details',
+    component: lotteryResultDetailsPage,
+    props: true,
+    meta: { title: `${DOMAIN_TITLE} | lottery entry` }
   },
   {
     path: '/account',

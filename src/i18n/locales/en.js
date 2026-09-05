@@ -23,6 +23,7 @@ export default {
   nav: {
     events: 'Events',
     members: 'Members',
+    groups: 'Groups',
     store: 'Store',
     login: 'Login',
     logout: 'Logout',
@@ -56,7 +57,7 @@ export default {
   },
 
   events: {
-    eyebrow: 'School idol tickets',
+    eyebrow: 'Idol tickets',
     title: 'Find your next live',
     sub: 'Direct sale or lottery, six units, one stage at a time.',
     searchPlaceholder: 'Search events, units, venues…',
@@ -82,7 +83,7 @@ export default {
   },
 
   members: {
-    eyebrow: 'School idol roster',
+    eyebrow: 'Idol roster',
     title: 'Meet the members',
     sub: 'Eighteen idols, six units. Pick a face to see where they\'re playing next.',
     filterByUnit: 'Filter by unit',
@@ -103,6 +104,11 @@ export default {
     noResults: 'No items match those filters.',
     addToCart: 'Add to Cart',
     addedToCart: 'Added ✓',
+    viewDetails: 'Details',
+    inStock: 'In stock',
+    lowStock: 'Only {count} left',
+    outOfStock: 'Out of stock',
+    taxIncluded: '(tax incl. ¥{price})',
     trackCountOne: '{count} track',
     trackCountOther: '{count} tracks'
   },
@@ -121,7 +127,8 @@ export default {
     emptyHint: 'Browse the store to find your next favorite album.',
     goToStore: 'Go to Store',
     unitPrice: '{price} each',
-    removeItem: 'Remove item'
+    removeItem: 'Remove item',
+    itemAdded: '{name} added to cart'
   },
 
   checkout: {
@@ -164,15 +171,17 @@ export default {
     profile: 'Profile',
     saveChanges: 'Save changes',
     profileSaved: 'Profile updated.',
-    preferences: 'Preferences',
-    savePreferences: 'Save preferences',
-    preferencesSaved: 'Preferences saved.',
-    lotteryAlertsTitle: 'Lottery alerts',
-    lotteryAlertsDesc: 'Email me when a new lottery opens for units I follow.',
-    orderReceiptsTitle: 'Order receipts',
-    orderReceiptsDesc: 'Email me a receipt every time I check out.',
-    releaseAlertsTitle: 'New release alerts',
-    releaseAlertsDesc: 'Let me know when albums or singles drop in the Store.'
+    password: 'Password',
+    currentPassword: 'Current password',
+    newPassword: 'New password',
+    confirmNewPassword: 'Confirm new password',
+    changePassword: 'Change password',
+    passwordChanged: 'Password updated.',
+    errorCurrentPassword: 'Enter your current password.',
+    shippingAddress: 'Shipping Address',
+    saveAddress: 'Save address',
+    addressSaved: 'Shipping address saved.',
+    errorAddress: 'Fill in your address, city, and postal code.'
   },
 
   guidelines: {
@@ -198,7 +207,7 @@ export default {
   about: {
     eyebrow: 'About',
     title: 'What I-Dolly is',
-    sub: 'One place for tickets, lotteries, and releases from six school idol units.',
+    sub: 'One place for tickets, lotteries, and releases from six idol units.',
     intro: 'I-Dolly started as a way to stop juggling six different fan clubs, six different ticket queues, and six different release calendars. Now every unit — from Starlight Aria\'s arena tours to Mint Parade\'s first steps — sells tickets, runs lotteries, and ships albums through one account.',
     statUnits: 'Units',
     statIdols: 'Idols',
@@ -298,6 +307,7 @@ export default {
     hometown: 'Hometown',
     birthday: 'Birthday',
     alsoIn: 'Also in {name}',
+    otherSoloIdols: 'Other solo idols',
     notFound: 'We couldn\'t find that idol.'
   },
 
@@ -343,5 +353,59 @@ export default {
     notifLotteryMessage: 'Entry {orderNumber} for {tier} · {title} is in.',
     notifPurchaseTitle: 'Tickets confirmed',
     notifPurchaseMessage: 'Order {orderNumber} for {title} ({amount}) is confirmed.'
+  },
+
+  productDetail: {
+    backToStore: 'Store',
+    notFound: 'We couldn\'t find that item.',
+    recommendations: 'You might also like'
+  },
+
+  orderDetails: {
+    backToHistory: 'History',
+    title: 'Order details',
+    items: 'Items',
+    total: 'Total',
+    notFound: 'We couldn\'t find that order.'
+  },
+
+  ticketDetails: {
+    backToHistory: 'History',
+    title: 'Ticket details',
+    event: 'Event',
+    tier: 'Tier',
+    quantity: 'Quantity',
+    total: 'Total',
+    viewEvent: 'View event',
+    notFound: 'We couldn\'t find that ticket order.'
+  },
+
+  lotteryDetails: {
+    backToHistory: 'History',
+    title: 'Lottery entry',
+    event: 'Event',
+    tier: 'Tier',
+    quantity: 'Quantity',
+    viewEvent: 'View event',
+    statusPending: 'Awaiting results',
+    statusWon: 'Won',
+    statusLost: 'Not selected',
+    notFound: 'We couldn\'t find that lottery entry.'
+  },
+
+  groupDetail: {
+    debut: 'Debuted {date}',
+    members: 'Members',
+    events: 'Events',
+    products: 'Store',
+    notFound: 'We couldn\'t find that group.'
+  },
+
+  groupsPage: {
+    eyebrow: 'Idol units',
+    title: 'Meet the units',
+    sub: 'Six units, one roster each. Pick a unit to see its members, shows, and releases.',
+    resultCount: '{count} units',
+    noResults: 'No units yet.'
   }
 }
