@@ -213,7 +213,7 @@ export default {
       return this.concert && this.concert.doors_open_at ? format(parseISO(this.concert.doors_open_at), 'h:mm a') : null
     },
     ctaDisabled () {
-      return !this.concert || this.concert.status !== 'on_sale' || !this.directTicketTypes.length
+      return !this.concert || this.concert.status !== 'on_sale' || !this.ticketTypes.length
     },
     ctaLabel () {
       if (!this.concert) return ''
@@ -221,8 +221,8 @@ export default {
       if (this.concert.status === 'scheduled') return 'Coming Soon'
       if (this.concert.status === 'completed') return 'Event Ended'
       if (this.concert.status === 'cancelled') return 'Cancelled'
-      if (!this.directTicketTypes.length) return 'Lottery Only'
-      return 'Select Seats →'
+      if (!this.ticketTypes.length) return 'Not On Sale'
+      return 'Apply →'
     },
     ctaTo () {
       return this.concert ? `/events/${this.concert.id}/seats` : ''
@@ -233,8 +233,8 @@ export default {
       if (this.concert.status === 'scheduled') return 'Sale details haven\'t been announced yet. Check back soon.'
       if (this.concert.status === 'completed') return 'This show has already happened.'
       if (this.concert.status === 'cancelled') return 'This show was cancelled.'
-      if (!this.directTicketTypes.length) return 'This show sells through a lottery — entries aren\'t supported in this build yet.'
-      return 'Seats are assigned at checkout — pick your row on the next screen.'
+      if (!this.directTicketTypes.length) return 'This show sells through a lottery — apply on the next screen.'
+      return 'Apply for the lottery or reserve seats directly on the next screen.'
     }
   },
 

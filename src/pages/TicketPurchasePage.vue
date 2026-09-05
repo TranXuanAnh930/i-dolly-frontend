@@ -3,7 +3,7 @@
     <section class="hero">
       <div class="wrapper hero__inner">
         <router-link :to="`/events/${concert.id}`" class="back-link">&larr; {{ concert.title }}</router-link>
-        <p class="hero__eyebrow">Direct sale checkout</p>
+        <p class="hero__eyebrow">{{ isLotteryTier ? 'Lottery entry' : 'Direct sale checkout' }}</p>
         <h1 class="hero__title" :style="{ color: color.hex }">Get tickets</h1>
 
         <ol class="steps">
@@ -14,7 +14,7 @@
           <li class="step-line" :class="{ 'is-done': step > 1 }"></li>
           <li class="step" :class="stepClass(2)">
             <span class="step__dot">{{ step > 2 ? '&check;' : '2' }}</span>
-            <span class="step__label">Payment</span>
+            <span class="step__label">{{ step2Label }}</span>
           </li>
           <li class="step-line" :class="{ 'is-done': step > 2 }"></li>
           <li class="step" :class="stepClass(3)">
@@ -38,19 +38,11 @@
                 v-for="tier in allTicketTypes"
                 :key="tier.id"
                 class="option-row"
-                :class="{ 'is-selected': selectedTierId === tier.id, 'is-disabled': tier.sale_method !== 'direct' }">
-                <input
-                  type="radio"
-                  name="tier"
-                  :value="tier.id"
-                  v-model="selectedTierId"
-                  :disabled="tier.sale_method !== 'direct'">
+                :class="{ 'is-selected': selectedTierId === tier.id }">
+                <input type="radio" name="tier" :value="tier.id" v-model="selectedTierId">
                 <span class="option-row__text">
                   <span class="option-row__title">{{ tierLabel(tier) }}</span>
-                  <span class="option-row__note">
-                    <template v-if="tier.sale_method === 'direct'">{{ remaining(tier) }} left</template>
-                    <template v-else>Lottery only</template>
-                  </span>
+                  <span class="option-row__note">{{ remaining(tier) }} left &middot; {{ tier.sale_method === 'lottery' ? 'Lottery' : 'Direct sale' }}</span>
                 </span>
                 <span class="option-row__price">&yen;{{ tier.price.toLocaleString('en-US') }}</span>
               </label>
@@ -82,7 +74,7 @@
             <span>Total</span>
             <span>&yen;{{ total.toLocaleString('en-US') }}</span>
           </div>
-          <button type="button" class="continue-btn" @click="step = 2">Continue to payment &rarr;</button>
+          <button type="button" class="continue-btn" @click="proceed">{{ isLotteryTier ? 'Apply for Lottery →' : 'Continue to Checkout →' }}</button>
         </div>
       </div>
 
@@ -146,8 +138,14 @@
       <!-- Step 3: finish -->
       <div v-else class="confirmation">
         <div class="confirmation__badge">&check;</div>
-        <h2 class="confirmation__title">You're going!</h2>
-        <p class="confirmation__note">Order <strong>{{ orderNumber }}</strong> is confirmed for {{ concert.title }} &middot; {{ dateLabel }}. This is a mock checkout, so nothing was actually charged.</p>
+        <template v-if="outcome === 'lottery'">
+          <h2 class="confirmation__title">You applied!</h2>
+          <p class="confirmation__note">Entry <strong>{{ orderNumber }}</strong> for {{ tierLabel(selectedTier) }} &middot; {{ concert.title }} is in. Winners are notified by email roughly two weeks before the show.</p>
+        </template>
+        <template v-else>
+          <h2 class="confirmation__title">You're going!</h2>
+          <p class="confirmation__note">Order <strong>{{ orderNumber }}</strong> is confirmed for {{ concert.title }} &middot; {{ dateLabel }}. This is a mock checkout, so nothing was actually charged.</p>
+        </template>
         <div class="confirmation__actions">
           <router-link to="/history" class="confirmation__btn">View in History</router-link>
           <router-link to="/events" class="confirmation__link">Back to events</router-link>
@@ -191,7 +189,8 @@ export default {
         cardCvc: ''
       },
       error: '',
-      orderNumber: ''
+      orderNumber: '',
+      outcome: null
     }
   },
 
@@ -205,29 +204,29 @@ export default {
     color () {
       return this.concertsStore.colorForConcert(this.concert)
     },
-    // Every tier for this concert — shown in the picker so buyers can see
-    // lottery-only tiers (e.g. VIP) exist, even though they can't be
-    // selected here (no lottery-entry flow yet).
+    // Every tier for this concert — buyers can either apply for a lottery
+    // tier or go straight to checkout for a direct-sale one.
     allTicketTypes () {
       return this.concert ? this.concertsStore.ticketTypesForConcert(this.concert.id) : []
     },
-    // Only ticket types sold directly — this page has no lottery-entry flow.
-    directTicketTypes () {
-      return this.allTicketTypes.filter(tier => tier.sale_method === 'direct')
-    },
     eligible () {
-      return !!this.concert && this.concert.status === 'on_sale' && this.directTicketTypes.length > 0
+      return !!this.concert && this.concert.status === 'on_sale' && this.allTicketTypes.length > 0
     },
     ineligibleMessage () {
       if (!this.concert) return 'We couldn\'t find that event.'
       if (this.concert.status === 'sold_out') return 'This show is sold out.'
       if (this.concert.status === 'completed') return 'This show has already happened.'
       if (this.concert.status === 'cancelled') return 'This show was cancelled.'
-      if (!this.directTicketTypes.length) return 'This show sells through a lottery, not direct sale.'
       return 'Tickets for this show aren\'t on sale yet.'
     },
     selectedTier () {
-      return this.directTicketTypes.find(tier => tier.id === this.selectedTierId) || this.directTicketTypes[0] || null
+      return this.allTicketTypes.find(tier => tier.id === this.selectedTierId) || this.allTicketTypes[0] || null
+    },
+    isLotteryTier () {
+      return !!this.selectedTier && this.selectedTier.sale_method === 'lottery'
+    },
+    step2Label () {
+      return this.isLotteryTier ? 'Entry' : 'Payment'
     },
     total () {
       return this.selectedTier ? this.selectedTier.price * this.qty : 0
@@ -255,9 +254,9 @@ export default {
         })
       }
     },
-    // Default to the first direct tier once ticket types load, and fall
-    // back if the selected one ever stops being valid (e.g. switching events).
-    directTicketTypes: {
+    // Default to the first tier once ticket types load, and fall back if
+    // the selected one ever stops being valid (e.g. switching events).
+    allTicketTypes: {
       immediate: true,
       handler (tiers) {
         if (!tiers.some(tier => tier.id === this.selectedTierId)) {
@@ -282,6 +281,27 @@ export default {
     remaining (tier) {
       return Math.max(0, tier.total_quantity - tier.sold_quantity)
     },
+    // Lottery tiers skip checkout entirely — applying is a single click,
+    // no payment involved, straight to the "you applied" confirmation.
+    proceed () {
+      if (this.isLotteryTier) {
+        this.applyForLottery()
+      } else {
+        this.step = 2
+      }
+    },
+    applyForLottery () {
+      this.orderNumber = `LOT-${Math.floor(100000 + Math.random() * 900000)}`
+      this.outcome = 'lottery'
+      this.step = 3
+
+      useNotificationStore().add({
+        type: 'lottery-entry',
+        title: 'Lottery entry submitted',
+        message: `Entry ${this.orderNumber} for ${this.tierLabel(this.selectedTier)} · ${this.concert.title} is in.`,
+        to: '/history'
+      })
+    },
     placeOrder () {
       if (!this.form.name.trim() || !this.form.email.trim()) {
         this.error = 'Fill in your name and email.'
@@ -294,6 +314,7 @@ export default {
 
       this.error = ''
       this.orderNumber = `ID-${Math.floor(100000 + Math.random() * 900000)}`
+      this.outcome = 'purchase'
       this.step = 3
 
       useNotificationStore().add({

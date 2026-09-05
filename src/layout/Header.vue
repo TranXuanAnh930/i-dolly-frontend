@@ -134,8 +134,7 @@ export default {
   flex: none;
   width: 32px;
   height: 32px;
-  border-radius: 42% 58% 53% 47% / 45% 42% 58% 55%;
-  transform: rotate(-4deg);
+  border-radius: 50%;
   background: $color-white;
   color: $color-brand;
   display: flex;
@@ -146,7 +145,6 @@ export default {
   svg {
     width: 18px;
     height: 18px;
-    transform: rotate(4deg);
   }
 }
 
