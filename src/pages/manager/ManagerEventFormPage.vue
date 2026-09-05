@@ -24,7 +24,7 @@
           <span class="field__label">Venue</span>
           <select v-model="form.venue_id" required>
             <option value="" disabled>Select a venue…</option>
-            <option v-for="venue in concertsStore.venues" :key="venue.id" :value="venue.id">{{ venue.name }} · {{ venue.city }}</option>
+            <option v-for="venue in venues" :key="venue.id" :value="venue.id">{{ venue.name }} · {{ venue.city }}</option>
           </select>
         </label>
         <label class="field">
@@ -63,7 +63,7 @@
 </template>
 
 <script>
-import { useConcertsStore } from '@/store/concerts'
+import { ConcertsService } from '@/services/concerts.service'
 import { useCompaniesStore } from '@/store/companies'
 
 const STATUS_OPTIONS = ['scheduled', 'on_sale', 'sold_out', 'completed', 'cancelled']
@@ -92,6 +92,8 @@ export default {
 
   data () {
     return {
+      concerts: [],
+      venues: [],
       selectedCompanyId: this.$route.query.company_id || '',
       form: emptyForm(),
       error: '',
@@ -101,9 +103,6 @@ export default {
   },
 
   computed: {
-    concertsStore () {
-      return useConcertsStore()
-    },
     companiesStore () {
       return useCompaniesStore()
     },
@@ -114,7 +113,7 @@ export default {
       return !!this.id
     },
     concert () {
-      return this.isEditing ? this.concertsStore.concertById(this.id) : null
+      return this.isEditing ? this.concerts.find(c => c.id === this.id) : null
     },
     companyId () {
       if (this.isEditing) return this.concert ? this.concert.company_id : ''
@@ -141,11 +140,20 @@ export default {
   },
 
   created () {
-    this.concertsStore.fetchAll()
+    this.fetchPage()
     if (this.isAdmin) this.companiesStore.fetchAll()
   },
 
   methods: {
+    async fetchPage () {
+      try {
+        const response = await ConcertsService.getManagerEventsPagePublic()
+        this.concerts = response.data.concerts
+        this.venues = response.data.venues
+      } catch (error) {
+        this.error = error.message
+      }
+    },
     async save () {
       if (!this.form.title.trim() || !this.form.venue_id || !this.form.event_datetime) {
         this.error = 'Title, venue and event date are required.'
@@ -163,9 +171,9 @@ export default {
       }
       try {
         if (this.isEditing) {
-          await this.concertsStore.updateConcert(this.id, { ...fields, status: this.form.status })
+          await ConcertsService.update(this.id, { ...fields, status: this.form.status })
         } else {
-          await this.concertsStore.createConcert({ ...fields, company_id: this.companyId })
+          await ConcertsService.create({ ...fields, company_id: this.companyId })
         }
         this.$router.push({ name: 'manager-events' })
       } catch (error) {

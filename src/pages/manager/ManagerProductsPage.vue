@@ -5,7 +5,7 @@
       <router-link :to="{ name: 'manager-products-new' }" class="add-btn">+ Add product</router-link>
     </div>
 
-    <div class="table-card" v-if="catalogStore.products.length">
+    <div class="table-card" v-if="products.length">
       <table class="table">
         <thead>
           <tr>
@@ -18,7 +18,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="product in catalogStore.products" :key="product.id">
+          <tr v-for="product in products" :key="product.id">
             <td class="thumb-cell">
               <img v-if="resolveMediaUrl(product.image_url)" :src="resolveMediaUrl(product.image_url)" :alt="product.name" class="thumb">
             </td>
@@ -41,7 +41,7 @@
 </template>
 
 <script>
-import { useCatalogStore } from '@/store/catalog'
+import { ProductsService } from '@/services/products.service'
 import { resolveMediaUrl } from '@/utils/media'
 
 export default {
@@ -49,27 +49,41 @@ export default {
 
   data () {
     return {
+      products: [],
       error: ''
     }
   },
 
   computed: {
-    catalogStore () {
-      return useCatalogStore()
+    // Products carry no direct company_id — the backend resolves one via
+    // album_details/lightstick_details when it can, and treats plain merch
+    // with neither as manageable by anyone. A manager is scoped to their
+    // own company (plus that ownerless merch); an admin sees every product,
+    // same as everywhere else admins aren't scoped.
+    companyId () {
+      return this.$currentUser.role === 'admin' ? null : this.$currentUser.company_id
     }
   },
 
   created () {
-    this.catalogStore.fetchAll()
-    this.catalogStore.fetchCategories()
+    this.fetchPage()
   },
 
   methods: {
     resolveMediaUrl,
+    async fetchPage () {
+      try {
+        const response = await ProductsService.getManagerProductsPagePublic(this.companyId)
+        this.products = response.data.products
+      } catch (error) {
+        this.error = error.message
+      }
+    },
     async remove (product) {
       if (!window.confirm(`Delete ${product.name}? This can't be undone.`)) return
       try {
-        await this.catalogStore.removeProduct(product.id)
+        await ProductsService.remove(product.id)
+        await this.fetchPage()
       } catch (error) {
         this.error = error.message
       }

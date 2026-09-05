@@ -51,7 +51,7 @@
 </template>
 
 <script>
-import { useIdolsStore } from '@/store/idols'
+import { IdolsService } from '@/services/idols.service'
 import { useCompaniesStore } from '@/store/companies'
 import { resolveMediaUrl } from '@/utils/media'
 
@@ -60,15 +60,14 @@ export default {
 
   data () {
     return {
+      idols: [],
+      groups: [],
       selectedCompanyId: '',
       error: ''
     }
   },
 
   computed: {
-    idolsStore () {
-      return useIdolsStore()
-    },
     companiesStore () {
       return useCompaniesStore()
     },
@@ -86,25 +85,35 @@ export default {
       return this.isAdmin ? { company_id: this.companyId } : {}
     },
     myIdols () {
-      return this.idolsStore.idols.filter(idol => idol.company_id === this.companyId)
+      return this.idols.filter(idol => idol.company_id === this.companyId)
     }
   },
 
   created () {
-    this.idolsStore.fetchAll()
+    this.fetchPage()
     if (this.isAdmin) this.companiesStore.fetchAll()
   },
 
   methods: {
     resolveMediaUrl,
+    async fetchPage () {
+      try {
+        const response = await IdolsService.getManagerIdolsPagePublic()
+        this.idols = response.data.idols
+        this.groups = response.data.groups
+      } catch (error) {
+        this.error = error.message
+      }
+    },
     groupName (groupId) {
-      const group = this.idolsStore.groupById(groupId)
+      const group = this.groups.find(g => g.id === groupId)
       return group ? group.name : '—'
     },
     async remove (idol) {
       if (!window.confirm(`Delete ${idol.name}? This can't be undone.`)) return
       try {
-        await this.idolsStore.removeIdol(idol.id)
+        await IdolsService.remove(idol.id)
+        await this.fetchPage()
       } catch (error) {
         this.error = error.message
       }

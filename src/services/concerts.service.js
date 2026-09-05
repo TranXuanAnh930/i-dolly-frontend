@@ -35,4 +35,19 @@ export class ConcertsService extends BaseService {
       throw this.errorWrapper(error, message)
     }
   }
+
+  // GET /concerts/manager-events-page — public, no auth. One bundled
+  // response for ManagerEventsPage's table and ManagerEventFormPage's venue
+  // <select>: concerts and venues as separate lists (not embedded per-
+  // concert) since the form's dropdown needs every venue, not just ones
+  // already booked.
+  static async getManagerEventsPagePublic () {
+    try {
+      const response = await this.request().get(`${this.entity}/manager-events-page`)
+      return this.responseWrapper(response, response.data)
+    } catch (error) {
+      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
+      throw this.errorWrapper(error, message)
+    }
+  }
 }

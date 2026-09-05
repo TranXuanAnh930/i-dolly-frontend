@@ -5,13 +5,14 @@ import { GroupsService } from '@/services/groups.service'
 import { IdolColorsService } from '@/services/idolColors.service'
 import { paletteColorForId, contrastTextColor } from '@/utils/palette'
 
-// The generic idol/group collection — Members/Store/Events/Groups grids and
-// the idol/product/event/group detail pages all have their own page-shaped
-// endpoint instead (services/idols.service.js's getMembersPagePublic/
-// getDetailPublic, etc.), so this store's only remaining consumers are the
-// manager/admin CRUD pages (ManagerIdolsPage, ManagerGroupsPage, their form
-// pages) and catalogStore's colorForRelease — neither needs positions data,
-// so it isn't fetched here.
+// The generic idol/group collection — every customer-facing page and the
+// manager/admin settings pages all have their own page-shaped endpoint
+// instead (services/idols.service.js's getMembersPagePublic/getDetailPublic/
+// getManagerIdolsPagePublic/getManagerIdolFormPagePublic, etc., and the
+// settings pages call IdolsService/GroupsService directly for mutations
+// rather than through this store), so this store's only remaining consumer
+// is catalogStore's artistForAlbum/colorForRelease (Cart/Checkout) —
+// nothing here needs positions data, so it isn't fetched.
 export const useIdolsStore = defineStore('idols', {
   state: () => ({
     idols: [],
@@ -64,34 +65,6 @@ export const useIdolsStore = defineStore('idols', {
       } finally {
         this.loading = false
       }
-    },
-
-    // Manager/admin mutations (ManagerIdolsPage, ManagerGroupsPage) — errors
-    // are left to bubble up to the calling form rather than caught here, so
-    // the page can show them inline next to the field that failed.
-    async createIdol (fields) {
-      await IdolsService.create(fields)
-      await this.fetchAll({ force: true })
-    },
-    async updateIdol (id, fields) {
-      await IdolsService.update(id, fields)
-      await this.fetchAll({ force: true })
-    },
-    async removeIdol (id) {
-      await IdolsService.remove(id)
-      await this.fetchAll({ force: true })
-    },
-    async createGroup (fields) {
-      await GroupsService.create(fields)
-      await this.fetchAll({ force: true })
-    },
-    async updateGroup (id, fields) {
-      await GroupsService.update(id, fields)
-      await this.fetchAll({ force: true })
-    },
-    async removeGroup (id) {
-      await GroupsService.remove(id)
-      await this.fetchAll({ force: true })
     }
   }
 })

@@ -51,7 +51,7 @@
 <script>
 import { format, parseISO } from 'date-fns'
 
-import { useConcertsStore } from '@/store/concerts'
+import { ConcertsService } from '@/services/concerts.service'
 import { useCompaniesStore } from '@/store/companies'
 
 export default {
@@ -59,15 +59,14 @@ export default {
 
   data () {
     return {
+      concerts: [],
+      venues: [],
       selectedCompanyId: '',
       error: ''
     }
   },
 
   computed: {
-    concertsStore () {
-      return useConcertsStore()
-    },
     companiesStore () {
       return useCompaniesStore()
     },
@@ -81,18 +80,27 @@ export default {
       return this.isAdmin ? { company_id: this.companyId } : {}
     },
     myEvents () {
-      return this.concertsStore.concerts.filter(concert => concert.company_id === this.companyId)
+      return this.concerts.filter(concert => concert.company_id === this.companyId)
     }
   },
 
   created () {
-    this.concertsStore.fetchAll()
+    this.fetchPage()
     if (this.isAdmin) this.companiesStore.fetchAll()
   },
 
   methods: {
+    async fetchPage () {
+      try {
+        const response = await ConcertsService.getManagerEventsPagePublic()
+        this.concerts = response.data.concerts
+        this.venues = response.data.venues
+      } catch (error) {
+        this.error = error.message
+      }
+    },
     venueName (venueId) {
-      const venue = this.concertsStore.venueById(venueId)
+      const venue = this.venues.find(v => v.id === venueId)
       return venue ? venue.name : '—'
     },
     formatDate (iso) {
@@ -101,7 +109,8 @@ export default {
     async remove (concert) {
       if (!window.confirm(`Delete "${concert.title}"? This can't be undone.`)) return
       try {
-        await this.concertsStore.removeConcert(concert.id)
+        await ConcertsService.remove(concert.id)
+        await this.fetchPage()
       } catch (error) {
         this.error = error.message
       }

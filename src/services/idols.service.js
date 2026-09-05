@@ -61,4 +61,31 @@ export class IdolsService extends BaseService {
       throw this.errorWrapper(error, message)
     }
   }
+
+  // GET /idols/manager-idols-page — public, no auth. One bundled response
+  // for ManagerIdolsPage's table: every idol, plus the group list its
+  // "Group" column resolves against. No idol_colors — this table never
+  // shows a color.
+  static async getManagerIdolsPagePublic () {
+    try {
+      const response = await this.request().get(`${this.entity}/manager-idols-page`)
+      return this.responseWrapper(response, response.data)
+    } catch (error) {
+      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
+      throw this.errorWrapper(error, message)
+    }
+  }
+
+  // GET /idols/manager-idol-form-page — public, no auth. One bundled
+  // response for ManagerIdolFormPage: idols (for the isEditing lookup),
+  // groups (the group <select>), and colors (the color <select>).
+  static async getManagerIdolFormPagePublic () {
+    try {
+      const response = await this.request().get(`${this.entity}/manager-idol-form-page`)
+      return this.responseWrapper(response, response.data)
+    } catch (error) {
+      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
+      throw this.errorWrapper(error, message)
+    }
+  }
 }

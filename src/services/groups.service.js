@@ -34,4 +34,17 @@ export class GroupsService extends BaseService {
       throw this.errorWrapper(error, message)
     }
   }
+
+  // GET /groups/manager-groups-page — public, no auth. One bundled response
+  // for ManagerGroupsPage's table and ManagerGroupFormPage's groupById
+  // lookup: plain group rows only, no members/events/products.
+  static async getManagerGroupsPagePublic () {
+    try {
+      const response = await this.request().get(`${this.entity}/manager-groups-page`)
+      return this.responseWrapper(response, response.data)
+    } catch (error) {
+      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
+      throw this.errorWrapper(error, message)
+    }
+  }
 }

@@ -39,7 +39,7 @@
           <span class="field__label">Color</span>
           <select v-model="form.color_id">
             <option value="">None</option>
-            <option v-for="color in idolsStore.colors" :key="color.id" :value="color.id">{{ color.name }}</option>
+            <option v-for="color in colors" :key="color.id" :value="color.id">{{ color.name }}</option>
           </select>
         </label>
         <label class="field">
@@ -68,7 +68,6 @@
 </template>
 
 <script>
-import { useIdolsStore } from '@/store/idols'
 import { useCompaniesStore } from '@/store/companies'
 import { IdolsService } from '@/services/idols.service'
 
@@ -93,6 +92,9 @@ export default {
 
   data () {
     return {
+      idols: [],
+      groups: [],
+      colors: [],
       selectedCompanyId: this.$route.query.company_id || '',
       form: emptyForm(),
       imageFile: null,
@@ -102,9 +104,6 @@ export default {
   },
 
   computed: {
-    idolsStore () {
-      return useIdolsStore()
-    },
     companiesStore () {
       return useCompaniesStore()
     },
@@ -115,7 +114,7 @@ export default {
       return !!this.id
     },
     idol () {
-      return this.isEditing ? this.idolsStore.idolById(this.id) : null
+      return this.isEditing ? this.idols.find(i => i.id === this.id) : null
     },
     // A manager is always scoped to their own company; on edit the
     // idol's own (immutable) company applies; on create an admin picks one.
@@ -124,7 +123,7 @@ export default {
       return this.isAdmin ? this.selectedCompanyId : this.$currentUser.company_id
     },
     myGroups () {
-      return this.idolsStore.groups.filter(group => group.company_id === this.companyId)
+      return this.groups.filter(group => group.company_id === this.companyId)
     }
   },
 
@@ -147,11 +146,21 @@ export default {
   },
 
   created () {
-    this.idolsStore.fetchAll()
+    this.fetchPage()
     if (this.isAdmin) this.companiesStore.fetchAll()
   },
 
   methods: {
+    async fetchPage () {
+      try {
+        const response = await IdolsService.getManagerIdolFormPagePublic()
+        this.idols = response.data.idols
+        this.groups = response.data.groups
+        this.colors = response.data.colors
+      } catch (error) {
+        this.error = error.message
+      }
+    },
     onImageChange (event) {
       this.imageFile = event.target.files[0] || null
     },
@@ -173,10 +182,10 @@ export default {
       }
       try {
         if (this.isEditing) {
-          await this.idolsStore.updateIdol(this.id, fields)
+          await IdolsService.update(this.id, fields)
           if (this.imageFile) await IdolsService.uploadImage(this.id, this.imageFile)
         } else {
-          await this.idolsStore.createIdol({ ...fields, company_id: this.companyId, image: this.imageFile })
+          await IdolsService.create({ ...fields, company_id: this.companyId, image: this.imageFile })
         }
         this.$router.push({ name: 'manager-idols' })
       } catch (error) {

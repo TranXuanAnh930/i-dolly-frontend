@@ -42,7 +42,7 @@
 </template>
 
 <script>
-import { useIdolsStore } from '@/store/idols'
+import { GroupsService } from '@/services/groups.service'
 import { useCompaniesStore } from '@/store/companies'
 
 function emptyForm () {
@@ -58,6 +58,7 @@ export default {
 
   data () {
     return {
+      groups: [],
       selectedCompanyId: this.$route.query.company_id || '',
       form: emptyForm(),
       error: '',
@@ -66,9 +67,6 @@ export default {
   },
 
   computed: {
-    idolsStore () {
-      return useIdolsStore()
-    },
     companiesStore () {
       return useCompaniesStore()
     },
@@ -79,7 +77,7 @@ export default {
       return !!this.id
     },
     group () {
-      return this.isEditing ? this.idolsStore.groupById(this.id) : null
+      return this.isEditing ? this.groups.find(g => g.id === this.id) : null
     },
     companyId () {
       if (this.isEditing) return this.group ? this.group.company_id : ''
@@ -102,11 +100,19 @@ export default {
   },
 
   created () {
-    this.idolsStore.fetchAll()
+    this.fetchPage()
     if (this.isAdmin) this.companiesStore.fetchAll()
   },
 
   methods: {
+    async fetchPage () {
+      try {
+        const response = await GroupsService.getManagerGroupsPagePublic()
+        this.groups = response.data.groups
+      } catch (error) {
+        this.error = error.message
+      }
+    },
     async save () {
       if (!this.form.name.trim()) {
         this.error = 'Name is required.'
@@ -121,9 +127,9 @@ export default {
       }
       try {
         if (this.isEditing) {
-          await this.idolsStore.updateGroup(this.id, fields)
+          await GroupsService.update(this.id, fields)
         } else {
-          await this.idolsStore.createGroup({ ...fields, company_id: this.companyId })
+          await GroupsService.create({ ...fields, company_id: this.companyId })
         }
         this.$router.push({ name: 'manager-groups' })
       } catch (error) {

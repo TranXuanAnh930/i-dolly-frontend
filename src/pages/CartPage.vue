@@ -67,6 +67,7 @@
 <script>
 import { useCartStore } from '@/store/cart'
 import { useCatalogStore } from '@/store/catalog'
+import { useIdolsStore } from '@/store/idols'
 import { resolveMediaUrl } from '@/utils/media'
 import { formatNumber } from '@/utils/format'
 
@@ -93,6 +94,9 @@ export default {
 
   created () {
     this.catalogStore.fetchAll()
+    // catalogStore.artistForAlbum/colorForRelease resolve against the idols
+    // store's idols/groups — never loaded on this page otherwise.
+    useIdolsStore().fetchAll()
   },
 
   methods: {

@@ -5,6 +5,12 @@ import { VenuesService } from '@/services/venues.service'
 import { TicketTypesService } from '@/services/ticketTypes.service'
 import { paletteColorForId, contrastTextColor } from '@/utils/palette'
 
+// The generic concert/venue collection — every customer-facing page and the
+// manager/admin settings pages all have their own page-shaped endpoint
+// instead (services/concerts.service.js's getEventsPagePublic/
+// getDetailPublic/getManagerEventsPagePublic, and the settings pages call
+// ConcertsService directly for mutations rather than through this store),
+// so this store's only remaining consumer is TicketPurchasePage.
 export const useConcertsStore = defineStore('concerts', {
   state: () => ({
     concerts: [],
@@ -64,21 +70,6 @@ export const useConcertsStore = defineStore('concerts', {
       } catch (error) {
         this.error = error.message
       }
-    },
-
-    // Manager/admin mutations (ManagerEventsPage) — errors bubble up to the
-    // calling form rather than being caught here.
-    async createConcert (fields) {
-      await ConcertsService.create(fields)
-      await this.fetchAll({ force: true })
-    },
-    async updateConcert (id, fields) {
-      await ConcertsService.update(id, fields)
-      await this.fetchAll({ force: true })
-    },
-    async removeConcert (id) {
-      await ConcertsService.remove(id)
-      await this.fetchAll({ force: true })
     }
   }
 })

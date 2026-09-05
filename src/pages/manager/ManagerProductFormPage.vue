@@ -14,7 +14,7 @@
           <span class="field__label">Category</span>
           <select v-model="form.category_id" required>
             <option value="" disabled>Select a category…</option>
-            <option v-for="category in catalogStore.categories" :key="category.id" :value="category.id">{{ category.name }}</option>
+            <option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option>
           </select>
         </label>
         <label class="field">
@@ -47,7 +47,6 @@
 </template>
 
 <script>
-import { useCatalogStore } from '@/store/catalog'
 import { ProductsService } from '@/services/products.service'
 
 function emptyForm () {
@@ -63,6 +62,8 @@ export default {
 
   data () {
     return {
+      products: [],
+      categories: [],
       form: emptyForm(),
       imageFile: null,
       error: '',
@@ -71,14 +72,16 @@ export default {
   },
 
   computed: {
-    catalogStore () {
-      return useCatalogStore()
-    },
     isEditing () {
       return !!this.id
     },
     product () {
-      return this.isEditing ? this.catalogStore.products.find(p => p.id === this.id) : null
+      return this.isEditing ? this.products.find(p => p.id === this.id) : null
+    },
+    // Same scoping as ManagerProductsPage — a manager only ever edits their
+    // own company's products (plus ownerless merch); an admin isn't scoped.
+    companyId () {
+      return this.$currentUser.role === 'admin' ? null : this.$currentUser.company_id
     }
   },
 
@@ -89,7 +92,7 @@ export default {
         if (!product) return
         // ProductRead exposes the category *name*, not its id — the write
         // endpoints need category_id, so map back via the categories list.
-        const category = this.catalogStore.categories.find(c => c.name === product.category)
+        const category = this.categories.find(c => c.name === product.category)
         this.form = {
           name: product.name,
           category_id: category ? category.id : '',
@@ -102,11 +105,19 @@ export default {
   },
 
   created () {
-    this.catalogStore.fetchAll()
-    this.catalogStore.fetchCategories()
+    this.fetchPage()
   },
 
   methods: {
+    async fetchPage () {
+      try {
+        const response = await ProductsService.getManagerProductFormPagePublic(this.companyId)
+        this.products = response.data.products
+        this.categories = response.data.categories
+      } catch (error) {
+        this.error = error.message
+      }
+    },
     onImageChange (event) {
       this.imageFile = event.target.files[0] || null
     },
@@ -126,10 +137,10 @@ export default {
       }
       try {
         if (this.isEditing) {
-          await this.catalogStore.updateProduct(this.id, fields)
+          await ProductsService.update(this.id, fields)
           if (this.imageFile) await ProductsService.uploadImage(this.id, this.imageFile)
         } else {
-          await this.catalogStore.createProduct({ ...fields, image: this.imageFile })
+          await ProductsService.create({ ...fields, image: this.imageFile })
         }
         this.$router.push({ name: 'manager-products' })
       } catch (error) {

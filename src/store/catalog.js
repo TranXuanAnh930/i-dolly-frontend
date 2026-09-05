@@ -2,23 +2,21 @@ import { defineStore } from 'pinia'
 
 import { ProductsService } from '@/services/products.service'
 import { AlbumDetailsService } from '@/services/albumDetails.service'
-import { CategoriesService } from '@/services/categories.service'
 import { paletteColorForId, contrastTextColor } from '@/utils/palette'
 import { useIdolsStore } from './idols'
 
-// The generic product collection — the Store grid and product detail page
-// have their own page-shaped endpoint instead (services/products.service.js's
-// getStorePagePublic/getDetailPublic, with genre tags embedded there), so
-// this store's only remaining consumers are Cart/Checkout (artistForAlbum/
-// colorForRelease, to theme a cart line item) and the manager/admin product
-// CRUD pages — neither needs genre tags, so they aren't fetched here.
+// The generic product collection — every customer-facing page and the
+// manager/admin settings pages all have their own page-shaped endpoint
+// instead (services/products.service.js's getStorePagePublic/getDetailPublic/
+// getManagerProductsPagePublic/getManagerProductFormPagePublic, etc., and the
+// settings pages call ProductsService directly for mutations rather than
+// through this store), so this store's only remaining consumer is
+// Cart/Checkout's artistForAlbum/colorForRelease (to theme a cart line
+// item) — it doesn't need genre tags or categories, so neither is fetched.
 export const useCatalogStore = defineStore('catalog', {
   state: () => ({
     products: [],
     albumDetails: [],
-    // Only exists to populate ManagerProductsPage's category dropdown —
-    // fetched on demand, not part of fetchAll.
-    categories: [],
     loading: false,
     loaded: false,
     error: null
@@ -117,31 +115,6 @@ export const useCatalogStore = defineStore('catalog', {
       } finally {
         this.loading = false
       }
-    },
-
-    async fetchCategories ({ force = false } = {}) {
-      if (!force && this.categories.length) return
-      try {
-        const response = await CategoriesService.getAllPublic()
-        this.categories = response.data
-      } catch (error) {
-        this.error = error.message
-      }
-    },
-
-    // Manager/admin mutations (ManagerProductsPage) — errors bubble up to
-    // the calling form rather than being caught here.
-    async createProduct (fields) {
-      await ProductsService.create(fields)
-      await this.fetchAll({ force: true })
-    },
-    async updateProduct (id, fields) {
-      await ProductsService.update(id, fields)
-      await this.fetchAll({ force: true })
-    },
-    async removeProduct (id) {
-      await ProductsService.remove(id)
-      await this.fetchAll({ force: true })
     }
   }
 })

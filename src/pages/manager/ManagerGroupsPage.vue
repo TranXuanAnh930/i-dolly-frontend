@@ -47,7 +47,7 @@
 </template>
 
 <script>
-import { useIdolsStore } from '@/store/idols'
+import { GroupsService } from '@/services/groups.service'
 import { useCompaniesStore } from '@/store/companies'
 
 export default {
@@ -55,15 +55,13 @@ export default {
 
   data () {
     return {
+      groups: [],
       selectedCompanyId: '',
       error: ''
     }
   },
 
   computed: {
-    idolsStore () {
-      return useIdolsStore()
-    },
     companiesStore () {
       return useCompaniesStore()
     },
@@ -77,20 +75,29 @@ export default {
       return this.isAdmin ? { company_id: this.companyId } : {}
     },
     myGroups () {
-      return this.idolsStore.groups.filter(group => group.company_id === this.companyId)
+      return this.groups.filter(group => group.company_id === this.companyId)
     }
   },
 
   created () {
-    this.idolsStore.fetchAll()
+    this.fetchPage()
     if (this.isAdmin) this.companiesStore.fetchAll()
   },
 
   methods: {
+    async fetchPage () {
+      try {
+        const response = await GroupsService.getManagerGroupsPagePublic()
+        this.groups = response.data.groups
+      } catch (error) {
+        this.error = error.message
+      }
+    },
     async remove (group) {
       if (!window.confirm(`Delete ${group.name}? This can't be undone.`)) return
       try {
-        await this.idolsStore.removeGroup(group.id)
+        await GroupsService.remove(group.id)
+        await this.fetchPage()
       } catch (error) {
         this.error = error.message
       }
