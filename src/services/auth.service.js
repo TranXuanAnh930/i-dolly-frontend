@@ -43,11 +43,14 @@ export class AuthService {
   static async makeLogout () {
     try {
       const response = await new Http({ auth: true }).post('profile/logout', {}, { withCredentials: true })
-      _resetAuthData()
-      $router.push({ name: 'login' }).catch(() => {})
       return new ResponseWrapper(response, response.data)
     } catch (error) {
       throw new ErrorWrapper(error, error.response && error.response.data ? error.response.data.detail : undefined)
+    } finally {
+      // clear the local session and redirect even if the logout request
+      // itself failed (e.g. network error, already-expired token)
+      _resetAuthData()
+      $router.push({ name: 'login' }).catch(() => {})
     }
   }
 

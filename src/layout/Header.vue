@@ -103,7 +103,9 @@ export default {
   },
   methods: {
     async logout () {
-      await AuthService.makeLogout()
+      // session is cleared and redirect happens in makeLogout regardless
+      // of whether the API call succeeds, so a failed request can be ignored here
+      await AuthService.makeLogout().catch(() => {})
     }
   }
 }
