@@ -8,6 +8,7 @@ export const useUserStore = defineStore('user', {
     currentUser: {
       id: '',
       role: '',
+      company_id: null,
       name: '',
       email: ''
     }

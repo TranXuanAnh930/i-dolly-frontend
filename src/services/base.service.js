@@ -107,14 +107,20 @@ export class BaseService {
     }
   }
 
+  /**
+   * POST {entity}/add — the manager/admin write convention shared by
+   * idols, groups, concerts, venues, ticket_types and management_companies
+   * (see docs/api-spec.md in the E-commerce backend repo). `data` may be a
+   * plain object (sent as JSON) or a FormData instance (for the two
+   * entities — idols, products — whose /add endpoint is multipart).
+   */
   static async create (data = {}) {
-    assert.object(data, { required: true })
-
     try {
-      const response = await this.request({ auth: true }).post(`${this.entity}`, data)
-      return new ResponseWrapper(response, response.data.data)
+      const response = await this.request({ auth: true }).post(`${this.entity}/add`, data)
+      return new ResponseWrapper(response, response.data)
     } catch (error) {
-      throw new ErrorWrapper(error)
+      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
+      throw new ErrorWrapper(error, message)
     }
   }
 
@@ -123,10 +129,11 @@ export class BaseService {
     assert.object(data, { required: true })
 
     try {
-      const response = await this.request({ auth: true }).patch(`${this.entity}/${id}`, data)
-      return new ResponseWrapper(response, response.data.data)
+      const response = await this.request({ auth: true }).put(`${this.entity}/update/${id}`, data)
+      return new ResponseWrapper(response, response.data)
     } catch (error) {
-      throw new ErrorWrapper(error)
+      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
+      throw new ErrorWrapper(error, message)
     }
   }
 
@@ -134,10 +141,11 @@ export class BaseService {
     assert.id(id, { required: true })
 
     try {
-      const response = await this.request({ auth: true }).delete(`${this.entity}/${id}`)
-      return new ResponseWrapper(response, response.data.data)
+      const response = await this.request({ auth: true }).delete(`${this.entity}/delete/${id}`)
+      return new ResponseWrapper(response, response.data)
     } catch (error) {
-      throw new ErrorWrapper(error)
+      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
+      throw new ErrorWrapper(error, message)
     }
   }
 }

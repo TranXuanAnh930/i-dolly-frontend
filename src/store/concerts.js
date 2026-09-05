@@ -95,6 +95,21 @@ export const useConcertsStore = defineStore('concerts', {
       } catch (error) {
         this.error = error.message
       }
+    },
+
+    // Manager/admin mutations (ManagerEventsPage) — errors bubble up to the
+    // calling form rather than being caught here.
+    async createConcert (fields) {
+      await ConcertsService.create(fields)
+      await this.fetchAll({ force: true })
+    },
+    async updateConcert (id, fields) {
+      await ConcertsService.update(id, fields)
+      await this.fetchAll({ force: true })
+    },
+    async removeConcert (id) {
+      await ConcertsService.remove(id)
+      await this.fetchAll({ force: true })
     }
   }
 })

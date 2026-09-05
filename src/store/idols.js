@@ -91,6 +91,34 @@ export const useIdolsStore = defineStore('idols', {
       } catch (error) {
         this.error = error.message
       }
+    },
+
+    // Manager/admin mutations (ManagerIdolsPage, ManagerGroupsPage) — errors
+    // are left to bubble up to the calling form rather than caught here, so
+    // the page can show them inline next to the field that failed.
+    async createIdol (fields) {
+      await IdolsService.create(fields)
+      await this.fetchAll({ force: true })
+    },
+    async updateIdol (id, fields) {
+      await IdolsService.update(id, fields)
+      await this.fetchAll({ force: true })
+    },
+    async removeIdol (id) {
+      await IdolsService.remove(id)
+      await this.fetchAll({ force: true })
+    },
+    async createGroup (fields) {
+      await GroupsService.create(fields)
+      await this.fetchAll({ force: true })
+    },
+    async updateGroup (id, fields) {
+      await GroupsService.update(id, fields)
+      await this.fetchAll({ force: true })
+    },
+    async removeGroup (id) {
+      await GroupsService.remove(id)
+      await this.fetchAll({ force: true })
     }
   }
 })

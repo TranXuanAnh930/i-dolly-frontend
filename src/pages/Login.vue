@@ -82,11 +82,18 @@ export default {
         await AuthService.makeLogin({ username: this.email, password: this.password })
         this.error = ''
         await useUserStore().getCurrent()
-        await this.$router.push('/')
+        await this.$router.push(this.landingRouteFor(useUserStore().currentUser.role))
       } catch (error) {
         useToastStore().add({ type: 'error', message: error.message })
         this.error = error.status === 404 ? 'User with same email not found' : error.message
       }
+    },
+    // Managers/admins land straight in their own working area rather than
+    // the public storefront, since that's what they log in to do.
+    landingRouteFor (role) {
+      if (role === 'admin') return { name: 'admin-companies' }
+      if (role === 'manager') return { name: 'manager-groups' }
+      return '/'
     }
   }
 }

@@ -14,19 +14,38 @@
       </router-link>
 
       <ul class="menu">
-        <li>
-          <router-link :to="{ name: 'events' }" class="menu__link">{{ $t('nav.events') }}</router-link>
-        </li>
-        <li>
-          <router-link :to="{ name: 'members' }" class="menu__link">{{ $t('nav.members') }}</router-link>
-        </li>
-        <li>
-          <router-link :to="{ name: 'store' }" class="menu__link">{{ $t('nav.store') }}</router-link>
-        </li>
+        <template v-if="isStaff">
+          <li>
+            <router-link :to="{ name: 'manager-idols' }" class="menu__link">Idols</router-link>
+          </li>
+          <li>
+            <router-link :to="{ name: 'manager-groups' }" class="menu__link">Groups</router-link>
+          </li>
+          <li>
+            <router-link :to="{ name: 'manager-events' }" class="menu__link">Events</router-link>
+          </li>
+          <li>
+            <router-link :to="{ name: 'manager-products' }" class="menu__link">Products</router-link>
+          </li>
+          <li v-if="isAdmin">
+            <router-link :to="{ name: 'admin-companies' }" class="menu__link">Companies</router-link>
+          </li>
+        </template>
+        <template v-else>
+          <li>
+            <router-link :to="{ name: 'events' }" class="menu__link">{{ $t('nav.events') }}</router-link>
+          </li>
+          <li>
+            <router-link :to="{ name: 'members' }" class="menu__link">{{ $t('nav.members') }}</router-link>
+          </li>
+          <li>
+            <router-link :to="{ name: 'store' }" class="menu__link">{{ $t('nav.store') }}</router-link>
+          </li>
+        </template>
         <li>
           <NotificationDropdown/>
         </li>
-        <li>
+        <li v-if="!isStaff">
           <router-link :to="{ name: 'cart' }" class="cart-link" :aria-label="$t('nav.cart')">
             <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
               <path d="M5 6.5h10l-.8 8.5a1.5 1.5 0 0 1-1.5 1.4H7.3a1.5 1.5 0 0 1-1.5-1.4L5 6.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
@@ -74,6 +93,12 @@ export default {
   computed: {
     cartCount () {
       return useCartStore().itemCount
+    },
+    isStaff () {
+      return ['manager', 'admin'].includes(this.$currentUser.role)
+    },
+    isAdmin () {
+      return this.$currentUser.role === 'admin'
     }
   },
   methods: {

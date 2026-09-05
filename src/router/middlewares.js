@@ -23,14 +23,16 @@ export async function initCurrentUserStateMiddleware (to, from, next) {
 }
 
 /**
- * Check access permission to auth routes
+ * Check access permission to auth routes, and to routes restricted to
+ * specific roles (manager/admin sections) via `meta.roles`.
  */
 export function checkAccessMiddleware (to, from, next) {
-  const currentUserId = useUserStore().currentUser.id
+  const currentUser = useUserStore().currentUser
   const isAuthRoute = to.matched.some(item => item.meta.isAuth)
+  const requiredRoles = to.matched.flatMap(item => item.meta.roles || [])
 
-  if (isAuthRoute && currentUserId) return next()
-  if (isAuthRoute) return next({ name: 'login' })
+  if (isAuthRoute && !currentUser.id) return next({ name: 'login' })
+  if (requiredRoles.length && !requiredRoles.includes(currentUser.role)) return next({ name: 'index' })
   next()
 }
 

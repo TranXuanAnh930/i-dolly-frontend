@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 import { ProductsService } from '@/services/products.service'
 import { AlbumDetailsService } from '@/services/albumDetails.service'
 import { GenresService } from '@/services/genres.service'
+import { CategoriesService } from '@/services/categories.service'
 import { paletteColorForId, contrastTextColor } from '@/utils/palette'
 import { createQueue } from '@/utils/concurrencyQueue'
 import { useIdolsStore } from './idols'
@@ -20,6 +21,9 @@ export const useCatalogStore = defineStore('catalog', {
     // Genre tags are scoped to one product (no `/all` route) — fetched
     // lazily per release card and cached here by product id.
     genresByProduct: {},
+    // Only exists to populate ManagerProductsPage's category dropdown —
+    // fetched on demand, not part of fetchAll.
+    categories: [],
     loading: false,
     loaded: false,
     error: null
@@ -137,6 +141,31 @@ export const useCatalogStore = defineStore('catalog', {
       } catch (error) {
         this.error = error.message
       }
+    },
+
+    async fetchCategories ({ force = false } = {}) {
+      if (!force && this.categories.length) return
+      try {
+        const response = await CategoriesService.getAllPublic()
+        this.categories = response.data
+      } catch (error) {
+        this.error = error.message
+      }
+    },
+
+    // Manager/admin mutations (ManagerProductsPage) — errors bubble up to
+    // the calling form rather than being caught here.
+    async createProduct (fields) {
+      await ProductsService.create(fields)
+      await this.fetchAll({ force: true })
+    },
+    async updateProduct (id, fields) {
+      await ProductsService.update(id, fields)
+      await this.fetchAll({ force: true })
+    },
+    async removeProduct (id) {
+      await ProductsService.remove(id)
+      await this.fetchAll({ force: true })
     }
   }
 })

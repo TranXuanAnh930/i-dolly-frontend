@@ -15,6 +15,19 @@ import loginPage from '../pages/Login.vue'
 import registerPage from '../pages/RegisterPage.vue'
 import notFoundPage from '../pages/NotFound.vue'
 
+import managerIdolsPage from '../pages/manager/ManagerIdolsPage.vue'
+import managerIdolFormPage from '../pages/manager/ManagerIdolFormPage.vue'
+import managerGroupsPage from '../pages/manager/ManagerGroupsPage.vue'
+import managerGroupFormPage from '../pages/manager/ManagerGroupFormPage.vue'
+import managerEventsPage from '../pages/manager/ManagerEventsPage.vue'
+import managerEventFormPage from '../pages/manager/ManagerEventFormPage.vue'
+import managerProductsPage from '../pages/manager/ManagerProductsPage.vue'
+import managerProductFormPage from '../pages/manager/ManagerProductFormPage.vue'
+
+import adminCompaniesPage from '../pages/admin/AdminCompaniesPage.vue'
+import adminCompanyFormPage from '../pages/admin/AdminCompanyFormPage.vue'
+import adminManagerAccountFormPage from '../pages/admin/AdminManagerAccountFormPage.vue'
+
 import { DOMAIN_TITLE } from '../env'
 
 export const routes = [
@@ -116,6 +129,112 @@ export const routes = [
     name: 'register',
     component: registerPage,
     meta: { title: `${DOMAIN_TITLE} | register` }
+  },
+  {
+    path: '/settings',
+    redirect: { name: 'manager-idols' }
+  },
+  {
+    path: '/settings/idols',
+    name: 'manager-idols',
+    component: managerIdolsPage,
+    meta: { isAuth: true, roles: ['manager', 'admin'], title: `${DOMAIN_TITLE} | settings · idols` }
+  },
+  {
+    path: '/settings/idols/new',
+    name: 'manager-idols-new',
+    component: managerIdolFormPage,
+    meta: { isAuth: true, roles: ['manager', 'admin'], title: `${DOMAIN_TITLE} | settings · add idol` }
+  },
+  {
+    path: '/settings/idols/:id/edit',
+    name: 'manager-idols-edit',
+    component: managerIdolFormPage,
+    props: true,
+    meta: { isAuth: true, roles: ['manager', 'admin'], title: `${DOMAIN_TITLE} | settings · edit idol` }
+  },
+  {
+    path: '/settings/groups',
+    name: 'manager-groups',
+    component: managerGroupsPage,
+    meta: { isAuth: true, roles: ['manager', 'admin'], title: `${DOMAIN_TITLE} | settings · groups` }
+  },
+  {
+    path: '/settings/groups/new',
+    name: 'manager-groups-new',
+    component: managerGroupFormPage,
+    meta: { isAuth: true, roles: ['manager', 'admin'], title: `${DOMAIN_TITLE} | settings · add group` }
+  },
+  {
+    path: '/settings/groups/:id/edit',
+    name: 'manager-groups-edit',
+    component: managerGroupFormPage,
+    props: true,
+    meta: { isAuth: true, roles: ['manager', 'admin'], title: `${DOMAIN_TITLE} | settings · edit group` }
+  },
+  {
+    path: '/settings/events',
+    name: 'manager-events',
+    component: managerEventsPage,
+    meta: { isAuth: true, roles: ['manager', 'admin'], title: `${DOMAIN_TITLE} | settings · events` }
+  },
+  {
+    path: '/settings/events/new',
+    name: 'manager-events-new',
+    component: managerEventFormPage,
+    meta: { isAuth: true, roles: ['manager', 'admin'], title: `${DOMAIN_TITLE} | settings · add event` }
+  },
+  {
+    path: '/settings/events/:id/edit',
+    name: 'manager-events-edit',
+    component: managerEventFormPage,
+    props: true,
+    meta: { isAuth: true, roles: ['manager', 'admin'], title: `${DOMAIN_TITLE} | settings · edit event` }
+  },
+  {
+    path: '/settings/products',
+    name: 'manager-products',
+    component: managerProductsPage,
+    meta: { isAuth: true, roles: ['manager', 'admin'], title: `${DOMAIN_TITLE} | settings · products` }
+  },
+  {
+    path: '/settings/products/new',
+    name: 'manager-products-new',
+    component: managerProductFormPage,
+    meta: { isAuth: true, roles: ['manager', 'admin'], title: `${DOMAIN_TITLE} | settings · add product` }
+  },
+  {
+    path: '/settings/products/:id/edit',
+    name: 'manager-products-edit',
+    component: managerProductFormPage,
+    props: true,
+    meta: { isAuth: true, roles: ['manager', 'admin'], title: `${DOMAIN_TITLE} | settings · edit product` }
+  },
+  {
+    path: '/settings/companies',
+    name: 'admin-companies',
+    component: adminCompaniesPage,
+    meta: { isAuth: true, roles: ['admin'], title: `${DOMAIN_TITLE} | settings · companies` }
+  },
+  {
+    path: '/settings/companies/new',
+    name: 'admin-companies-new',
+    component: adminCompanyFormPage,
+    meta: { isAuth: true, roles: ['admin'], title: `${DOMAIN_TITLE} | settings · add company` }
+  },
+  {
+    path: '/settings/companies/:id/edit',
+    name: 'admin-companies-edit',
+    component: adminCompanyFormPage,
+    props: true,
+    meta: { isAuth: true, roles: ['admin'], title: `${DOMAIN_TITLE} | settings · edit company` }
+  },
+  {
+    path: '/settings/companies/:id/managers/new',
+    name: 'admin-manager-account-new',
+    component: adminManagerAccountFormPage,
+    props: true,
+    meta: { isAuth: true, roles: ['admin'], title: `${DOMAIN_TITLE} | settings · add manager account` }
   },
   {
     path: '/:pathMatch(.*)*',
