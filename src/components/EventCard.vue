@@ -17,17 +17,18 @@
       <p class="venue" v-if="venue">{{ venue.name }} <span v-if="venue.city">&middot; {{ venue.city }}</span></p>
 
       <div class="footer">
-        <span class="capacity">{{ event.capacity.toLocaleString('en-US') }} capacity</span>
-        <span class="time" v-if="doorsLabel">Doors {{ doorsLabel }}</span>
+        <span class="capacity">{{ $t('events.capacity', { count: formattedCapacity }) }}</span>
+        <span class="time" v-if="doorsLabel">{{ $t('events.doorsAt', { time: doorsLabel }) }}</span>
       </div>
     </div>
   </router-link>
 </template>
 
 <script>
-import { format, parseISO } from 'date-fns'
+import { parseISO } from 'date-fns'
 
 import { useConcertsStore } from '@/store/concerts'
+import { formatDate, formatNumber } from '@/utils/format'
 import StatusBadge from './StatusBadge.vue'
 
 export default {
@@ -53,13 +54,16 @@ export default {
       return parseISO(this.event.event_datetime)
     },
     dateMonth () {
-      return format(this.eventDate, 'MMM')
+      return formatDate(this.eventDate, 'MMM')
     },
     dateDay () {
-      return format(this.eventDate, 'd')
+      return formatDate(this.eventDate, 'd')
     },
     doorsLabel () {
-      return this.event.doors_open_at ? format(parseISO(this.event.doors_open_at), 'h:mm a') : null
+      return this.event.doors_open_at ? formatDate(parseISO(this.event.doors_open_at), 'h:mm a') : null
+    },
+    formattedCapacity () {
+      return formatNumber(this.event.capacity)
     }
   }
 }

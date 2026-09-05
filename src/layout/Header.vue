@@ -13,60 +13,74 @@
         </svg>
       </router-link>
 
-      <ul class="menu">
-        <template v-if="isStaff">
-          <li>
-            <router-link :to="{ name: 'manager-idols' }" class="menu__link">Idols</router-link>
-          </li>
-          <li>
-            <router-link :to="{ name: 'manager-groups' }" class="menu__link">Groups</router-link>
-          </li>
-          <li>
-            <router-link :to="{ name: 'manager-events' }" class="menu__link">Events</router-link>
-          </li>
-          <li>
-            <router-link :to="{ name: 'manager-products' }" class="menu__link">Products</router-link>
-          </li>
-          <li v-if="isAdmin">
-            <router-link :to="{ name: 'admin-companies' }" class="menu__link">Companies</router-link>
-          </li>
-        </template>
-        <template v-else>
-          <li>
-            <router-link :to="{ name: 'events' }" class="menu__link">{{ $t('nav.events') }}</router-link>
-          </li>
-          <li>
-            <router-link :to="{ name: 'members' }" class="menu__link">{{ $t('nav.members') }}</router-link>
-          </li>
-          <li>
-            <router-link :to="{ name: 'store' }" class="menu__link">{{ $t('nav.store') }}</router-link>
-          </li>
-        </template>
-        <li>
-          <NotificationDropdown/>
-        </li>
-        <li v-if="!isStaff">
-          <router-link :to="{ name: 'cart' }" class="cart-link" :aria-label="$t('nav.cart')">
-            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-              <path d="M5 6.5h10l-.8 8.5a1.5 1.5 0 0 1-1.5 1.4H7.3a1.5 1.5 0 0 1-1.5-1.4L5 6.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-              <path d="M7 6.5V5a3 3 0 0 1 6 0v1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-            <span v-if="cartCount" class="cart-link__badge">{{ cartCount }}</span>
-          </router-link>
-        </li>
-        <li v-if="!$currentUser.id">
-          <router-link :to="{ name: 'login' }" class="menu__link">{{ $t('nav.login') }}</router-link>
-        </li>
-        <li v-if="$currentUser.id">
-          <span class="menu__link menu__link--action" @click="logout()">{{ $t('nav.logout') }}</span>
-        </li>
-        <li>
-          <LanguageSwitcher/>
-        </li>
-        <li>
-          <UiHeaderDropdownMenu/>
-        </li>
-      </ul>
+      <UiOnClickOutside :do="closeMobile">
+        <div class="mobile-nav">
+          <button
+            type="button"
+            class="burger"
+            :class="{ 'is-open': mobileOpen }"
+            :aria-label="$t('common.menu')"
+            :aria-expanded="mobileOpen"
+            @click="toggleMobile">
+            <span></span><span></span><span></span>
+          </button>
+
+          <ul class="menu" :class="{ 'is-open': mobileOpen }">
+            <template v-if="isStaff">
+              <li>
+                <router-link :to="{ name: 'manager-idols' }" class="menu__link">Idols</router-link>
+              </li>
+              <li>
+                <router-link :to="{ name: 'manager-groups' }" class="menu__link">Groups</router-link>
+              </li>
+              <li>
+                <router-link :to="{ name: 'manager-events' }" class="menu__link">Events</router-link>
+              </li>
+              <li>
+                <router-link :to="{ name: 'manager-products' }" class="menu__link">Products</router-link>
+              </li>
+              <li v-if="isAdmin">
+                <router-link :to="{ name: 'admin-companies' }" class="menu__link">Companies</router-link>
+              </li>
+            </template>
+            <template v-else>
+              <li>
+                <router-link :to="{ name: 'events' }" class="menu__link">{{ $t('nav.events') }}</router-link>
+              </li>
+              <li>
+                <router-link :to="{ name: 'members' }" class="menu__link">{{ $t('nav.members') }}</router-link>
+              </li>
+              <li>
+                <router-link :to="{ name: 'store' }" class="menu__link">{{ $t('nav.store') }}</router-link>
+              </li>
+            </template>
+            <li>
+              <NotificationDropdown/>
+            </li>
+            <li v-if="!isStaff">
+              <router-link :to="{ name: 'cart' }" class="cart-link" :aria-label="$t('nav.cart')">
+                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <path d="M5 6.5h10l-.8 8.5a1.5 1.5 0 0 1-1.5 1.4H7.3a1.5 1.5 0 0 1-1.5-1.4L5 6.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                  <path d="M7 6.5V5a3 3 0 0 1 6 0v1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                <span v-if="cartCount" class="cart-link__badge">{{ cartCount }}</span>
+              </router-link>
+            </li>
+            <li v-if="!$currentUser.id">
+              <router-link :to="{ name: 'login' }" class="menu__link">{{ $t('nav.login') }}</router-link>
+            </li>
+            <li v-if="$currentUser.id">
+              <span class="menu__link menu__link--action" @click="logout()">{{ $t('nav.logout') }}</span>
+            </li>
+            <li>
+              <LanguageSwitcher/>
+            </li>
+            <li>
+              <UiHeaderDropdownMenu/>
+            </li>
+          </ul>
+        </div>
+      </UiOnClickOutside>
     </div>
   </div>
 </template>
@@ -76,6 +90,7 @@ import { AuthService } from '../services/auth.service'
 
 import UiHeaderDropdownMenu from '@/components/UiHeaderDropdownMenu.vue'
 import UiToastList from '@/components/UiToastList'
+import UiOnClickOutside from '@/components/UiOnClickOutside.vue'
 import BowIcon from '@/components/icons/BowIcon.vue'
 import NotificationDropdown from '@/components/NotificationDropdown.vue'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
@@ -86,9 +101,15 @@ export default {
   components: {
     UiToastList,
     UiHeaderDropdownMenu,
+    UiOnClickOutside,
     BowIcon,
     NotificationDropdown,
     LanguageSwitcher
+  },
+  data () {
+    return {
+      mobileOpen: false
+    }
   },
   computed: {
     cartCount () {
@@ -101,7 +122,18 @@ export default {
       return this.$currentUser.role === 'admin'
     }
   },
+  watch: {
+    $route () {
+      this.closeMobile()
+    }
+  },
   methods: {
+    toggleMobile () {
+      this.mobileOpen = !this.mobileOpen
+    },
+    closeMobile () {
+      this.mobileOpen = false
+    },
     async logout () {
       // session is cleared and redirect happens in makeLogout regardless
       // of whether the API call succeeds, so a failed request can be ignored here
@@ -171,6 +203,51 @@ export default {
   margin-top: 2px;
 }
 
+.mobile-nav {
+  display: flex;
+  align-items: center;
+}
+
+.burger {
+  display: none;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+
+  span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    border-radius: 2px;
+    background: $color-white;
+    transition: transform .2s ease, opacity .2s ease;
+  }
+
+  &.is-open {
+    span:nth-child(1) {
+      transform: translateY(7px) rotate(45deg);
+    }
+    span:nth-child(2) {
+      opacity: 0;
+    }
+    span:nth-child(3) {
+      transform: translateY(-7px) rotate(-45deg);
+    }
+  }
+
+  @include media_mobile {
+    display: flex;
+  }
+}
+
 .menu {
   display: flex;
   align-items: center;
@@ -180,9 +257,61 @@ export default {
     text-decoration: underline;
     text-underline-offset: 4px;
   }
+
+  @include media_mobile {
+    display: none;
+    position: absolute;
+    top: calc(100% + 16px);
+    left: -10px;
+    right: -10px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    background: $color-brand;
+    padding: 8px 10px 18px;
+    box-shadow: 0 20px 30px -12px rgba($color-ink, .35);
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+
+    &.is-open {
+      display: flex;
+    }
+
+    li {
+      width: 100%;
+
+      &:not(:last-child) {
+        border-bottom: 1px solid rgba(255, 255, 255, .15);
+      }
+    }
+
+    :deep(.notif) {
+      margin-top: 6px;
+    }
+
+    :deep(.notif__trigger),
+    :deep(.more-menu__trigger) {
+      padding: 12px 8px;
+    }
+
+    :deep(.lang-switch) {
+      display: inline-flex;
+      margin: 10px 0;
+    }
+
+    :deep(.notif__panel),
+    :deep(.more-menu__panel) {
+      position: static;
+      width: 100%;
+      max-width: none;
+      margin-top: 8px;
+      box-shadow: none;
+    }
+  }
 }
 
 .menu__link {
+  display: block;
   color: $color-white;
   text-decoration: none;
   font-family: $font-content;
@@ -192,6 +321,10 @@ export default {
 
   &--action:hover {
     opacity: .8;
+  }
+
+  @include media_mobile {
+    padding: 12px 8px;
   }
 }
 
@@ -207,6 +340,10 @@ export default {
 
   &:hover {
     opacity: .8;
+  }
+
+  @include media_mobile {
+    padding: 12px 8px;
   }
 }
 

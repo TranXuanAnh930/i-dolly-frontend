@@ -3,13 +3,13 @@
     <section class="hero">
       <div class="wrapper hero__inner">
         <router-link :to="`/events/${concert.id}`" class="back-link">&larr; {{ concert.title }}</router-link>
-        <p class="hero__eyebrow">{{ isLotteryTier ? 'Lottery entry' : 'Direct sale checkout' }}</p>
-        <h1 class="hero__title" :style="{ color: color.hex }">Get tickets</h1>
+        <p class="hero__eyebrow">{{ isLotteryTier ? $t('ticketPurchase.lotteryEntry') : $t('ticketPurchase.directSaleCheckout') }}</p>
+        <h1 class="hero__title" :style="{ color: color.hex }">{{ $t('ticketPurchase.getTickets') }}</h1>
 
         <ol class="steps">
           <li class="step" :class="stepClass(1)">
             <span class="step__dot">{{ step > 1 ? '&check;' : '1' }}</span>
-            <span class="step__label">Tickets</span>
+            <span class="step__label">{{ $t('ticketPurchase.stepTickets') }}</span>
           </li>
           <li class="step-line" :class="{ 'is-done': step > 1 }"></li>
           <li class="step" :class="stepClass(2)">
@@ -19,7 +19,7 @@
           <li class="step-line" :class="{ 'is-done': step > 2 }"></li>
           <li class="step" :class="stepClass(3)">
             <span class="step__dot">3</span>
-            <span class="step__label">Done</span>
+            <span class="step__label">{{ $t('ticketPurchase.stepDone') }}</span>
           </li>
         </ol>
       </div>
@@ -29,10 +29,10 @@
       <!-- Step 1: choose ticket tier -->
       <div v-if="step === 1" class="layout">
         <div class="panel">
-          <h2 class="panel-title">Choose a ticket tier</h2>
+          <h2 class="panel-title">{{ $t('ticketPurchase.chooseTier') }}</h2>
 
           <div class="field-block">
-            <span class="field-block__label">Tier</span>
+            <span class="field-block__label">{{ $t('ticketPurchase.tier') }}</span>
             <div class="option-list">
               <label
                 v-for="tier in allTicketTypes"
@@ -42,72 +42,72 @@
                 <input type="radio" name="tier" :value="tier.id" v-model="selectedTierId">
                 <span class="option-row__text">
                   <span class="option-row__title">{{ tierLabel(tier) }}</span>
-                  <span class="option-row__note">{{ remaining(tier) }} left &middot; {{ tier.sale_method === 'lottery' ? 'Lottery' : 'Direct sale' }}</span>
+                  <span class="option-row__note">{{ $t('eventDetail.leftSuffix', { count: remaining(tier) }) }} &middot; {{ tier.sale_method === 'lottery' ? $t('eventDetail.lotteryLabel') : $t('eventDetail.directSaleLabel') }}</span>
                 </span>
-                <span class="option-row__price">&yen;{{ tier.price.toLocaleString('en-US') }}</span>
+                <span class="option-row__price">&yen;{{ formatNumber(tier.price) }}</span>
               </label>
             </div>
           </div>
 
           <div class="field-block">
-            <span class="field-block__label">Quantity</span>
+            <span class="field-block__label">{{ $t('ticketPurchase.quantity') }}</span>
             <div class="qty-control">
-              <button type="button" class="qty-btn" @click="qty = Math.max(1, qty - 1)" aria-label="Decrease quantity">&minus;</button>
+              <button type="button" class="qty-btn" @click="qty = Math.max(1, qty - 1)" :aria-label="$t('common.decreaseQuantity')">&minus;</button>
               <span class="qty-value">{{ qty }}</span>
-              <button type="button" class="qty-btn" @click="qty = Math.min(6, qty + 1)" aria-label="Increase quantity">+</button>
+              <button type="button" class="qty-btn" @click="qty = Math.min(6, qty + 1)" :aria-label="$t('common.increaseQuantity')">+</button>
             </div>
           </div>
 
-          <h3 class="subhead">Seat map</h3>
+          <h3 class="subhead">{{ $t('ticketPurchase.seatMap') }}</h3>
           <VenueSeatMap class="seat-map"/>
         </div>
 
         <div class="summary">
-          <h2 class="summary__title">Order Summary</h2>
+          <h2 class="summary__title">{{ $t('ticketPurchase.orderSummary') }}</h2>
           <p class="summary__event">{{ concert.title }}</p>
-          <p class="summary__meta">{{ dateLabel }}<template v-if="doorsLabel"> &middot; Doors {{ doorsLabel }}</template></p>
+          <p class="summary__meta">{{ dateLabel }}<template v-if="doorsLabel"> &middot; {{ $t('events.doorsAt', { time: doorsLabel }) }}</template></p>
           <div class="summary__row">
             <span>{{ tierLabel(selectedTier) }} &times;{{ qty }}</span>
-            <span>&yen;{{ total.toLocaleString('en-US') }}</span>
+            <span>&yen;{{ formatNumber(total) }}</span>
           </div>
           <div class="summary__row summary__row--total">
-            <span>Total</span>
-            <span>&yen;{{ total.toLocaleString('en-US') }}</span>
+            <span>{{ $t('ticketPurchase.total') }}</span>
+            <span>&yen;{{ formatNumber(total) }}</span>
           </div>
-          <button type="button" class="continue-btn" @click="proceed">{{ isLotteryTier ? 'Apply for Lottery →' : 'Continue to Checkout →' }}</button>
+          <button type="button" class="continue-btn" @click="proceed">{{ isLotteryTier ? $t('ticketPurchase.applyLottery') : $t('ticketPurchase.continueCheckout') }}</button>
         </div>
       </div>
 
       <!-- Step 2: payment -->
       <div v-else-if="step === 2" class="layout">
         <form class="panel" @submit.prevent="placeOrder">
-          <h2 class="panel-title">Contact &amp; payment</h2>
+          <h2 class="panel-title">{{ $t('ticketPurchase.contactPayment') }}</h2>
 
           <div class="field-grid">
             <label class="field">
-              <span class="field__label">Full name</span>
-              <input type="text" v-model="form.name" placeholder="Your name" autocomplete="name">
+              <span class="field__label">{{ $t('ticketPurchase.fullName') }}</span>
+              <input type="text" v-model="form.name" :placeholder="$t('common.yourName')" autocomplete="name">
             </label>
             <label class="field">
-              <span class="field__label">Email</span>
+              <span class="field__label">{{ $t('common.email') }}</span>
               <input type="text" v-model="form.email" placeholder="you@example.com" autocomplete="email">
             </label>
           </div>
 
-          <h2 class="panel-title panel-title--spaced">Payment (mock)</h2>
+          <h2 class="panel-title panel-title--spaced">{{ $t('ticketPurchase.paymentMock') }}</h2>
 
           <label class="field">
-            <span class="field__label">Card number</span>
+            <span class="field__label">{{ $t('ticketPurchase.cardNumber') }}</span>
             <input type="text" v-model="form.cardNumber" placeholder="4242 4242 4242 4242" autocomplete="cc-number" inputmode="numeric">
           </label>
 
           <div class="field-grid">
             <label class="field">
-              <span class="field__label">Expiry</span>
+              <span class="field__label">{{ $t('ticketPurchase.expiry') }}</span>
               <input type="text" v-model="form.cardExpiry" placeholder="MM / YY" autocomplete="cc-exp">
             </label>
             <label class="field">
-              <span class="field__label">CVC</span>
+              <span class="field__label">{{ $t('ticketPurchase.cvc') }}</span>
               <input type="text" v-model="form.cardCvc" placeholder="123" autocomplete="cc-csc" inputmode="numeric">
             </label>
           </div>
@@ -115,22 +115,22 @@
           <p class="form-error" v-if="error" :key="error">{{ error }}</p>
 
           <div class="form-actions">
-            <button type="button" class="back-btn" @click="step = 1">&larr; Back</button>
-            <button type="submit" class="place-order-btn">Place Order &rarr;</button>
+            <button type="button" class="back-btn" @click="step = 1">&larr; {{ $t('ticketPurchase.back') }}</button>
+            <button type="submit" class="place-order-btn">{{ $t('ticketPurchase.placeOrder') }} &rarr;</button>
           </div>
         </form>
 
         <div class="summary">
-          <h2 class="summary__title">Order Summary</h2>
+          <h2 class="summary__title">{{ $t('ticketPurchase.orderSummary') }}</h2>
           <p class="summary__event">{{ concert.title }}</p>
-          <p class="summary__meta">{{ dateLabel }}<template v-if="doorsLabel"> &middot; Doors {{ doorsLabel }}</template></p>
+          <p class="summary__meta">{{ dateLabel }}<template v-if="doorsLabel"> &middot; {{ $t('events.doorsAt', { time: doorsLabel }) }}</template></p>
           <div class="summary__row">
             <span>{{ tierLabel(selectedTier) }} &times;{{ qty }}</span>
-            <span>&yen;{{ total.toLocaleString('en-US') }}</span>
+            <span>&yen;{{ formatNumber(total) }}</span>
           </div>
           <div class="summary__row summary__row--total">
-            <span>Total</span>
-            <span>&yen;{{ total.toLocaleString('en-US') }}</span>
+            <span>{{ $t('ticketPurchase.total') }}</span>
+            <span>&yen;{{ formatNumber(total) }}</span>
           </div>
         </div>
       </div>
@@ -139,16 +139,16 @@
       <div v-else class="confirmation">
         <div class="confirmation__badge">&check;</div>
         <template v-if="outcome === 'lottery'">
-          <h2 class="confirmation__title">You applied!</h2>
-          <p class="confirmation__note">Entry <strong>{{ orderNumber }}</strong> for {{ tierLabel(selectedTier) }} &middot; {{ concert.title }} is in. Winners are notified by email roughly two weeks before the show.</p>
+          <h2 class="confirmation__title">{{ $t('ticketPurchase.appliedTitle') }}</h2>
+          <p class="confirmation__note">{{ $t('ticketPurchase.appliedNote', { orderNumber, tier: tierLabel(selectedTier), title: concert.title }) }}</p>
         </template>
         <template v-else>
-          <h2 class="confirmation__title">You're going!</h2>
-          <p class="confirmation__note">Order <strong>{{ orderNumber }}</strong> is confirmed for {{ concert.title }} &middot; {{ dateLabel }}. This is a mock checkout, so nothing was actually charged.</p>
+          <h2 class="confirmation__title">{{ $t('ticketPurchase.wentTitle') }}</h2>
+          <p class="confirmation__note">{{ $t('ticketPurchase.wentNote', { orderNumber, title: concert.title, date: dateLabel }) }}</p>
         </template>
         <div class="confirmation__actions">
-          <router-link to="/history" class="confirmation__btn">View in History</router-link>
-          <router-link to="/events" class="confirmation__link">Back to events</router-link>
+          <router-link to="/history" class="confirmation__btn">{{ $t('ticketPurchase.viewHistory') }}</router-link>
+          <router-link to="/events" class="confirmation__link">{{ $t('ticketPurchase.backToEvents') }}</router-link>
         </div>
       </div>
     </div>
@@ -156,15 +156,16 @@
 
   <div v-else class="not-found">
     <p class="not-found__title">{{ ineligibleMessage }}</p>
-    <router-link :to="concert ? `/events/${concert.id}` : '/events'" class="not-found__link">&larr; Back to event</router-link>
+    <router-link :to="concert ? `/events/${concert.id}` : '/events'" class="not-found__link">&larr; {{ $t('ticketPurchase.backToEvent') }}</router-link>
   </div>
 </template>
 
 <script>
-import { format, parseISO } from 'date-fns'
+import { parseISO } from 'date-fns'
 
 import { useConcertsStore } from '@/store/concerts'
 import { useNotificationStore } from '@/store/notifications'
+import { formatDate, formatNumber } from '@/utils/format'
 import VenueSeatMap from '@/components/VenueSeatMap.vue'
 
 export default {
@@ -213,11 +214,11 @@ export default {
       return !!this.concert && this.concert.status === 'on_sale' && this.allTicketTypes.length > 0
     },
     ineligibleMessage () {
-      if (!this.concert) return 'We couldn\'t find that event.'
-      if (this.concert.status === 'sold_out') return 'This show is sold out.'
-      if (this.concert.status === 'completed') return 'This show has already happened.'
-      if (this.concert.status === 'cancelled') return 'This show was cancelled.'
-      return 'Tickets for this show aren\'t on sale yet.'
+      if (!this.concert) return this.$t('ticketPurchase.ineligibleNotFound')
+      if (this.concert.status === 'sold_out') return this.$t('ticketPurchase.ineligibleSoldOut')
+      if (this.concert.status === 'completed') return this.$t('ticketPurchase.ineligibleCompleted')
+      if (this.concert.status === 'cancelled') return this.$t('ticketPurchase.ineligibleCancelled')
+      return this.$t('ticketPurchase.ineligibleDefault')
     },
     selectedTier () {
       return this.allTicketTypes.find(tier => tier.id === this.selectedTierId) || this.allTicketTypes[0] || null
@@ -226,16 +227,16 @@ export default {
       return !!this.selectedTier && this.selectedTier.sale_method === 'lottery'
     },
     step2Label () {
-      return this.isLotteryTier ? 'Entry' : 'Payment'
+      return this.isLotteryTier ? this.$t('ticketPurchase.stepEntry') : this.$t('ticketPurchase.stepPayment')
     },
     total () {
       return this.selectedTier ? this.selectedTier.price * this.qty : 0
     },
     dateLabel () {
-      return this.concert ? format(parseISO(this.concert.event_datetime), 'EEE, MMM d, yyyy · h:mm a') : ''
+      return this.concert ? formatDate(parseISO(this.concert.event_datetime), 'EEE, MMM d, yyyy · h:mm a') : ''
     },
     doorsLabel () {
-      return this.concert && this.concert.doors_open_at ? format(parseISO(this.concert.doors_open_at), 'h:mm a') : null
+      return this.concert && this.concert.doors_open_at ? formatDate(parseISO(this.concert.doors_open_at), 'h:mm a') : null
     }
   },
 
@@ -272,6 +273,7 @@ export default {
   },
 
   methods: {
+    formatNumber,
     stepClass (n) {
       return { 'is-active': this.step === n, 'is-done': this.step > n }
     },
@@ -297,18 +299,19 @@ export default {
 
       useNotificationStore().add({
         type: 'lottery-entry',
-        title: 'Lottery entry submitted',
-        message: `Entry ${this.orderNumber} for ${this.tierLabel(this.selectedTier)} · ${this.concert.title} is in.`,
+        titleKey: 'ticketPurchase.notifLotteryTitle',
+        messageKey: 'ticketPurchase.notifLotteryMessage',
+        messageParams: { orderNumber: this.orderNumber, tier: this.tierLabel(this.selectedTier), title: this.concert.title },
         to: '/history'
       })
     },
     placeOrder () {
       if (!this.form.name.trim() || !this.form.email.trim()) {
-        this.error = 'Fill in your name and email.'
+        this.error = this.$t('ticketPurchase.errorContactEmail')
         return
       }
       if (!this.form.cardNumber.trim() || !this.form.cardExpiry.trim() || !this.form.cardCvc.trim()) {
-        this.error = 'Enter mock payment details to continue.'
+        this.error = this.$t('ticketPurchase.errorPayment')
         return
       }
 
@@ -319,8 +322,9 @@ export default {
 
       useNotificationStore().add({
         type: 'purchase',
-        title: 'Tickets confirmed',
-        message: `Order ${this.orderNumber} for ${this.concert.title} (¥${this.total.toLocaleString('en-US')}) is confirmed.`,
+        titleKey: 'ticketPurchase.notifPurchaseTitle',
+        messageKey: 'ticketPurchase.notifPurchaseMessage',
+        messageParams: { orderNumber: this.orderNumber, title: this.concert.title, amount: `¥${formatNumber(this.total)}` },
         to: '/history'
       })
     }

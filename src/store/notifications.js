@@ -8,8 +8,9 @@ const SEED = [
   {
     id: 'seed-lottery-1',
     type: 'lottery-won',
-    title: 'Lottery result',
-    message: 'You won the lottery for Nova Iris Anniversary Live 2026! 🎉',
+    titleKey: 'notifications.seedLotteryResultTitle',
+    messageKey: 'notifications.seedLotteryWonMessage',
+    messageParams: { event: 'Nova Iris Anniversary Live 2026' },
     to: '/events/nova-anniversary-2026',
     timestamp: '2026-09-01T10:00:00',
     read: false
@@ -17,8 +18,9 @@ const SEED = [
   {
     id: 'seed-lottery-2',
     type: 'lottery-lost',
-    title: 'Lottery result',
-    message: 'Entries closed for Starlight Aria x Nova Iris: Collab Night — not selected this time.',
+    titleKey: 'notifications.seedLotteryResultTitle',
+    messageKey: 'notifications.seedLotteryLostMessage',
+    messageParams: { event: 'Starlight Aria x Nova Iris: Collab Night' },
     to: '/events/aria-nova-collab-night',
     timestamp: '2026-08-28T14:30:00',
     read: true

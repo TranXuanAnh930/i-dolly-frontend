@@ -25,7 +25,7 @@
           <div class="field-grid">
             <label class="field">
               <span class="field__label">{{ $t('checkout.fullName') }}</span>
-              <input type="text" v-model="form.name" placeholder="Your name" autocomplete="name">
+              <input type="text" v-model="form.name" :placeholder="$t('common.yourName')" autocomplete="name">
             </label>
             <label class="field">
               <span class="field__label">{{ $t('common.email') }}</span>
@@ -35,13 +35,13 @@
 
           <label class="field">
             <span class="field__label">{{ $t('common.address') }}</span>
-            <input type="text" v-model="form.address" placeholder="Street address" autocomplete="street-address">
+            <input type="text" v-model="form.address" :placeholder="$t('common.streetAddress')" autocomplete="street-address">
           </label>
 
           <div class="field-grid">
             <label class="field">
               <span class="field__label">{{ $t('common.city') }}</span>
-              <input type="text" v-model="form.city" placeholder="City" autocomplete="address-level2">
+              <input type="text" v-model="form.city" :placeholder="$t('common.city')" autocomplete="address-level2">
             </label>
             <label class="field">
               <span class="field__label">{{ $t('common.postalCode') }}</span>
@@ -77,12 +77,12 @@
           <div class="summary__lines">
             <div v-for="line in lines" :key="line.productId" class="summary__line">
               <span>{{ line.product.name }} &times;{{ line.qty }}</span>
-              <span>&yen;{{ (line.product.price * line.qty).toLocaleString('en-US') }}</span>
+              <span>&yen;{{ formatNumber(line.product.price * line.qty) }}</span>
             </div>
           </div>
           <div class="summary__row summary__row--total">
             <span>{{ $t('checkout.total') }}</span>
-            <span>&yen;{{ subtotal.toLocaleString('en-US') }}</span>
+            <span>&yen;{{ formatNumber(subtotal) }}</span>
           </div>
         </div>
       </div>
@@ -100,6 +100,7 @@
 import { useCartStore } from '@/store/cart'
 import { useCatalogStore } from '@/store/catalog'
 import { useNotificationStore } from '@/store/notifications'
+import { formatNumber } from '@/utils/format'
 
 export default {
   name: 'CheckoutPage',
@@ -141,6 +142,7 @@ export default {
   },
 
   methods: {
+    formatNumber,
     placeOrder () {
       if (!this.form.name.trim() || !this.form.email.trim() || !this.form.address.trim()) {
         this.error = this.$t('checkout.errorContact')
@@ -157,8 +159,9 @@ export default {
 
       useNotificationStore().add({
         type: 'purchase',
-        title: this.$t('checkout.notificationTitle'),
-        message: this.$t('checkout.notificationMessage', { orderNumber: this.orderNumber, amount: this.subtotal.toLocaleString('en-US') }),
+        titleKey: 'checkout.notificationTitle',
+        messageKey: 'checkout.notificationMessage',
+        messageParams: { orderNumber: this.orderNumber, amount: formatNumber(this.subtotal) },
         to: '/history'
       })
 

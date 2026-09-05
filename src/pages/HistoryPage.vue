@@ -38,10 +38,10 @@
 
             <span class="item__body">
               <span class="item__top">
-                <span class="item__title">{{ item.title }}</span>
-                <span class="item__time">{{ formatDate(item.timestamp) }}</span>
+                <span class="item__title">{{ notificationTitle(item) }}</span>
+                <span class="item__time">{{ formatTimestamp(item.timestamp) }}</span>
               </span>
-              <span class="item__message">{{ item.message }}</span>
+              <span class="item__message">{{ notificationMessage(item) }}</span>
             </span>
           </router-link>
         </div>
@@ -56,9 +56,10 @@
 </template>
 
 <script>
-import { format, parseISO } from 'date-fns'
+import { parseISO } from 'date-fns'
 
 import { useNotificationStore } from '@/store/notifications'
+import { formatDate } from '@/utils/format'
 
 export default {
   name: 'HistoryPage',
@@ -79,8 +80,14 @@ export default {
     markAllRead () {
       this.notifications.markAllRead()
     },
-    formatDate (timestamp) {
-      return format(parseISO(timestamp), 'MMM d, yyyy · h:mm a')
+    formatTimestamp (timestamp) {
+      return formatDate(parseISO(timestamp), 'MMM d, yyyy · h:mm a')
+    },
+    notificationTitle (item) {
+      return item.titleKey ? this.$t(item.titleKey, item.titleParams || {}) : item.title
+    },
+    notificationMessage (item) {
+      return item.messageKey ? this.$t(item.messageKey, item.messageParams || {}) : item.message
     }
   }
 }

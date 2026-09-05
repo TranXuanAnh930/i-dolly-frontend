@@ -1,5 +1,5 @@
 <template>
-  <transition-group name="slide" tag="div" class="ui-toast-list component">
+  <transition-group name="toast" tag="div" class="ui-toast-list component">
     <UiToast
       @remove="onRemove"
       v-for="item in toastsList"
@@ -48,22 +48,43 @@ export default {
 
 <style lang="scss" scoped>
 .ui-toast-list.component {
-  top: 50px;
-  left: 50px;
-  width: 300px;
+  top: 20px;
+  right: 20px;
+  width: 340px;
+  max-width: calc(100vw - 24px);
   position: fixed;
   z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+
+  @include media_mobile {
+    top: 12px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+  }
 }
 
-.slide-leave-active,
-.slide-enter-active {
-  transition: .3s;
-}
-.slide-enter {
-  transform: translate(0, 100%);
-}
-.slide-leave-to {
-  transform: translate(-200%, 0);
+.toast-move,
+.toast-enter-active,
+.toast-leave-active {
+  transition: transform .3s cubic-bezier(.32, .72, 0, 1), opacity .3s ease;
 }
 
+.toast-enter-from {
+  opacity: 0;
+  transform: translate(24px, -8px) scale(.96);
+}
+
+.toast-leave-to {
+  opacity: 0;
+  transform: translate(24px, 0) scale(.96);
+}
+
+.toast-leave-active {
+  position: absolute;
+  width: 100%;
+}
 </style>

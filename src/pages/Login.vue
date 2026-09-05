@@ -34,7 +34,7 @@
               v-model="password"
               placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"
               autocomplete="current-password">
-            <button type="button" class="field__toggle" @click="showPassword = !showPassword" :aria-label="showPassword ? 'Hide password' : 'Show password'">
+            <button type="button" class="field__toggle" @click="showPassword = !showPassword" :aria-label="showPassword ? $t('common.hidePassword') : $t('common.showPassword')">
               <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
                 <path d="M1.5 10S4.5 4 10 4s8.5 6 8.5 6-3 6-8.5 6-8.5-6-8.5-6Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
                 <circle cx="10" cy="10" r="2.4" stroke="currentColor" stroke-width="1.5"/>
@@ -85,7 +85,7 @@ export default {
         await this.$router.push(this.landingRouteFor(useUserStore().currentUser.role))
       } catch (error) {
         useToastStore().add({ type: 'error', message: error.message })
-        this.error = error.status === 404 ? 'User with same email not found' : error.message
+        this.error = error.status === 404 ? this.$t('login.errorUserNotFound') : error.message
       }
     },
     // Managers/admins land straight in their own working area rather than

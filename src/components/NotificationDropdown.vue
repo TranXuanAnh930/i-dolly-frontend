@@ -36,8 +36,8 @@
               </svg>
             </span>
             <span class="notif__body">
-              <span class="notif__title">{{ item.title }}</span>
-              <span class="notif__message">{{ item.message }}</span>
+              <span class="notif__title">{{ notificationTitle(item) }}</span>
+              <span class="notif__message">{{ notificationMessage(item) }}</span>
               <span class="notif__time">{{ relativeTime(item.timestamp) }}</span>
             </span>
           </router-link>
@@ -51,9 +51,10 @@
 </template>
 
 <script>
-import { formatDistanceToNow, parseISO } from 'date-fns'
+import { parseISO } from 'date-fns'
 
 import { useNotificationStore } from '@/store/notifications'
+import { formatRelativeTime } from '@/utils/format'
 import UiOnClickOutside from './UiOnClickOutside.vue'
 
 export default {
@@ -94,7 +95,13 @@ export default {
       this.notifications.markAllRead()
     },
     relativeTime (timestamp) {
-      return formatDistanceToNow(parseISO(timestamp), { addSuffix: true })
+      return formatRelativeTime(parseISO(timestamp))
+    },
+    notificationTitle (item) {
+      return item.titleKey ? this.$t(item.titleKey, item.titleParams || {}) : item.title
+    },
+    notificationMessage (item) {
+      return item.messageKey ? this.$t(item.messageKey, item.messageParams || {}) : item.message
     }
   }
 }

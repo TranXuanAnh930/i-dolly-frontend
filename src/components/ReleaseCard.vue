@@ -18,7 +18,7 @@
       <div class="footer">
         <span class="price">${{ formattedPrice }}</span>
         <button type="button" class="add-to-cart-btn" :class="{ 'is-added': justAdded }" @click="addToCart">
-          {{ justAdded ? 'Added ✓' : 'Add to Cart' }}
+          {{ justAdded ? $t('store.addedToCart') : $t('store.addToCart') }}
         </button>
       </div>
     </div>
@@ -26,11 +26,12 @@
 </template>
 
 <script>
-import { format, parseISO } from 'date-fns'
+import { parseISO } from 'date-fns'
 
 import { useCatalogStore } from '@/store/catalog'
 import { useCartStore } from '@/store/cart'
 import { resolveMediaUrl } from '@/utils/media'
+import { formatDate, formatNumber } from '@/utils/format'
 
 export default {
   name: 'ReleaseCard',
@@ -59,12 +60,15 @@ export default {
     metaLine () {
       const album = this.release.album || {}
       const parts = []
-      if (album.track_count) parts.push(`${album.track_count} ${album.track_count === 1 ? 'track' : 'tracks'}`)
-      if (album.release_date) parts.push(format(parseISO(album.release_date), 'MMM d, yyyy'))
+      if (album.track_count) {
+        const key = album.track_count === 1 ? 'store.trackCountOne' : 'store.trackCountOther'
+        parts.push(this.$t(key, { count: album.track_count }))
+      }
+      if (album.release_date) parts.push(formatDate(parseISO(album.release_date), 'MMM d, yyyy'))
       return parts.join(' · ')
     },
     formattedPrice () {
-      return this.release.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      return formatNumber(this.release.price, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
     },
     genres () {
       return useCatalogStore().genresForRelease(this.release.id)

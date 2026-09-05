@@ -5,7 +5,7 @@
 -->
 <template>
   <figure class="venue-map">
-    <svg viewBox="0 0 400 320" role="img" font-family="'M PLUS 1', sans-serif" aria-label="Illustrative seating diagram: VIP, Premium and Regular zones fanning out from the stage.">
+    <svg viewBox="0 0 400 320" role="img" font-family="'M PLUS 1', sans-serif" :aria-label="$t('events.seatMapCaption')">
       <defs>
         <filter id="venueMapShadow" x="-20%" y="-20%" width="140%" height="140%">
           <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#0b1220" flood-opacity=".18"/>
@@ -15,25 +15,25 @@
       <rect x="8" y="8" width="384" height="304" rx="18" fill="none" stroke="#dfeaf6" stroke-width="2"/>
 
       <rect x="130" y="24" width="140" height="42" rx="10" fill="#8a92a6" filter="url(#venueMapShadow)"/>
-      <text x="200" y="50" text-anchor="middle" font-weight="700" font-size="13" letter-spacing="1.5" fill="#ffffff">STAGE</text>
+      <text x="200" y="50" text-anchor="middle" font-weight="700" font-size="13" letter-spacing="1.5" fill="#ffffff">{{ $t('events.seatMapStage') }}</text>
 
       <polygon points="150,80 250,80 263,122 137,122" fill="#F2B705" filter="url(#venueMapShadow)"/>
-      <text x="200" y="105" text-anchor="middle" font-weight="700" font-size="13" fill="#ffffff">VIP</text>
+      <text x="200" y="105" text-anchor="middle" font-weight="700" font-size="13" fill="#ffffff">{{ $t('events.seatMapVip') }}</text>
 
       <polygon points="118,132 282,132 307,194 93,194" fill="#B6379C" filter="url(#venueMapShadow)"/>
-      <text x="200" y="167" text-anchor="middle" font-weight="700" font-size="13" fill="#ffffff">Premium</text>
+      <text x="200" y="167" text-anchor="middle" font-weight="700" font-size="13" fill="#ffffff">{{ $t('events.seatMapPremium') }}</text>
 
       <polygon points="66,204 334,204 380,302 20,302" fill="#1F8FD6" filter="url(#venueMapShadow)"/>
-      <text x="200" y="257" text-anchor="middle" font-weight="700" font-size="13" fill="#ffffff">Regular</text>
+      <text x="200" y="257" text-anchor="middle" font-weight="700" font-size="13" fill="#ffffff">{{ $t('events.seatMapRegular') }}</text>
     </svg>
 
     <div class="venue-map__legend">
-      <span class="legend-item"><span class="legend-swatch" style="background:#F2B705"></span>VIP</span>
-      <span class="legend-item"><span class="legend-swatch" style="background:#B6379C"></span>Premium</span>
-      <span class="legend-item"><span class="legend-swatch" style="background:#1F8FD6"></span>Regular</span>
+      <span class="legend-item"><span class="legend-swatch" style="background:#F2B705"></span>{{ $t('events.seatMapVip') }}</span>
+      <span class="legend-item"><span class="legend-swatch" style="background:#B6379C"></span>{{ $t('events.seatMapPremium') }}</span>
+      <span class="legend-item"><span class="legend-swatch" style="background:#1F8FD6"></span>{{ $t('events.seatMapRegular') }}</span>
     </div>
 
-    <figcaption class="venue-map__caption">Illustrative only — actual seating varies by venue and show.</figcaption>
+    <figcaption class="venue-map__caption">{{ $t('events.seatMapCaption') }}</figcaption>
   </figure>
 </template>
 

@@ -14,17 +14,18 @@
     <div class="body">
       <p class="description" v-if="member.short_intro">{{ member.short_intro }}</p>
       <p class="meta" v-if="member.hometown">{{ member.hometown }}</p>
-      <p class="birthday" v-if="birthdayLabel">Birthday &middot; {{ birthdayLabel }}</p>
+      <p class="birthday" v-if="birthdayLabel">{{ $t('idolDetail.birthday') }} &middot; {{ birthdayLabel }}</p>
     </div>
   </router-link>
 </template>
 
 <script>
-import { format, parseISO } from 'date-fns'
+import { parseISO } from 'date-fns'
 
 import { useIdolsStore } from '@/store/idols'
 import { resolveMediaUrl } from '@/utils/media'
 import { fallbackPortraitFor } from '@/utils/idolPortrait'
+import { formatDate } from '@/utils/format'
 import IdolPortrait from './IdolPortrait.vue'
 
 export default {
@@ -48,7 +49,7 @@ export default {
     },
     birthdayLabel () {
       if (!this.member.date_of_birth) return null
-      return format(parseISO(this.member.date_of_birth), 'MMM d')
+      return formatDate(parseISO(this.member.date_of_birth), 'MMM d')
     },
     fallbackPortrait () {
       return fallbackPortraitFor(this.member, this.color.hex)

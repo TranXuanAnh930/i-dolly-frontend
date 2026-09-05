@@ -17,7 +17,7 @@
               <circle cx="10" cy="6.5" r="3.2" stroke="currentColor" stroke-width="1.6"/>
               <path d="M3.5 17c.7-3.4 3.6-5.5 6.5-5.5s5.8 2.1 6.5 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
             </svg>
-            <input id="name" type="text" v-model="name" placeholder="Your name" autocomplete="name">
+            <input id="name" type="text" v-model="name" :placeholder="$t('common.yourName')" autocomplete="name">
           </div>
         </label>
 
@@ -43,9 +43,9 @@
               id="password"
               :type="showPassword ? 'text' : 'password'"
               v-model="password"
-              placeholder="At least 6 characters"
+              :placeholder="$t('register.passwordPlaceholder')"
               autocomplete="new-password">
-            <button type="button" class="field__toggle" @click="showPassword = !showPassword" :aria-label="showPassword ? 'Hide password' : 'Show password'">
+            <button type="button" class="field__toggle" @click="showPassword = !showPassword" :aria-label="showPassword ? $t('common.hidePassword') : $t('common.showPassword')">
               <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
                 <path d="M1.5 10S4.5 4 10 4s8.5 6 8.5 6-3 6-8.5 6-8.5-6-8.5-6Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
                 <circle cx="10" cy="10" r="2.4" stroke="currentColor" stroke-width="1.5"/>
@@ -62,7 +62,7 @@
               <rect x="4" y="9" width="12" height="9" rx="2.2" stroke="currentColor" stroke-width="1.6"/>
               <path d="M6.5 9V6.5a3.5 3.5 0 0 1 7 0V9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
             </svg>
-            <input id="confirm" :type="showPassword ? 'text' : 'password'" v-model="confirmPassword" placeholder="Type it again" autocomplete="new-password">
+            <input id="confirm" :type="showPassword ? 'text' : 'password'" v-model="confirmPassword" :placeholder="$t('register.confirmPasswordPlaceholder')" autocomplete="new-password">
           </div>
         </label>
 

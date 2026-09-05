@@ -19,18 +19,18 @@
             <div class="line__info">
               <span class="line__type">{{ line.product.category }}<template v-if="artistFor(line.product)"> &middot; {{ artistFor(line.product).name }}</template></span>
               <span class="line__title">{{ line.product.name }}</span>
-              <span class="line__price">&yen;{{ line.product.price.toLocaleString('en-US') }} each</span>
+              <span class="line__price">{{ $t('cart.unitPrice', { price: `¥${formatNumber(line.product.price)}` }) }}</span>
             </div>
 
             <div class="line__qty">
-              <button type="button" class="qty-btn" @click="updateQty(line.productId, line.qty - 1)" aria-label="Decrease quantity">&minus;</button>
+              <button type="button" class="qty-btn" @click="updateQty(line.productId, line.qty - 1)" :aria-label="$t('common.decreaseQuantity')">&minus;</button>
               <span class="qty-value">{{ line.qty }}</span>
-              <button type="button" class="qty-btn" @click="updateQty(line.productId, line.qty + 1)" aria-label="Increase quantity">+</button>
+              <button type="button" class="qty-btn" @click="updateQty(line.productId, line.qty + 1)" :aria-label="$t('common.increaseQuantity')">+</button>
             </div>
 
-            <span class="line__total">&yen;{{ (line.product.price * line.qty).toLocaleString('en-US') }}</span>
+            <span class="line__total">&yen;{{ formatNumber(line.product.price * line.qty) }}</span>
 
-            <button type="button" class="line__remove" @click="removeItem(line.productId)" aria-label="Remove item">
+            <button type="button" class="line__remove" @click="removeItem(line.productId)" :aria-label="$t('cart.removeItem')">
               <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3 13 13M13 3 3 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
             </button>
           </div>
@@ -40,7 +40,7 @@
           <h2 class="summary__title">{{ $t('cart.orderSummary') }}</h2>
           <div class="summary__row">
             <span>{{ $t('cart.subtotal', { count: itemCount }) }}</span>
-            <span>&yen;{{ subtotal.toLocaleString('en-US') }}</span>
+            <span>&yen;{{ formatNumber(subtotal) }}</span>
           </div>
           <div class="summary__row">
             <span>{{ $t('cart.shipping') }}</span>
@@ -48,7 +48,7 @@
           </div>
           <div class="summary__row summary__row--total">
             <span>{{ $t('cart.total') }}</span>
-            <span>&yen;{{ subtotal.toLocaleString('en-US') }}</span>
+            <span>&yen;{{ formatNumber(subtotal) }}</span>
           </div>
           <router-link to="/checkout" class="checkout-btn">{{ $t('cart.checkout') }} &rarr;</router-link>
           <router-link to="/store" class="continue-link">&larr; {{ $t('cart.continueShopping') }}</router-link>
@@ -68,6 +68,7 @@
 import { useCartStore } from '@/store/cart'
 import { useCatalogStore } from '@/store/catalog'
 import { resolveMediaUrl } from '@/utils/media'
+import { formatNumber } from '@/utils/format'
 
 export default {
   name: 'CartPage',
@@ -95,6 +96,7 @@ export default {
   },
 
   methods: {
+    formatNumber,
     artistFor (product) {
       return this.catalogStore.artistForAlbum(product)
     },

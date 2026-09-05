@@ -6,7 +6,7 @@
   <div v-else-if="concert" class="event-detail-page">
     <section class="hero">
       <div class="wrapper hero__inner">
-        <router-link to="/events" class="back-link">&larr; All events</router-link>
+        <router-link to="/events" class="back-link">&larr; {{ $t('eventDetail.backToEvents') }}</router-link>
 
         <div class="hero__tags">
           <UnitPill v-for="group in performingGroups" :key="group.id" :unit="unitFor(group)"/>
@@ -21,20 +21,20 @@
     <div class="wrapper content">
       <div class="info-table">
         <div class="info-row">
-          <span class="info-row__label">Event Date</span>
+          <span class="info-row__label">{{ $t('eventDetail.eventDate') }}</span>
           <span class="info-row__value">
             {{ dateLabel }}
-            <template v-if="doorsLabel"> &middot; Doors {{ doorsLabel }}</template>
+            <template v-if="doorsLabel"> &middot; {{ $t('events.doorsAt', { time: doorsLabel }) }}</template>
           </span>
         </div>
         <div class="info-row" v-if="venue">
-          <span class="info-row__label">Venue</span>
+          <span class="info-row__label">{{ $t('eventDetail.venue') }}</span>
           <span class="info-row__value">{{ venue.name }}<template v-if="venue.city"> &middot; {{ venue.city }}</template></span>
         </div>
       </div>
 
       <section class="block" v-if="lineup.length">
-        <h2 class="block__title">Lineup</h2>
+        <h2 class="block__title">{{ $t('eventDetail.lineup') }}</h2>
         <div class="section-rule"></div>
         <p class="block__lead" v-if="performingGroupNames">{{ performingGroupNames }}</p>
 
@@ -52,20 +52,20 @@
       </section>
 
       <section class="block">
-        <h2 class="block__title">Tickets</h2>
+        <h2 class="block__title">{{ $t('eventDetail.tickets') }}</h2>
         <div class="section-rule"></div>
 
         <div class="tiers" v-if="ticketTypes.length">
           <div class="tier" v-for="tier in ticketTypes" :key="tier.id">
             <div class="tier__info">
               <span class="tier__name">{{ tierLabel(tier) }}</span>
-              <span class="tier__note">{{ tier.sale_method === 'lottery' ? 'Lottery' : 'Direct sale' }} &middot; {{ remaining(tier) }} left</span>
+              <span class="tier__note">{{ tier.sale_method === 'lottery' ? $t('eventDetail.lotteryLabel') : $t('eventDetail.directSaleLabel') }} &middot; {{ $t('eventDetail.leftSuffix', { count: remaining(tier) }) }}</span>
             </div>
-            <span class="tier__price">&yen;{{ tier.price.toLocaleString('en-US') }}</span>
+            <span class="tier__price">&yen;{{ formatNumber(tier.price) }}</span>
           </div>
         </div>
 
-        <h3 class="subhead">Seat map</h3>
+        <h3 class="subhead">{{ $t('eventDetail.seatMap') }}</h3>
         <VenueSeatMap class="seat-map"/>
 
         <div class="sale-panel">
@@ -81,44 +81,44 @@
       </section>
 
       <section class="block">
-        <h2 class="block__title">Good to know</h2>
+        <h2 class="block__title">{{ $t('eventDetail.goodToKnow') }}</h2>
         <div class="section-rule"></div>
 
         <div class="accordion">
           <details class="accordion-item" open>
             <summary>
-              Event guidelines
+              {{ $t('eventDetail.eventGuidelines') }}
               <svg class="accordion-item__chevron" viewBox="0 0 20 20"><path d="M5 7.5 10 12.5 15 7.5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </summary>
             <ul class="accordion-item__list">
-              <li>Please arrive at least 30 minutes before doors open — bag checks can take a while.</li>
-              <li>Professional cameras and recording equipment aren't allowed inside the venue.</li>
-              <li>Light sticks are welcome; keep them below shoulder height during ballads.</li>
-              <li>Re-entry isn't permitted once you've left the venue.</li>
+              <li>{{ $t('guidelines.venueItem1') }}</li>
+              <li>{{ $t('guidelines.venueItem2') }}</li>
+              <li>{{ $t('guidelines.venueItem3') }}</li>
+              <li>{{ $t('guidelines.venueItem4') }}</li>
             </ul>
           </details>
 
           <details class="accordion-item">
             <summary>
-              Q&amp;A
+              {{ $t('eventDetail.qa') }}
               <svg class="accordion-item__chevron" viewBox="0 0 20 20"><path d="M5 7.5 10 12.5 15 7.5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </summary>
             <dl class="accordion-item__qa">
               <div class="qa-pair">
-                <dt>Can I get a refund?</dt>
-                <dd>Tickets are non-refundable, except if the event is cancelled or rescheduled.</dd>
+                <dt>{{ $t('eventDetail.qaRefundQ') }}</dt>
+                <dd>{{ $t('eventDetail.qaRefundA') }}</dd>
               </div>
               <div class="qa-pair">
-                <dt>Can I transfer my ticket to someone else?</dt>
-                <dd>Not through I-Dolly directly — the name on the ticket must match the attendee's ID at entry.</dd>
+                <dt>{{ $t('eventDetail.qaTransferQ') }}</dt>
+                <dd>{{ $t('eventDetail.qaTransferA') }}</dd>
               </div>
               <div class="qa-pair" v-if="hasLotteryTickets">
-                <dt>When will I know if I won the lottery?</dt>
-                <dd>Winners are notified by email roughly two weeks before the show.</dd>
+                <dt>{{ $t('eventDetail.qaLotteryQ') }}</dt>
+                <dd>{{ $t('eventDetail.qaLotteryA') }}</dd>
               </div>
               <div class="qa-pair">
-                <dt>Is there an age restriction?</dt>
-                <dd>Most shows are all-ages. Late-night sets that aren't are always noted on the event page.</dd>
+                <dt>{{ $t('eventDetail.qaAgeQ') }}</dt>
+                <dd>{{ $t('eventDetail.qaAgeA') }}</dd>
               </div>
             </dl>
           </details>
@@ -128,18 +128,19 @@
   </div>
 
   <div v-else class="not-found">
-    <p class="not-found__title">{{ concertsStore.error || 'We couldn\'t find that event.' }}</p>
-    <router-link to="/events" class="not-found__link">&larr; Back to events</router-link>
+    <p class="not-found__title">{{ concertsStore.error || $t('eventDetail.notFound') }}</p>
+    <router-link to="/events" class="not-found__link">&larr; {{ $t('checkout.backToEvents') }}</router-link>
   </div>
 </template>
 
 <script>
-import { format, parseISO } from 'date-fns'
+import { parseISO } from 'date-fns'
 
 import { useConcertsStore } from '@/store/concerts'
 import { useIdolsStore } from '@/store/idols'
 import { resolveMediaUrl } from '@/utils/media'
 import { fallbackPortraitFor } from '@/utils/idolPortrait'
+import { formatDate, formatNumber } from '@/utils/format'
 import UnitPill from '@/components/UnitPill.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import IdolPortrait from '@/components/IdolPortrait.vue'
@@ -207,34 +208,34 @@ export default {
       return this.performingGroups.map(group => group.name).join(', ')
     },
     dateLabel () {
-      return this.concert ? format(parseISO(this.concert.event_datetime), 'EEE, MMM d, yyyy · h:mm a') : ''
+      return this.concert ? formatDate(parseISO(this.concert.event_datetime), 'EEE, MMM d, yyyy · h:mm a') : ''
     },
     doorsLabel () {
-      return this.concert && this.concert.doors_open_at ? format(parseISO(this.concert.doors_open_at), 'h:mm a') : null
+      return this.concert && this.concert.doors_open_at ? formatDate(parseISO(this.concert.doors_open_at), 'h:mm a') : null
     },
     ctaDisabled () {
       return !this.concert || this.concert.status !== 'on_sale' || !this.ticketTypes.length
     },
     ctaLabel () {
       if (!this.concert) return ''
-      if (this.concert.status === 'sold_out') return 'Sold Out'
-      if (this.concert.status === 'scheduled') return 'Coming Soon'
-      if (this.concert.status === 'completed') return 'Event Ended'
-      if (this.concert.status === 'cancelled') return 'Cancelled'
-      if (!this.ticketTypes.length) return 'Not On Sale'
-      return 'Apply →'
+      if (this.concert.status === 'sold_out') return this.$t('eventDetail.statusSoldOut')
+      if (this.concert.status === 'scheduled') return this.$t('eventDetail.statusComingSoon')
+      if (this.concert.status === 'completed') return this.$t('eventDetail.statusEnded')
+      if (this.concert.status === 'cancelled') return this.$t('eventDetail.statusCancelled')
+      if (!this.ticketTypes.length) return this.$t('eventDetail.statusNotOnSale')
+      return this.$t('eventDetail.ctaApply')
     },
     ctaTo () {
       return this.concert ? `/events/${this.concert.id}/seats` : ''
     },
     saleNote () {
       if (!this.concert) return ''
-      if (this.concert.status === 'sold_out') return 'All seats for this show are gone — check back for resale.'
-      if (this.concert.status === 'scheduled') return 'Sale details haven\'t been announced yet. Check back soon.'
-      if (this.concert.status === 'completed') return 'This show has already happened.'
-      if (this.concert.status === 'cancelled') return 'This show was cancelled.'
-      if (!this.directTicketTypes.length) return 'This show sells through a lottery — apply on the next screen.'
-      return 'Apply for the lottery or reserve seats directly on the next screen.'
+      if (this.concert.status === 'sold_out') return this.$t('eventDetail.saleNoteSoldOut')
+      if (this.concert.status === 'scheduled') return this.$t('eventDetail.saleNoteScheduled')
+      if (this.concert.status === 'completed') return this.$t('eventDetail.saleNoteCompleted')
+      if (this.concert.status === 'cancelled') return this.$t('eventDetail.saleNoteCancelled')
+      if (!this.directTicketTypes.length) return this.$t('eventDetail.saleNoteLotteryOnly')
+      return this.$t('eventDetail.saleNoteDefault')
     }
   },
 
@@ -257,6 +258,7 @@ export default {
   },
 
   methods: {
+    formatNumber,
     fallbackPortraitFor,
     colorFor (idol) {
       return this.idolsStore.colorForIdol(idol)

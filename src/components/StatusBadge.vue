@@ -1,6 +1,6 @@
 <template>
   <span class="status-badge" :style="{ backgroundColor: meta.bg, color: meta.color }">
-    {{ meta.label }}
+    {{ $t(meta.labelKey) }}
   </span>
 </template>
 

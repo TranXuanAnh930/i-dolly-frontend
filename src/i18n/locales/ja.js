@@ -3,13 +3,21 @@ export default {
     save: '保存',
     submit: '送信',
     cancel: 'キャンセル',
+    close: '閉じる',
     name: 'お名前',
     email: 'メールアドレス',
     password: 'パスワード',
     confirmPassword: 'パスワード（確認）',
     address: '住所',
     city: '市区町村',
-    postalCode: '郵便番号'
+    postalCode: '郵便番号',
+    yourName: 'お名前',
+    streetAddress: '番地・建物名',
+    showPassword: 'パスワードを表示',
+    hidePassword: 'パスワードを隠す',
+    decreaseQuantity: '数量を減らす',
+    increaseQuantity: '数量を増やす',
+    menu: 'メニュー'
   },
 
   nav: {
@@ -26,7 +34,10 @@ export default {
     title: '通知',
     markAllRead: 'すべて既読にする',
     empty: '通知はまだありません。',
-    more: 'もっと見る'
+    more: 'もっと見る',
+    seedLotteryResultTitle: '抽選結果',
+    seedLotteryWonMessage: '{event}の抽選に当選しました！🎉',
+    seedLotteryLostMessage: '{event}の抽選受付は終了しました — 今回は落選となりました。'
   },
 
   menu: {
@@ -55,7 +66,19 @@ export default {
     resultCount: '{count}件のイベント',
     noResults: '条件に一致するイベントが見つかりません。',
     noResultsHint: '検索条件をリセットするか、別のユニットを選んでみてください。',
-    clearFilters: 'フィルターをリセット'
+    clearFilters: 'フィルターをリセット',
+    capacity: '収容人数 {count}人',
+    doorsAt: '開場 {time}',
+    statusScheduled: '近日公開',
+    statusOnSale: '発売中',
+    statusSoldOut: '売り切れ',
+    statusCompleted: '終了',
+    statusCancelled: '中止',
+    seatMapStage: 'ステージ',
+    seatMapVip: 'VIP',
+    seatMapPremium: 'プレミアム',
+    seatMapRegular: 'レギュラー',
+    seatMapCaption: 'イメージ図です — 実際の座席は会場や公演により異なります。'
   },
 
   members: {
@@ -77,7 +100,11 @@ export default {
     typeSingle: 'シングル',
     unitLabel: 'ユニット',
     resultCount: '{count}件のアイテム',
-    noResults: '条件に一致するアイテムが見つかりません。'
+    noResults: '条件に一致するアイテムが見つかりません。',
+    addToCart: 'カートに入れる',
+    addedToCart: '追加しました ✓',
+    trackCountOne: '{count}曲',
+    trackCountOther: '{count}曲'
   },
 
   cart: {
@@ -92,7 +119,9 @@ export default {
     continueShopping: '買い物を続ける',
     emptyTitle: 'カートは空です。',
     emptyHint: 'ストアをチェックしてお気に入りを見つけよう。',
-    goToStore: 'ストアへ'
+    goToStore: 'ストアへ',
+    unitPrice: '{price}（1点あたり）',
+    removeItem: '削除'
   },
 
   checkout: {
@@ -205,7 +234,8 @@ export default {
     subtitle: 'ログインして座席の確保や抽選応募をしよう。',
     submit: 'ログイン',
     noAccount: 'アカウントをお持ちでない方は',
-    register: '新規登録'
+    register: '新規登録',
+    errorUserNotFound: '同じメールアドレスのユーザーが見つかりません'
   },
 
   register: {
@@ -219,6 +249,99 @@ export default {
     errorEmail: '正しいメールアドレスを入力してください。',
     errorPasswordLength: 'パスワードは6文字以上で入力してください。',
     errorPasswordMatch: 'パスワードが一致しません。',
-    successMessage: '{name}さん、ようこそ！アカウントの準備ができました。ログインしてください。'
+    successMessage: '{name}さん、ようこそ！アカウントの準備ができました。ログインしてください。',
+    passwordPlaceholder: '6文字以上で入力',
+    confirmPasswordPlaceholder: 'もう一度入力'
+  },
+
+  eventDetail: {
+    backToEvents: 'イベント一覧',
+    eventDate: '開催日',
+    venue: '会場',
+    lineup: '出演者',
+    tickets: 'チケット',
+    lotteryLabel: '抽選',
+    directSaleLabel: '先着販売',
+    leftSuffix: '残り{count}枚',
+    seatMap: '座席表',
+    goodToKnow: '知っておきたいこと',
+    eventGuidelines: 'イベントガイドライン',
+    qa: 'Q&A',
+    qaRefundQ: '返金はできますか？',
+    qaRefundA: 'チケットは原則返金不可ですが、イベントが中止・延期になった場合は返金いたします。',
+    qaTransferQ: 'チケットを他の人に譲渡できますか？',
+    qaTransferA: 'I-Dolly経由での譲渡はできません — 入場時にチケットのお名前と来場者のIDが一致している必要があります。',
+    qaLotteryQ: '抽選結果はいつわかりますか？',
+    qaLotteryA: '当選者には公演の約2週間前にメールでお知らせします。',
+    qaAgeQ: '年齢制限はありますか？',
+    qaAgeA: 'ほとんどの公演は全年齢対象です。対象外の深夜公演は必ずイベントページに記載されます。',
+    notFound: 'そのイベントが見つかりませんでした。',
+    statusSoldOut: '売り切れ',
+    statusComingSoon: '近日公開',
+    statusEnded: '終了',
+    statusCancelled: '中止',
+    statusNotOnSale: '販売前',
+    ctaApply: '応募する →',
+    saleNoteSoldOut: 'この公演の座席はすべて完売しました — リセール情報は随時ご確認ください。',
+    saleNoteScheduled: '販売情報はまだ発表されていません。しばらくお待ちください。',
+    saleNoteCompleted: 'この公演はすでに終了しました。',
+    saleNoteCancelled: 'この公演は中止となりました。',
+    saleNoteLotteryOnly: 'この公演は抽選での販売です — 次の画面から応募してください。',
+    saleNoteDefault: '次の画面から抽選応募または座席の確保ができます。'
+  },
+
+  idolDetail: {
+    backToMembers: 'メンバー一覧',
+    backLink: 'メンバー一覧へ戻る',
+    position: 'ポジション',
+    unit: 'ユニット',
+    hometown: '出身地',
+    birthday: '誕生日',
+    alsoIn: '{name}の他のメンバー',
+    notFound: 'そのメンバーが見つかりませんでした。'
+  },
+
+  ticketPurchase: {
+    lotteryEntry: '抽選応募',
+    directSaleCheckout: '先着販売チェックアウト',
+    getTickets: 'チケットを取得',
+    stepTickets: 'チケット',
+    stepEntry: '応募',
+    stepPayment: 'お支払い',
+    stepDone: '完了',
+    chooseTier: 'チケット種別を選択',
+    tier: '種別',
+    quantity: '枚数',
+    seatMap: '座席表',
+    orderSummary: 'ご注文内容',
+    total: '合計',
+    applyLottery: '抽選に応募する →',
+    continueCheckout: 'チェックアウトへ進む →',
+    contactPayment: '連絡先・お支払い',
+    fullName: 'お名前',
+    paymentMock: 'お支払い（モック）',
+    cardNumber: 'カード番号',
+    expiry: '有効期限',
+    cvc: 'セキュリティコード',
+    back: '戻る',
+    placeOrder: '注文を確定する',
+    appliedTitle: '応募しました！',
+    wentTitle: '参加確定！',
+    appliedNote: 'エントリー番号 {orderNumber}（{tier} · {title}）を受け付けました。当選者には公演の約2週間前にメールでお知らせします。',
+    wentNote: '注文番号 {orderNumber}（{title} · {date}）が確定しました。これはモックのチェックアウトのため、実際の請求は発生しません。',
+    viewHistory: '履歴で見る',
+    backToEvents: 'イベント一覧へ戻る',
+    backToEvent: 'イベントページへ戻る',
+    ineligibleNotFound: 'そのイベントが見つかりませんでした。',
+    ineligibleSoldOut: 'この公演は売り切れです。',
+    ineligibleCompleted: 'この公演はすでに終了しました。',
+    ineligibleCancelled: 'この公演は中止となりました。',
+    ineligibleDefault: 'このイベントのチケットはまだ販売されていません。',
+    errorContactEmail: 'お名前とメールアドレスを入力してください。',
+    errorPayment: 'お支払い情報（モック）を入力してください。',
+    notifLotteryTitle: '抽選応募を受け付けました',
+    notifLotteryMessage: 'エントリー番号 {orderNumber}（{tier} · {title}）を受け付けました。',
+    notifPurchaseTitle: 'チケットが確定しました',
+    notifPurchaseMessage: '注文番号 {orderNumber}（{title}・{amount}）が確定しました。'
   }
 }

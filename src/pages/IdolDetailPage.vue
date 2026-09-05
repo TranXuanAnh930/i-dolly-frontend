@@ -6,7 +6,7 @@
   <div v-else-if="member" class="idol-detail-page">
     <section class="hero">
       <div class="wrapper hero__inner">
-        <router-link to="/members" class="back-link">&larr; All members</router-link>
+        <router-link to="/members" class="back-link">&larr; {{ $t('idolDetail.backToMembers') }}</router-link>
 
         <div class="hero__layout">
           <div class="portrait-frame" :style="{ backgroundColor: color.hex }">
@@ -26,19 +26,19 @@
     <div class="wrapper content">
       <div class="stats" v-if="positionsLabel || group || member.hometown || birthdayLabel">
         <div class="stat" v-if="positionsLabel">
-          <span class="stat__label">Position</span>
+          <span class="stat__label">{{ $t('idolDetail.position') }}</span>
           <span class="stat__value">{{ positionsLabel }}</span>
         </div>
         <div class="stat" v-if="group">
-          <span class="stat__label">Unit</span>
+          <span class="stat__label">{{ $t('idolDetail.unit') }}</span>
           <span class="stat__value">{{ group.name }}</span>
         </div>
         <div class="stat" v-if="member.hometown">
-          <span class="stat__label">Hometown</span>
+          <span class="stat__label">{{ $t('idolDetail.hometown') }}</span>
           <span class="stat__value">{{ member.hometown }}</span>
         </div>
         <div class="stat" v-if="birthdayLabel">
-          <span class="stat__label">Birthday</span>
+          <span class="stat__label">{{ $t('idolDetail.birthday') }}</span>
           <span class="stat__value">{{ birthdayLabel }}</span>
         </div>
       </div>
@@ -46,7 +46,7 @@
       <p class="description" v-if="description">{{ description }}</p>
 
       <div v-if="bandmates.length" class="bandmates">
-        <h2 class="bandmates__title">Also in {{ group.name }}</h2>
+        <h2 class="bandmates__title">{{ $t('idolDetail.alsoIn', { name: group.name }) }}</h2>
         <div class="bandmates__list">
           <router-link
             v-for="bandmate in bandmates"
@@ -67,17 +67,18 @@
   </div>
 
   <div v-else class="not-found">
-    <p class="not-found__title">{{ idolsStore.error || 'We couldn\'t find that idol.' }}</p>
-    <router-link to="/members" class="not-found__link">&larr; Back to all members</router-link>
+    <p class="not-found__title">{{ idolsStore.error || $t('idolDetail.notFound') }}</p>
+    <router-link to="/members" class="not-found__link">&larr; {{ $t('idolDetail.backLink') }}</router-link>
   </div>
 </template>
 
 <script>
-import { format, parseISO } from 'date-fns'
+import { parseISO } from 'date-fns'
 
 import { useIdolsStore } from '@/store/idols'
 import { resolveMediaUrl } from '@/utils/media'
 import { fallbackPortraitFor } from '@/utils/idolPortrait'
+import { formatDate } from '@/utils/format'
 import IdolPortrait from '@/components/IdolPortrait.vue'
 import UiSpinnerWave from '@/components/progress-loaders/UiSpinnerWave.vue'
 
@@ -114,7 +115,7 @@ export default {
     },
     birthdayLabel () {
       if (!this.member || !this.member.date_of_birth) return null
-      return format(parseISO(this.member.date_of_birth), 'MMM d, yyyy')
+      return formatDate(parseISO(this.member.date_of_birth), 'MMM d, yyyy')
     },
     fallbackPortrait () {
       return this.member ? fallbackPortraitFor(this.member, this.color.hex) : null

@@ -3,13 +3,21 @@ export default {
     save: 'Save',
     submit: 'Submit',
     cancel: 'Cancel',
+    close: 'Close',
     name: 'Name',
     email: 'Email',
     password: 'Password',
     confirmPassword: 'Confirm password',
     address: 'Address',
     city: 'City',
-    postalCode: 'Postal code'
+    postalCode: 'Postal code',
+    yourName: 'Your name',
+    streetAddress: 'Street address',
+    showPassword: 'Show password',
+    hidePassword: 'Hide password',
+    decreaseQuantity: 'Decrease quantity',
+    increaseQuantity: 'Increase quantity',
+    menu: 'Menu'
   },
 
   nav: {
@@ -26,7 +34,10 @@ export default {
     title: 'Notifications',
     markAllRead: 'Mark all read',
     empty: 'No notifications yet.',
-    more: 'More'
+    more: 'More',
+    seedLotteryResultTitle: 'Lottery result',
+    seedLotteryWonMessage: 'You won the lottery for {event}! 🎉',
+    seedLotteryLostMessage: 'Entries closed for {event} — not selected this time.'
   },
 
   menu: {
@@ -55,7 +66,19 @@ export default {
     resultCount: '{count} events',
     noResults: 'No events match those filters.',
     noResultsHint: 'Try clearing the search or picking a different unit.',
-    clearFilters: 'Clear filters'
+    clearFilters: 'Clear filters',
+    capacity: '{count} capacity',
+    doorsAt: 'Doors {time}',
+    statusScheduled: 'Coming Soon',
+    statusOnSale: 'On Sale',
+    statusSoldOut: 'Sold Out',
+    statusCompleted: 'Completed',
+    statusCancelled: 'Cancelled',
+    seatMapStage: 'STAGE',
+    seatMapVip: 'VIP',
+    seatMapPremium: 'Premium',
+    seatMapRegular: 'Regular',
+    seatMapCaption: 'Illustrative only — actual seating varies by venue and show.'
   },
 
   members: {
@@ -77,7 +100,11 @@ export default {
     typeSingle: 'Single',
     unitLabel: 'Unit',
     resultCount: '{count} items',
-    noResults: 'No items match those filters.'
+    noResults: 'No items match those filters.',
+    addToCart: 'Add to Cart',
+    addedToCart: 'Added ✓',
+    trackCountOne: '{count} track',
+    trackCountOther: '{count} tracks'
   },
 
   cart: {
@@ -92,7 +119,9 @@ export default {
     continueShopping: 'Continue shopping',
     emptyTitle: 'Your cart is empty.',
     emptyHint: 'Browse the store to find your next favorite album.',
-    goToStore: 'Go to Store'
+    goToStore: 'Go to Store',
+    unitPrice: '{price} each',
+    removeItem: 'Remove item'
   },
 
   checkout: {
@@ -205,7 +234,8 @@ export default {
     subtitle: 'Log in to grab seats and enter lotteries.',
     submit: 'Log in',
     noAccount: 'Don\'t have an account?',
-    register: 'Register'
+    register: 'Register',
+    errorUserNotFound: 'User with same email not found'
   },
 
   register: {
@@ -219,6 +249,99 @@ export default {
     errorEmail: 'Enter a valid email address.',
     errorPasswordLength: 'Password must be at least 6 characters.',
     errorPasswordMatch: 'Passwords don\'t match.',
-    successMessage: 'Welcome, {name}! Your account is ready — log in to continue.'
+    successMessage: 'Welcome, {name}! Your account is ready — log in to continue.',
+    passwordPlaceholder: 'At least 6 characters',
+    confirmPasswordPlaceholder: 'Type it again'
+  },
+
+  eventDetail: {
+    backToEvents: 'All events',
+    eventDate: 'Event Date',
+    venue: 'Venue',
+    lineup: 'Lineup',
+    tickets: 'Tickets',
+    lotteryLabel: 'Lottery',
+    directSaleLabel: 'Direct sale',
+    leftSuffix: '{count} left',
+    seatMap: 'Seat map',
+    goodToKnow: 'Good to know',
+    eventGuidelines: 'Event guidelines',
+    qa: 'Q&A',
+    qaRefundQ: 'Can I get a refund?',
+    qaRefundA: 'Tickets are non-refundable, except if the event is cancelled or rescheduled.',
+    qaTransferQ: 'Can I transfer my ticket to someone else?',
+    qaTransferA: 'Not through I-Dolly directly — the name on the ticket must match the attendee\'s ID at entry.',
+    qaLotteryQ: 'When will I know if I won the lottery?',
+    qaLotteryA: 'Winners are notified by email roughly two weeks before the show.',
+    qaAgeQ: 'Is there an age restriction?',
+    qaAgeA: 'Most shows are all-ages. Late-night sets that aren\'t are always noted on the event page.',
+    notFound: 'We couldn\'t find that event.',
+    statusSoldOut: 'Sold Out',
+    statusComingSoon: 'Coming Soon',
+    statusEnded: 'Event Ended',
+    statusCancelled: 'Cancelled',
+    statusNotOnSale: 'Not On Sale',
+    ctaApply: 'Apply →',
+    saleNoteSoldOut: 'All seats for this show are gone — check back for resale.',
+    saleNoteScheduled: 'Sale details haven\'t been announced yet. Check back soon.',
+    saleNoteCompleted: 'This show has already happened.',
+    saleNoteCancelled: 'This show was cancelled.',
+    saleNoteLotteryOnly: 'This show sells through a lottery — apply on the next screen.',
+    saleNoteDefault: 'Apply for the lottery or reserve seats directly on the next screen.'
+  },
+
+  idolDetail: {
+    backToMembers: 'All members',
+    backLink: 'Back to all members',
+    position: 'Position',
+    unit: 'Unit',
+    hometown: 'Hometown',
+    birthday: 'Birthday',
+    alsoIn: 'Also in {name}',
+    notFound: 'We couldn\'t find that idol.'
+  },
+
+  ticketPurchase: {
+    lotteryEntry: 'Lottery entry',
+    directSaleCheckout: 'Direct sale checkout',
+    getTickets: 'Get tickets',
+    stepTickets: 'Tickets',
+    stepEntry: 'Entry',
+    stepPayment: 'Payment',
+    stepDone: 'Done',
+    chooseTier: 'Choose a ticket tier',
+    tier: 'Tier',
+    quantity: 'Quantity',
+    seatMap: 'Seat map',
+    orderSummary: 'Order Summary',
+    total: 'Total',
+    applyLottery: 'Apply for Lottery →',
+    continueCheckout: 'Continue to Checkout →',
+    contactPayment: 'Contact & payment',
+    fullName: 'Full name',
+    paymentMock: 'Payment (mock)',
+    cardNumber: 'Card number',
+    expiry: 'Expiry',
+    cvc: 'CVC',
+    back: 'Back',
+    placeOrder: 'Place Order',
+    appliedTitle: 'You applied!',
+    wentTitle: 'You\'re going!',
+    appliedNote: 'Entry {orderNumber} for {tier} · {title} is in. Winners are notified by email roughly two weeks before the show.',
+    wentNote: 'Order {orderNumber} is confirmed for {title} · {date}. This is a mock checkout, so nothing was actually charged.',
+    viewHistory: 'View in History',
+    backToEvents: 'Back to events',
+    backToEvent: 'Back to event',
+    ineligibleNotFound: 'We couldn\'t find that event.',
+    ineligibleSoldOut: 'This show is sold out.',
+    ineligibleCompleted: 'This show has already happened.',
+    ineligibleCancelled: 'This show was cancelled.',
+    ineligibleDefault: 'Tickets for this show aren\'t on sale yet.',
+    errorContactEmail: 'Fill in your name and email.',
+    errorPayment: 'Enter mock payment details to continue.',
+    notifLotteryTitle: 'Lottery entry submitted',
+    notifLotteryMessage: 'Entry {orderNumber} for {tier} · {title} is in.',
+    notifPurchaseTitle: 'Tickets confirmed',
+    notifPurchaseMessage: 'Order {orderNumber} for {title} ({amount}) is confirmed.'
   }
 }
