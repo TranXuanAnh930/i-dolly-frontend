@@ -34,4 +34,31 @@ export class IdolsService extends BaseService {
       throw this.errorWrapper(error, message)
     }
   }
+
+  // GET /idols/members-page — public, no auth. One bundled response for the
+  // Members grid: every idol with its positions and color embedded, plus
+  // the group list the unit filter needs. Replaces separately fetching
+  // idols/all + idol_colors/all + positions/idol_positions/all.
+  static async getMembersPagePublic () {
+    try {
+      const response = await this.request().get(`${this.entity}/members-page`)
+      return this.responseWrapper(response, response.data)
+    } catch (error) {
+      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
+      throw this.errorWrapper(error, message)
+    }
+  }
+
+  // GET /idols/{id}/detail — public, no auth. One bundled response for an
+  // idol's own detail page: the idol (positions + color embedded), its
+  // group, and its siblings (other members, or other solo idols).
+  static async getDetailPublic (id) {
+    try {
+      const response = await this.request().get(`${this.entity}/${id}/detail`)
+      return this.responseWrapper(response, response.data)
+    } catch (error) {
+      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
+      throw this.errorWrapper(error, message)
+    }
+  }
 }

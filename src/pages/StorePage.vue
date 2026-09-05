@@ -60,8 +60,8 @@
 </template>
 
 <script>
-import { useCatalogStore } from '@/store/catalog'
-import { useIdolsStore } from '@/store/idols'
+import { ProductsService } from '@/services/products.service'
+import { paletteColorForId, contrastTextColor } from '@/utils/palette'
 import UnitPill from '@/components/UnitPill.vue'
 import ReleaseCard from '@/components/ReleaseCard.vue'
 import UiPageLoader from '@/components/progress-loaders/UiPageLoader.vue'
@@ -73,48 +73,38 @@ export default {
 
   data () {
     return {
+      products: [],
+      groups: [],
+      isLoading: true,
+      fetchError: null,
       activeType: 'All',
       activeUnitIds: []
     }
   },
 
   computed: {
-    catalogStore () {
-      return useCatalogStore()
-    },
-    idolsStore () {
-      return useIdolsStore()
-    },
-    isLoading () {
-      return (this.catalogStore.loading && !this.catalogStore.loaded) ||
-        (this.idolsStore.loading && !this.idolsStore.loaded)
-    },
-    fetchError () {
-      return this.catalogStore.error || this.idolsStore.error
-    },
     // Real product categories, whatever they are (e.g. "Album"/"Single"/
     // "Lightstick"/"Merch") rather than a hardcoded list — "All" is only
     // offered when there's more than one category to actually filter
     // between.
     typeOptions () {
-      const categories = [...new Set(this.catalogStore.storeItems.map(release => release.category))]
+      const categories = [...new Set(this.products.map(release => release.category))]
       return categories.length > 1 ? ['All', ...categories] : categories
     },
-    // Unit filter only covers group-attributed albums (see
-    // store/catalog.js's artistForAlbum) — a solo-idol release, or a plain
-    // merch item with no album_details row at all, has no group to filter
-    // by and only shows up in the unfiltered view.
+    // Unit filter only covers group-attributed releases — a solo-idol
+    // release, or a plain merch item resolved to no artist at all, has no
+    // group to filter by and only shows up in the unfiltered view.
     idolUnits () {
-      return this.idolsStore.groups.map(group => {
-        const color = this.idolsStore.colorForGroup(group)
-        return { id: group.id, name: group.name, color: color.hex, textColor: color.text }
+      return this.groups.map(group => {
+        const hex = paletteColorForId(group.id)
+        return { id: group.id, name: group.name, color: hex, textColor: contrastTextColor(hex) }
       })
     },
     filteredReleases () {
-      return this.catalogStore.storeItems.filter(release => {
+      return this.products.filter(release => {
         if (this.activeType !== 'All' && release.category !== this.activeType) return false
         if (this.activeUnitIds.length) {
-          const artist = this.catalogStore.artistForAlbum(release)
+          const artist = release.artist
           if (!artist || artist.type !== 'group' || !this.activeUnitIds.includes(artist.id)) return false
         }
         return true
@@ -123,11 +113,23 @@ export default {
   },
 
   created () {
-    this.catalogStore.fetchAll()
-    this.idolsStore.fetchAll()
+    this.fetchPage()
   },
 
   methods: {
+    async fetchPage () {
+      this.isLoading = true
+      this.fetchError = null
+      try {
+        const response = await ProductsService.getStorePagePublic()
+        this.products = response.data.products
+        this.groups = response.data.groups
+      } catch (error) {
+        this.fetchError = error.message
+      } finally {
+        this.isLoading = false
+      }
+    },
     toggleUnit (unitId) {
       this.activeUnitIds = this.activeUnitIds.includes(unitId)
         ? this.activeUnitIds.filter(id => id !== unitId)

@@ -251,7 +251,7 @@ export default {
       immediate: true,
       handler () {
         this.concertsStore.fetchAll().then(() => {
-          if (this.concert) this.concertsStore.fetchConcertExtras(this.concert.id)
+          if (this.concert) this.concertsStore.fetchTicketTypesForConcert(this.concert.id)
         })
       }
     },

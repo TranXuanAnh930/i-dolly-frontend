@@ -27,7 +27,7 @@
 <script>
 import { parseISO } from 'date-fns'
 
-import { useConcertsStore } from '@/store/concerts'
+import { paletteColorForId, contrastTextColor } from '@/utils/palette'
 import { formatDate, formatNumber } from '@/utils/format'
 import StatusBadge from './StatusBadge.vue'
 
@@ -37,18 +37,20 @@ export default {
   components: { StatusBadge },
 
   props: {
+    // Page-shaped (ConcertWithVenue from the backend): venue embedded, so
+    // this card never needs a store lookup.
     event: { type: Object, required: true }
   },
 
   computed: {
     venue () {
-      return useConcertsStore().venueById(this.event.venue_id)
+      return this.event.venue
     },
     // Concerts carry no color of their own — fall back to a stable
-    // palette pick (see store/concerts.js) so the poster still reads as
-    // themed rather than gray.
+    // palette pick so the poster still reads as themed rather than gray.
     color () {
-      return useConcertsStore().colorForConcert(this.event)
+      const hex = paletteColorForId(this.event.id)
+      return { hex, text: contrastTextColor(hex) }
     },
     eventDate () {
       return parseISO(this.event.event_datetime)

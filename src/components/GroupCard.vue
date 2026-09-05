@@ -16,22 +16,27 @@
 <script>
 import { parseISO } from 'date-fns'
 
-import { useIdolsStore } from '@/store/idols'
+import { paletteColorForId, contrastTextColor } from '@/utils/palette'
 import { formatDate } from '@/utils/format'
 
 export default {
   name: 'GroupCard',
 
   props: {
+    // Page-shaped (GroupWithCount from the backend): member_count
+    // precomputed server-side, so this card never needs a store lookup.
     group: { type: Object, required: true }
   },
 
   computed: {
+    // Groups carry no color of their own — same stable palette fallback
+    // used everywhere else a group is themed.
     color () {
-      return useIdolsStore().colorForGroup(this.group)
+      const hex = paletteColorForId(this.group.id)
+      return { hex, text: contrastTextColor(hex) }
     },
     memberCount () {
-      return useIdolsStore().membersOfGroup(this.group.id).length
+      return this.group.member_count
     },
     debutLabel () {
       return this.group.debut_date ? formatDate(parseISO(this.group.debut_date), 'MMM d, yyyy') : null

@@ -9,9 +9,9 @@
     </section>
 
     <div class="wrapper content">
-      <p v-if="idolsStore.error" class="fetch-error">{{ idolsStore.error }}</p>
+      <p v-if="error" class="fetch-error">{{ error }}</p>
 
-      <UiPageLoader v-if="idolsStore.loading && !idolsStore.loaded"/>
+      <UiPageLoader v-if="loading"/>
 
       <template v-else>
         <div v-if="idolUnits.length" class="filter-card">
@@ -43,7 +43,8 @@
 </template>
 
 <script>
-import { useIdolsStore } from '@/store/idols'
+import { IdolsService } from '@/services/idols.service'
+import { paletteColorForId, contrastTextColor } from '@/utils/palette'
 import UnitPill from '@/components/UnitPill.vue'
 import IdolCard from '@/components/IdolCard.vue'
 import UiPageLoader from '@/components/progress-loaders/UiPageLoader.vue'
@@ -55,33 +56,47 @@ export default {
 
   data () {
     return {
+      idols: [],
+      groups: [],
+      loading: true,
+      error: null,
       activeUnitIds: []
     }
   },
 
   computed: {
-    idolsStore () {
-      return useIdolsStore()
-    },
     // Groups have no color of their own in this API — resolve one so
     // UnitPill (which expects unit.color/textColor) can still theme it.
     idolUnits () {
-      return this.idolsStore.groups.map(group => {
-        const color = this.idolsStore.colorForGroup(group)
-        return { id: group.id, name: group.name, color: color.hex, textColor: color.text }
+      return this.groups.map(group => {
+        const hex = paletteColorForId(group.id)
+        return { id: group.id, name: group.name, color: hex, textColor: contrastTextColor(hex) }
       })
     },
     filteredMembers () {
-      if (!this.activeUnitIds.length) return this.idolsStore.idols
-      return this.idolsStore.idols.filter(member => this.activeUnitIds.includes(member.group_id))
+      if (!this.activeUnitIds.length) return this.idols
+      return this.idols.filter(member => this.activeUnitIds.includes(member.group_id))
     }
   },
 
   created () {
-    this.idolsStore.fetchAll()
+    this.fetchPage()
   },
 
   methods: {
+    async fetchPage () {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await IdolsService.getMembersPagePublic()
+        this.idols = response.data.idols
+        this.groups = response.data.groups
+      } catch (error) {
+        this.error = error.message
+      } finally {
+        this.loading = false
+      }
+    },
     toggleUnit (unitId) {
       this.activeUnitIds = this.activeUnitIds.includes(unitId)
         ? this.activeUnitIds.filter(id => id !== unitId)

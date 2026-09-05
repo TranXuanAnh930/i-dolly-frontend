@@ -14,9 +14,9 @@
         :search="search"
         @update:search="search = $event"/>
 
-      <p v-if="concertsStore.error" class="fetch-error">{{ concertsStore.error }}</p>
+      <p v-if="error" class="fetch-error">{{ error }}</p>
 
-      <UiPageLoader v-if="concertsStore.loading && !concertsStore.loaded"/>
+      <UiPageLoader v-if="loading"/>
 
       <template v-else>
         <p class="result-count">{{ $t('events.resultCount', { count: filteredEvents.length }) }}</p>
@@ -36,7 +36,7 @@
 </template>
 
 <script>
-import { useConcertsStore } from '@/store/concerts'
+import { ConcertsService } from '@/services/concerts.service'
 import EventFilters from '@/components/EventFilters.vue'
 import EventCard from '@/components/EventCard.vue'
 import UiPageLoader from '@/components/progress-loaders/UiPageLoader.vue'
@@ -48,20 +48,20 @@ export default {
 
   data () {
     return {
+      concerts: [],
+      loading: true,
+      error: null,
       search: ''
     }
   },
 
   computed: {
-    concertsStore () {
-      return useConcertsStore()
-    },
     filteredEvents () {
       const query = this.search.trim().toLowerCase()
 
-      let list = this.concertsStore.concerts.filter(event => {
+      let list = this.concerts.filter(event => {
         if (!query) return true
-        const venue = this.concertsStore.venueById(event.venue_id)
+        const venue = event.venue
         const haystack = `${event.title} ${venue ? venue.name : ''} ${venue ? venue.city : ''}`.toLowerCase()
         return haystack.includes(query)
       })
@@ -73,10 +73,22 @@ export default {
   },
 
   created () {
-    this.concertsStore.fetchAll()
+    this.fetchPage()
   },
 
   methods: {
+    async fetchPage () {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await ConcertsService.getEventsPagePublic()
+        this.concerts = response.data.concerts
+      } catch (error) {
+        this.error = error.message
+      } finally {
+        this.loading = false
+      }
+    },
     clearFilters () {
       this.search = ''
     }

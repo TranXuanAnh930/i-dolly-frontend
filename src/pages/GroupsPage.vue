@@ -9,9 +9,9 @@
     </section>
 
     <div class="wrapper content">
-      <p v-if="idolsStore.error" class="fetch-error">{{ idolsStore.error }}</p>
+      <p v-if="error" class="fetch-error">{{ error }}</p>
 
-      <UiPageLoader v-if="idolsStore.loading && !idolsStore.loaded"/>
+      <UiPageLoader v-if="loading"/>
 
       <template v-else>
         <p class="result-count">{{ $t('groupsPage.resultCount', { count: groups.length }) }}</p>
@@ -29,7 +29,7 @@
 </template>
 
 <script>
-import { useIdolsStore } from '@/store/idols'
+import { GroupsService } from '@/services/groups.service'
 import GroupCard from '@/components/GroupCard.vue'
 import UiPageLoader from '@/components/progress-loaders/UiPageLoader.vue'
 
@@ -38,17 +38,31 @@ export default {
 
   components: { GroupCard, UiPageLoader },
 
-  computed: {
-    idolsStore () {
-      return useIdolsStore()
-    },
-    groups () {
-      return this.idolsStore.groups
+  data () {
+    return {
+      groups: [],
+      loading: true,
+      error: null
     }
   },
 
   created () {
-    this.idolsStore.fetchAll()
+    this.fetchPage()
+  },
+
+  methods: {
+    async fetchPage () {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await GroupsService.getGroupsPagePublic()
+        this.groups = response.data.groups
+      } catch (error) {
+        this.error = error.message
+      } finally {
+        this.loading = false
+      }
+    }
   }
 }
 </script>

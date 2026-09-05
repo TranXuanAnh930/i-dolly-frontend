@@ -39,7 +39,7 @@
   </div>
 
   <div v-else class="not-found">
-    <p class="not-found__title">{{ idolsStore.error || $t('groupDetail.notFound') }}</p>
+    <p class="not-found__title">{{ error || $t('groupDetail.notFound') }}</p>
     <router-link to="/members" class="not-found__link">&larr; {{ $t('idolDetail.backToMembers') }}</router-link>
   </div>
 </template>
@@ -47,9 +47,8 @@
 <script>
 import { parseISO } from 'date-fns'
 
-import { useIdolsStore } from '@/store/idols'
-import { useConcertsStore } from '@/store/concerts'
-import { useCatalogStore } from '@/store/catalog'
+import { GroupsService } from '@/services/groups.service'
+import { paletteColorForId, contrastTextColor } from '@/utils/palette'
 import { formatDate } from '@/utils/format'
 import IdolCard from '@/components/IdolCard.vue'
 import EventCard from '@/components/EventCard.vue'
@@ -65,64 +64,58 @@ export default {
     id: { type: String, required: true }
   },
 
+  data () {
+    return {
+      group: null,
+      members: [],
+      events: [],
+      products: [],
+      loading: true,
+      error: null
+    }
+  },
+
   computed: {
-    idolsStore () {
-      return useIdolsStore()
-    },
-    concertsStore () {
-      return useConcertsStore()
-    },
-    catalogStore () {
-      return useCatalogStore()
-    },
-    loading () {
-      return this.idolsStore.loading && !this.idolsStore.loaded
-    },
-    group () {
-      return this.idolsStore.groupById(this.id)
-    },
+    // Groups carry no color of their own — same stable palette fallback
+    // used everywhere else a group is themed.
     color () {
-      return this.idolsStore.colorForGroup(this.group)
+      const hex = this.group ? paletteColorForId(this.group.id) : '#cccccc'
+      return { hex, text: contrastTextColor(hex) }
     },
     debutLabel () {
       return this.group && this.group.debut_date ? formatDate(parseISO(this.group.debut_date), 'MMM d, yyyy') : null
-    },
-    members () {
-      return this.idolsStore.membersOfGroup(this.id)
-    },
-    // Concerts carry no group reference of their own — a concert "belongs"
-    // to this group only via one of its performer credits, fetched per
-    // concert (see fetchConcertExtras below, no bulk performers route).
-    events () {
-      return this.concertsStore.concerts
-        .filter(concert => this.concertsStore.performersForConcert(concert.id).some(performer => performer.group_id === this.id))
-        .sort((a, b) => a.event_datetime.localeCompare(b.event_datetime))
-    },
-    // Real releases via their album_details.group_id, plus merch that
-    // name-matches this group (see catalogStore.artistForAlbum).
-    products () {
-      return this.catalogStore.storeItems.filter(item => {
-        const artist = this.catalogStore.artistForAlbum(item)
-        return !!artist && artist.type === 'group' && artist.id === this.id
-      })
     }
   },
 
   watch: {
-    group: {
+    group (group) {
+      if (group) document.title = `${group.name} | I-Dolly`
+    },
+    id: {
       immediate: true,
-      handler (group) {
-        if (group) document.title = `${group.name} | I-Dolly`
+      handler () {
+        this.fetchPage()
       }
     }
   },
 
-  created () {
-    this.idolsStore.fetchAll()
-    this.catalogStore.fetchAll()
-    this.concertsStore.fetchAll().then(() => {
-      this.concertsStore.concerts.forEach(concert => this.concertsStore.fetchConcertExtras(concert.id))
-    })
+  methods: {
+    async fetchPage () {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await GroupsService.getDetailPublic(this.id)
+        this.group = response.data.group
+        this.members = response.data.members
+        this.events = response.data.events
+        this.products = response.data.products
+      } catch (error) {
+        this.group = null
+        this.error = error.message
+      } finally {
+        this.loading = false
+      }
+    }
   }
 }
 </script>

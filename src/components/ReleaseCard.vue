@@ -32,7 +32,7 @@
 <script>
 import { parseISO } from 'date-fns'
 
-import { useCatalogStore } from '@/store/catalog'
+import { paletteColorForId, contrastTextColor } from '@/utils/palette'
 import { resolveMediaUrl } from '@/utils/media'
 import { formatDate, formatNumber } from '@/utils/format'
 import { stockStatus } from '@/utils/stock'
@@ -42,15 +42,23 @@ export default {
   name: 'ReleaseCard',
 
   props: {
+    // Page-shaped (ProductCard from the backend): album info, genres, and
+    // the resolved artist all embedded, so this card never needs a store
+    // lookup.
     release: { type: Object, required: true }
   },
 
   computed: {
     artist () {
-      return useCatalogStore().artistForAlbum(this.release)
+      return this.release.artist
     },
+    // The artist's real color (only ever set for an idol with one) when
+    // resolved, otherwise the same stable palette fallback keyed by the
+    // release's own id.
     color () {
-      return useCatalogStore().colorForRelease(this.release)
+      const artistHex = this.release.artist && this.release.artist.color_hex
+      const hex = artistHex || paletteColorForId(this.release.id)
+      return { hex, text: contrastTextColor(hex) }
     },
     coverPhoto () {
       const album = this.release.album || {}
@@ -76,12 +84,8 @@ export default {
       return stockStatus(this.release.quantity)
     },
     genres () {
-      return useCatalogStore().genresForRelease(this.release.id)
+      return this.release.genres || []
     }
-  },
-
-  created () {
-    useCatalogStore().fetchGenresForProduct(this.release.id)
   }
 }
 </script>
@@ -229,8 +233,10 @@ export default {
 
 .price-block {
   display: flex;
-  flex-direction: column;
-  gap: 1px;
+  flex-direction: row;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
   min-width: 0;
 }
 

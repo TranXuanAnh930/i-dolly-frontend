@@ -22,7 +22,7 @@
 <script>
 import { parseISO } from 'date-fns'
 
-import { useIdolsStore } from '@/store/idols'
+import { paletteColorForId, contrastTextColor } from '@/utils/palette'
 import { resolveMediaUrl } from '@/utils/media'
 import { fallbackPortraitFor } from '@/utils/idolPortrait'
 import { formatDate } from '@/utils/format'
@@ -34,15 +34,21 @@ export default {
   components: { IdolPortrait },
 
   props: {
+    // Page-shaped (IdolWithPositions from the backend): positions, color
+    // and group all embedded, so this card never needs a store lookup.
     member: { type: Object, required: true }
   },
 
   computed: {
     group () {
-      return useIdolsStore().groupById(this.member.group_id)
+      return this.member.group
     },
+    // The idol's real color (color_id → idol_colors.hex_code, embedded by
+    // the backend) when set, otherwise the same stable palette fallback
+    // used everywhere else an idol/group has no real color of its own.
     color () {
-      return useIdolsStore().colorForIdol(this.member)
+      const hex = this.member.color ? this.member.color.hex_code : paletteColorForId(this.member.id)
+      return { hex, text: contrastTextColor(hex) }
     },
     photoUrl () {
       return resolveMediaUrl(this.member.profile_image_url)
@@ -54,13 +60,12 @@ export default {
     fallbackPortrait () {
       return fallbackPortraitFor(this.member, this.color.hex)
     },
+    // The is_primary credit, falling back to whichever came back first.
     primaryPosition () {
-      return useIdolsStore().primaryPositionForIdol(this.member.id)
+      const positions = this.member.idol_positions || []
+      const primary = positions.find(p => p.is_primary)
+      return (primary || positions[0] || {}).position || null
     }
-  },
-
-  created () {
-    useIdolsStore().fetchPositionsForIdol(this.member.id)
   }
 }
 </script>

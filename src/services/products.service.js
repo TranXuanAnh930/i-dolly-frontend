@@ -40,4 +40,30 @@ export class ProductsService extends BaseService {
       throw this.errorWrapper(error, message)
     }
   }
+
+  // GET /products/store-page — public, no auth. One bundled response for
+  // the Store grid: every product with its album info, genre tags, and
+  // resolved artist embedded, plus the group list the unit filter needs.
+  static async getStorePagePublic () {
+    try {
+      const response = await this.request().get(`${this.entity}/store-page`)
+      return this.responseWrapper(response, response.data)
+    } catch (error) {
+      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
+      throw this.errorWrapper(error, message)
+    }
+  }
+
+  // GET /products/{id}/detail — public, no auth. One bundled response for a
+  // product's own detail page: the product (same shape as a store card) and
+  // its pre-computed recommendations (same-artist + same-genre).
+  static async getDetailPublic (id) {
+    try {
+      const response = await this.request().get(`${this.entity}/${id}/detail`)
+      return this.responseWrapper(response, response.data)
+    } catch (error) {
+      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
+      throw this.errorWrapper(error, message)
+    }
+  }
 }

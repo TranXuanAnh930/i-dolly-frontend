@@ -2,25 +2,20 @@ import { defineStore } from 'pinia'
 
 import { ProductsService } from '@/services/products.service'
 import { AlbumDetailsService } from '@/services/albumDetails.service'
-import { GenresService } from '@/services/genres.service'
 import { CategoriesService } from '@/services/categories.service'
 import { paletteColorForId, contrastTextColor } from '@/utils/palette'
-import { createQueue } from '@/utils/concurrencyQueue'
 import { useIdolsStore } from './idols'
 
-// The Store grid can mount 20+ ReleaseCards at once, each requesting its
-// own product's genres (no bulk route exists) — cap how many of those run
-// concurrently so the page doesn't trip the backend's rate limiter.
-const enqueueGenresFetch = createQueue(4)
-
+// The generic product collection — the Store grid and product detail page
+// have their own page-shaped endpoint instead (services/products.service.js's
+// getStorePagePublic/getDetailPublic, with genre tags embedded there), so
+// this store's only remaining consumers are Cart/Checkout (artistForAlbum/
+// colorForRelease, to theme a cart line item) and the manager/admin product
+// CRUD pages — neither needs genre tags, so they aren't fetched here.
 export const useCatalogStore = defineStore('catalog', {
   state: () => ({
     products: [],
     albumDetails: [],
-    genres: [],
-    // Genre tags are scoped to one product (no `/all` route) — fetched
-    // lazily per release card and cached here by product id.
-    genresByProduct: {},
     // Only exists to populate ManagerProductsPage's category dropdown —
     // fetched on demand, not part of fetchAll.
     categories: [],
@@ -31,11 +26,6 @@ export const useCatalogStore = defineStore('catalog', {
 
   getters: {
     productById: (state) => (id) => state.products.find(product => product.id === id),
-
-    genresForRelease: (state) => (productId) => {
-      const links = state.genresByProduct[productId] || []
-      return links.map(link => state.genres.find(genre => genre.id === link.genre_id)).filter(Boolean)
-    },
 
     // Only a product with an attached album_details row is actually an
     // "album" — a bare product (e.g. merch with no album/lightstick detail
@@ -49,18 +39,6 @@ export const useCatalogStore = defineStore('catalog', {
           return product ? { ...product, album: detail } : null
         })
         .filter(Boolean)
-    },
-
-    // Every storefront product — albums/singles/EPs merged with their album
-    // detail (same shape as `albums`), plus plain merch (lightsticks, tote
-    // bags, etc.) with no album_details row, unmerged. This is what the
-    // Store page renders; `albums` stays around for call sites that
-    // specifically want only the album-attached subset.
-    storeItems (state) {
-      return state.products.map(product => {
-        const detail = state.albumDetails.find(d => d.product_id === product.id)
-        return detail ? { ...product, album: detail } : product
-      })
     },
 
     // album_details ties to exactly one of idol_id / group_id (never
@@ -127,31 +105,17 @@ export const useCatalogStore = defineStore('catalog', {
       this.loading = true
       this.error = null
       try {
-        const [productsRes, albumDetailsRes, genresRes] = await Promise.all([
+        const [productsRes, albumDetailsRes] = await Promise.all([
           ProductsService.getAllPublic(),
-          AlbumDetailsService.getAllPublic(),
-          GenresService.getAllPublic()
+          AlbumDetailsService.getAllPublic()
         ])
         this.products = productsRes.data
         this.albumDetails = albumDetailsRes.data
-        this.genres = genresRes.data
         this.loaded = true
       } catch (error) {
         this.error = error.message
       } finally {
         this.loading = false
-      }
-    },
-
-    // Genre tags for one product — fetched on demand by ReleaseCard rather
-    // than upfront for every product in fetchAll.
-    async fetchGenresForProduct (productId, { force = false } = {}) {
-      if (!force && this.genresByProduct[productId]) return
-      try {
-        const response = await enqueueGenresFetch(() => GenresService.getForProductPublic(productId))
-        this.genresByProduct[productId] = response.data
-      } catch (error) {
-        this.error = error.message
       }
     },
 

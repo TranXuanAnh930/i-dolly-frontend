@@ -65,7 +65,7 @@
   </div>
 
   <div v-else class="not-found">
-    <p class="not-found__title">{{ idolsStore.error || $t('idolDetail.notFound') }}</p>
+    <p class="not-found__title">{{ error || $t('idolDetail.notFound') }}</p>
     <router-link to="/members" class="not-found__link">&larr; {{ $t('idolDetail.backLink') }}</router-link>
   </div>
 </template>
@@ -73,7 +73,8 @@
 <script>
 import { parseISO } from 'date-fns'
 
-import { useIdolsStore } from '@/store/idols'
+import { IdolsService } from '@/services/idols.service'
+import { paletteColorForId, contrastTextColor } from '@/utils/palette'
 import { resolveMediaUrl } from '@/utils/media'
 import { fallbackPortraitFor } from '@/utils/idolPortrait'
 import { formatDate } from '@/utils/format'
@@ -89,21 +90,19 @@ export default {
     id: { type: String, required: true }
   },
 
+  data () {
+    return {
+      member: null,
+      group: null,
+      relatedIdols: [],
+      loading: true,
+      error: null
+    }
+  },
+
   computed: {
-    idolsStore () {
-      return useIdolsStore()
-    },
-    loading () {
-      return this.idolsStore.loading && !this.idolsStore.loaded
-    },
-    member () {
-      return this.idolsStore.idolById(this.id)
-    },
-    group () {
-      return this.member ? this.idolsStore.groupById(this.member.group_id) : null
-    },
     color () {
-      return this.idolsStore.colorForIdol(this.member)
+      return this.colorFor(this.member)
     },
     photoUrl () {
       return this.member ? resolveMediaUrl(this.member.profile_image_url) : null
@@ -121,25 +120,9 @@ export default {
     // Primary credit first (e.g. "Leader"), then any secondary ones.
     positionsLabel () {
       if (!this.member) return null
-      const positions = [...this.idolsStore.positionsForIdol(this.member.id)]
+      const positions = [...(this.member.idol_positions || [])]
         .sort((a, b) => (b.is_primary ? 1 : 0) - (a.is_primary ? 1 : 0))
       return positions.map(p => p.position.name).join(' · ') || null
-    },
-    bandmates () {
-      // Solo idols have group_id: null — without this guard,
-      // membersOfGroup(null) would match every other soloist instead of
-      // correctly returning no bandmates.
-      if (!this.member || !this.member.group_id) return []
-      return this.idolsStore.membersOfGroup(this.member.group_id).filter(idol => idol.id !== this.member.id)
-    },
-    // Solo idols get the solo-roster equivalent of bandmates — other idols
-    // with no group_id of their own.
-    soloPeers () {
-      if (!this.member || this.member.group_id) return []
-      return this.idolsStore.soloIdols.filter(idol => idol.id !== this.member.id)
-    },
-    relatedIdols () {
-      return this.member && this.member.group_id ? this.bandmates : this.soloPeers
     },
     relatedTitle () {
       return this.member && this.member.group_id
@@ -149,25 +132,40 @@ export default {
   },
 
   watch: {
-    member: {
-      immediate: true,
-      handler (member) {
-        if (member) document.title = `${member.name} | I-Dolly`
-      }
+    member (member) {
+      if (member) document.title = `${member.name} | I-Dolly`
     },
     id: {
       immediate: true,
-      handler (id) {
-        this.idolsStore.fetchAll()
-        this.idolsStore.fetchPositionsForIdol(id)
+      handler () {
+        this.fetchPage()
       }
     }
   },
 
   methods: {
     fallbackPortraitFor,
+    async fetchPage () {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await IdolsService.getDetailPublic(this.id)
+        this.member = response.data.idol
+        this.group = response.data.group
+        this.relatedIdols = response.data.siblings
+      } catch (error) {
+        this.member = null
+        this.error = error.message
+      } finally {
+        this.loading = false
+      }
+    },
+    // The idol's real color (embedded by the backend) when set, otherwise
+    // the same stable palette fallback used everywhere else.
     colorFor (idol) {
-      return this.idolsStore.colorForIdol(idol)
+      if (!idol) return { hex: '#cccccc', text: '#000000' }
+      const hex = idol.color ? idol.color.hex_code : paletteColorForId(idol.id)
+      return { hex, text: contrastTextColor(hex) }
     },
     photoFor (idol) {
       return resolveMediaUrl(idol.profile_image_url)

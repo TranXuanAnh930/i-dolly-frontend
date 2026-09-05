@@ -10,4 +10,29 @@ export class ConcertsService extends BaseService {
   static get entity () {
     return 'concerts'
   }
+
+  // GET /concerts/events-page — public, no auth. One bundled response for
+  // the Events grid: every concert with its venue embedded.
+  static async getEventsPagePublic () {
+    try {
+      const response = await this.request().get(`${this.entity}/events-page`)
+      return this.responseWrapper(response, response.data)
+    } catch (error) {
+      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
+      throw this.errorWrapper(error, message)
+    }
+  }
+
+  // GET /concerts/{id}/detail — public, no auth. One bundled response for a
+  // concert's own detail page: the concert, its venue, its ticket types,
+  // the resolved idol lineup, and the distinct performing groups.
+  static async getDetailPublic (id) {
+    try {
+      const response = await this.request().get(`${this.entity}/${id}/detail`)
+      return this.responseWrapper(response, response.data)
+    } catch (error) {
+      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
+      throw this.errorWrapper(error, message)
+    }
+  }
 }

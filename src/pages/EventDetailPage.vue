@@ -131,7 +131,7 @@
   </div>
 
   <div v-else class="not-found">
-    <p class="not-found__title">{{ concertsStore.error || $t('eventDetail.notFound') }}</p>
+    <p class="not-found__title">{{ error || $t('eventDetail.notFound') }}</p>
     <router-link to="/events" class="not-found__link">&larr; {{ $t('checkout.backToEvents') }}</router-link>
   </div>
 </template>
@@ -139,8 +139,8 @@
 <script>
 import { parseISO } from 'date-fns'
 
-import { useConcertsStore } from '@/store/concerts'
-import { useIdolsStore } from '@/store/idols'
+import { ConcertsService } from '@/services/concerts.service'
+import { paletteColorForId, contrastTextColor } from '@/utils/palette'
 import { resolveMediaUrl } from '@/utils/media'
 import { fallbackPortraitFor } from '@/utils/idolPortrait'
 import { formatDate, formatNumber } from '@/utils/format'
@@ -160,53 +160,30 @@ export default {
     id: { type: String, required: true }
   },
 
+  data () {
+    return {
+      concert: null,
+      venue: null,
+      ticketTypes: [],
+      lineup: [],
+      performingGroups: [],
+      loading: true,
+      error: null
+    }
+  },
+
   computed: {
-    concertsStore () {
-      return useConcertsStore()
-    },
-    idolsStore () {
-      return useIdolsStore()
-    },
-    loading () {
-      return this.concertsStore.loading && !this.concertsStore.loaded
-    },
-    concert () {
-      return this.concertsStore.concertById(this.id)
-    },
-    venue () {
-      return this.concert ? this.concertsStore.venueById(this.concert.venue_id) : null
-    },
+    // Concerts carry no color of their own — fall back to a stable
+    // palette pick so the hero still reads as themed rather than gray.
     color () {
-      return this.concertsStore.colorForConcert(this.concert)
-    },
-    ticketTypes () {
-      return this.concert ? this.concertsStore.ticketTypesForConcert(this.concert.id) : []
+      const hex = this.concert ? paletteColorForId(this.concert.id) : '#cccccc'
+      return { hex, text: contrastTextColor(hex) }
     },
     directTicketTypes () {
       return this.ticketTypes.filter(tier => tier.sale_method === 'direct')
     },
     hasLotteryTickets () {
       return this.ticketTypes.some(tier => tier.sale_method === 'lottery')
-    },
-    lineup () {
-      return this.concert ? this.concertsStore.lineupForConcert(this.concert.id) : []
-    },
-    // Distinct groups behind this concert's performer credits — a solo
-    // idol_id credit has no group and isn't represented here (they still
-    // show up in `lineup`, just without a unit pill).
-    performingGroups () {
-      if (!this.concert) return []
-      const seen = new Set()
-      const groups = []
-      this.concertsStore.performersForConcert(this.concert.id).forEach(performer => {
-        if (!performer.group_id || seen.has(performer.group_id)) return
-        const group = this.idolsStore.groupById(performer.group_id)
-        if (group) {
-          seen.add(group.id)
-          groups.push(group)
-        }
-      })
-      return groups
     },
     performingGroupNames () {
       return this.performingGroups.map(group => group.name).join(', ')
@@ -244,19 +221,13 @@ export default {
   },
 
   watch: {
-    concert: {
-      immediate: true,
-      handler (concert) {
-        if (concert) document.title = `${concert.title} | I-Dolly`
-      }
+    concert (concert) {
+      if (concert) document.title = `${concert.title} | I-Dolly`
     },
     id: {
       immediate: true,
       handler () {
-        this.idolsStore.fetchAll()
-        this.concertsStore.fetchAll().then(() => {
-          if (this.concert) this.concertsStore.fetchConcertExtras(this.concert.id)
-        })
+        this.fetchPage()
       }
     }
   },
@@ -265,15 +236,36 @@ export default {
     formatNumber,
     withTax,
     fallbackPortraitFor,
+    async fetchPage () {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await ConcertsService.getDetailPublic(this.id)
+        this.concert = response.data.concert
+        this.venue = response.data.venue
+        this.ticketTypes = response.data.ticket_types
+        this.lineup = response.data.lineup
+        this.performingGroups = response.data.performing_groups
+      } catch (error) {
+        this.concert = null
+        this.error = error.message
+      } finally {
+        this.loading = false
+      }
+    },
+    // The idol's real color (embedded by the backend, on the lineup entry)
+    // when set, otherwise the same stable palette fallback used elsewhere.
     colorFor (idol) {
-      return this.idolsStore.colorForIdol(idol)
+      const hex = idol.color_hex || paletteColorForId(idol.id)
+      return { hex, text: contrastTextColor(hex) }
     },
     photoFor (idol) {
       return resolveMediaUrl(idol.profile_image_url)
     },
+    // Groups carry no color of their own — same stable palette fallback.
     unitFor (group) {
-      const color = this.idolsStore.colorForGroup(group)
-      return { id: group.id, name: group.name, color: color.hex, textColor: color.text }
+      const hex = paletteColorForId(group.id)
+      return { id: group.id, name: group.name, color: hex, textColor: contrastTextColor(hex) }
     },
     tierLabel (tier) {
       return tier.tier.charAt(0).toUpperCase() + tier.tier.slice(1)

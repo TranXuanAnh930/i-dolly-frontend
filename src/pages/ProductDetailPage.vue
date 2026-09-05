@@ -52,7 +52,7 @@
   </div>
 
   <div v-else class="not-found">
-    <p class="not-found__title">{{ catalogStore.error || $t('productDetail.notFound') }}</p>
+    <p class="not-found__title">{{ error || $t('productDetail.notFound') }}</p>
     <router-link to="/store" class="not-found__link">&larr; {{ $t('productDetail.backToStore') }}</router-link>
   </div>
 </template>
@@ -60,10 +60,10 @@
 <script>
 import { parseISO } from 'date-fns'
 
-import { useCatalogStore } from '@/store/catalog'
-import { useIdolsStore } from '@/store/idols'
+import { ProductsService } from '@/services/products.service'
 import { useCartStore } from '@/store/cart'
 import { useToastStore } from '@/store/toast'
+import { paletteColorForId, contrastTextColor } from '@/utils/palette'
 import { resolveMediaUrl } from '@/utils/media'
 import { formatDate, formatNumber } from '@/utils/format'
 import { stockStatus } from '@/utils/stock'
@@ -82,25 +82,26 @@ export default {
 
   data () {
     return {
+      product: null,
+      recommendations: [],
+      loading: true,
+      error: null,
       justAdded: false
     }
   },
 
   computed: {
-    catalogStore () {
-      return useCatalogStore()
-    },
-    loading () {
-      return this.catalogStore.loading && !this.catalogStore.loaded
-    },
-    product () {
-      return this.catalogStore.releaseById(this.id)
-    },
     artist () {
-      return this.product ? this.catalogStore.artistForAlbum(this.product) : null
+      return this.product ? this.product.artist : null
     },
+    // The artist's real color (only ever set for an idol with one) when
+    // resolved, otherwise the same stable palette fallback keyed by the
+    // product's own id.
     color () {
-      return this.product ? this.catalogStore.colorForRelease(this.product) : null
+      if (!this.product) return null
+      const artistHex = this.artist && this.artist.color_hex
+      const hex = artistHex || paletteColorForId(this.product.id)
+      return { hex, text: contrastTextColor(hex) }
     },
     coverPhoto () {
       if (!this.product) return null
@@ -128,70 +129,21 @@ export default {
       return this.product ? stockStatus(this.product.quantity) : 'in'
     },
     genres () {
-      return this.catalogStore.genresForRelease(this.id)
-    },
-    // Products by the same idol/group — shown for every product that has
-    // one (merch with no album_details row carries no artist, per
-    // artistForAlbum, so it just gets no artist-based recommendations).
-    sameArtistProducts () {
-      if (!this.product || !this.artist) return []
-      return this.catalogStore.storeItems.filter(item => {
-        if (item.id === this.product.id) return false
-        const itemArtist = this.catalogStore.artistForAlbum(item)
-        return !!itemArtist && itemArtist.type === this.artist.type && itemArtist.id === this.artist.id
-      })
-    },
-    // Only real releases (albums/singles/EPs) carry an album_details row —
-    // that's what genres are attached to, so plain merch never gets
-    // genre-based recommendations.
-    isAlbumFamily () {
-      return !!(this.product && this.product.album)
-    },
-    sameGenreProducts () {
-      if (!this.isAlbumFamily) return []
-      const myGenreIds = new Set(this.genres.map(genre => genre.id))
-      if (!myGenreIds.size) return []
-      return this.catalogStore.albums.filter(item => {
-        if (item.id === this.product.id) return false
-        return this.catalogStore.genresForRelease(item.id).some(genre => myGenreIds.has(genre.id))
-      })
-    },
-    recommendations () {
-      const seen = new Set([this.product ? this.product.id : null])
-      const deduped = []
-      for (const item of [...this.sameArtistProducts, ...this.sameGenreProducts]) {
-        if (seen.has(item.id)) continue
-        seen.add(item.id)
-        deduped.push(item)
-      }
-      return deduped.slice(0, 8)
+      return this.product ? this.product.genres : []
     }
   },
 
   watch: {
-    product: {
+    product (product) {
+      if (!product) return
+      document.title = `${product.name} | I-Dolly`
+    },
+    id: {
       immediate: true,
-      handler (product) {
-        if (!product) return
-        document.title = `${product.name} | I-Dolly`
-        // Genre matches need every candidate's genres fetched up front —
-        // ReleaseCard normally fetches its own lazily per card, but here we
-        // need them before we can even decide which products qualify.
-        if (product.album) {
-          this.catalogStore.albums
-            .filter(item => item.id !== product.id)
-            .forEach(item => this.catalogStore.fetchGenresForProduct(item.id))
-        }
+      handler () {
+        this.fetchPage()
       }
     }
-  },
-
-  created () {
-    this.catalogStore.fetchAll()
-    this.catalogStore.fetchGenresForProduct(this.id)
-    // artistForAlbum needs idols/groups loaded to resolve either an
-    // album_details credit or a merch item's name-matched artist.
-    useIdolsStore().fetchAll()
   },
 
   beforeUnmount () {
@@ -199,6 +151,20 @@ export default {
   },
 
   methods: {
+    async fetchPage () {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await ProductsService.getDetailPublic(this.id)
+        this.product = response.data.product
+        this.recommendations = response.data.recommendations
+      } catch (error) {
+        this.product = null
+        this.error = error.message
+      } finally {
+        this.loading = false
+      }
+    },
     addToCart () {
       useCartStore().addItem(this.product.id)
       useToastStore().add({ type: 'success', message: this.$t('cart.itemAdded', { name: this.product.name }) })
