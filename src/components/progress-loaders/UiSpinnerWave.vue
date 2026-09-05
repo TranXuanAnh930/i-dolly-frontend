@@ -1,82 +1,87 @@
 <template>
   <div class="ui-spinner-wave component">
-    <div class="sk-wave">
-      <div class="sk-rect sk-rect1" :style="loadingColor"></div>
-      <div class="sk-rect sk-rect2" :style="loadingColor"></div>
-      <div class="sk-rect sk-rect3" :style="loadingColor"></div>
-      <div class="sk-rect sk-rect4" :style="loadingColor"></div>
-      <div class="sk-rect sk-rect5" :style="loadingColor"></div>
+    <div class="loader">
+      <span class="loader__ring"></span>
+      <span class="loader__bow" :style="{ color }">
+        <BowIcon/>
+      </span>
     </div>
   </div>
 </template>
 
 <script>
+import BowIcon from '@/components/icons/BowIcon.vue'
+
 export default {
   name: 'UiSpinnerWave',
+  components: { BowIcon },
   props: {
     color: {
       type: String,
       default: '#bebebe'
-    }
-  },
-  computed: {
-    loadingColor () {
-      return {
-        'background-color': this.color
-      }
     }
   }
 }
 </script>
 
 <style scoped lang="scss">
-@use "sass:math";
-
 .ui-spinner-wave {
   height: 100%;
   width: 100%;
-  z-index: 10;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-// https://github.com/tobiasahlin/SpinKit/blob/master/scss/spinners/3-wave.scss
-$spinkit-spinner-margin: 0 auto !default;
-$spinkit-size: 40px !default;
-// $spinkit-spinner-color: #bebebe !default;
+.loader {
+  position: relative;
+  width: 52px;
+  height: 52px;
+}
 
-.sk-wave {
-  $rectCount: 5;
-  $animationDuration: 1.2s;
-  $delayRange: 0.4s;
-  margin: $spinkit-spinner-margin;
-  width: $spinkit-size * 1.25;
-  height: $spinkit-size;
-  text-align: center;
-  font-size: 10px;
-  .sk-rect {
-    // background-color: $spinkit-spinner-color;
-    height: 100%;
-    width: 6px;
-    display: inline-block;
-    animation: sk-waveStretchDelay $animationDuration infinite ease-in-out;
-  }
-  @for $i from 1 through $rectCount {
-    .sk-rect#{$i} {
-      animation-delay: - $animationDuration + math.div($delayRange, $rectCount - 1) * ($i - 1);
-    }
+.loader__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, #e4007f, #f2b705, #1f8fd6, #b6379c, #1fa876, #e4007f);
+  animation: loader-spin 1.1s linear infinite;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 5px;
+    border-radius: 50%;
+    background: $color-white;
   }
 }
 
-@keyframes sk-waveStretchDelay {
-  0%,
-  40%,
-  100% {
-    transform: scaleY(0.4)
+.loader__bow {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: loader-pulse 1.1s ease-in-out infinite;
+
+  svg {
+    width: 20px;
+    height: 20px;
   }
-  20% {
-    transform: scaleY(1.0)
+}
+
+@keyframes loader-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes loader-pulse {
+  0%, 100% { transform: scale(.82); opacity: .7; }
+  50% { transform: scale(1.05); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loader__ring,
+  .loader__bow {
+    animation: none;
   }
 }
 </style>

@@ -54,10 +54,16 @@
                 <router-link :to="{ name: 'store' }" class="menu__link">{{ $t('nav.store') }}</router-link>
               </li>
             </template>
-            <li>
+            <li class="menu-item--desktop">
               <NotificationDropdown/>
             </li>
-            <li v-if="!isStaff">
+            <li class="menu-item--mobile">
+              <router-link to="/history" class="menu__link">
+                {{ $t('nav.notifications') }}<span v-if="unreadCount" class="menu__count">{{ unreadCount }}</span>
+              </router-link>
+            </li>
+
+            <li v-if="!isStaff" class="menu-item--desktop">
               <router-link :to="{ name: 'cart' }" class="cart-link" :aria-label="$t('nav.cart')">
                 <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
                   <path d="M5 6.5h10l-.8 8.5a1.5 1.5 0 0 1-1.5 1.4H7.3a1.5 1.5 0 0 1-1.5-1.4L5 6.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
@@ -66,6 +72,12 @@
                 <span v-if="cartCount" class="cart-link__badge">{{ cartCount }}</span>
               </router-link>
             </li>
+            <li v-if="!isStaff" class="menu-item--mobile">
+              <router-link :to="{ name: 'cart' }" class="menu__link">
+                {{ $t('nav.cart') }}<span v-if="cartCount" class="menu__count">{{ cartCount }}</span>
+              </router-link>
+            </li>
+
             <li v-if="!$currentUser.id">
               <router-link :to="{ name: 'login' }" class="menu__link">{{ $t('nav.login') }}</router-link>
             </li>
@@ -75,8 +87,21 @@
             <li>
               <LanguageSwitcher/>
             </li>
-            <li>
+
+            <li class="menu-item--desktop">
               <UiHeaderDropdownMenu/>
+            </li>
+            <li class="menu-item--mobile">
+              <router-link to="/account" class="menu__link">{{ $t('menu.accountSettings.title') }}</router-link>
+            </li>
+            <li class="menu-item--mobile">
+              <router-link to="/contact" class="menu__link">{{ $t('menu.contact.title') }}</router-link>
+            </li>
+            <li class="menu-item--mobile">
+              <router-link to="/guidelines" class="menu__link">{{ $t('menu.guidelines.title') }}</router-link>
+            </li>
+            <li class="menu-item--mobile">
+              <router-link to="/about" class="menu__link">{{ $t('menu.about.title') }}</router-link>
             </li>
           </ul>
         </div>
@@ -95,6 +120,7 @@ import BowIcon from '@/components/icons/BowIcon.vue'
 import NotificationDropdown from '@/components/NotificationDropdown.vue'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 import { useCartStore } from '@/store/cart'
+import { useNotificationStore } from '@/store/notifications'
 
 export default {
   name: 'Header',
@@ -114,6 +140,9 @@ export default {
   computed: {
     cartCount () {
       return useCartStore().itemCount
+    },
+    unreadCount () {
+      return useNotificationStore().unreadCount
     },
     isStaff () {
       return ['manager', 'admin'].includes(this.$currentUser.role)
@@ -285,29 +314,42 @@ export default {
       }
     }
 
-    :deep(.notif) {
-      margin-top: 6px;
-    }
-
-    :deep(.notif__trigger),
-    :deep(.more-menu__trigger) {
-      padding: 12px 8px;
-    }
-
     :deep(.lang-switch) {
       display: inline-flex;
       margin: 10px 0;
     }
-
-    :deep(.notif__panel),
-    :deep(.more-menu__panel) {
-      position: static;
-      width: 100%;
-      max-width: none;
-      margin-top: 8px;
-      box-shadow: none;
-    }
   }
+}
+
+.menu-item--mobile {
+  display: none;
+}
+
+@include media_mobile {
+  .menu-item--desktop {
+    display: none;
+  }
+
+  .menu-item--mobile {
+    display: block;
+  }
+}
+
+.menu__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  margin-left: 8px;
+  border-radius: 999px;
+  background: #f2b705;
+  color: $color-ink;
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 11px;
+  vertical-align: middle;
 }
 
 .menu__link {
@@ -340,10 +382,6 @@ export default {
 
   &:hover {
     opacity: .8;
-  }
-
-  @include media_mobile {
-    padding: 12px 8px;
   }
 }
 
