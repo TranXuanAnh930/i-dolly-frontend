@@ -113,12 +113,9 @@ export class Assert {
   }
 
   static id (value, { required = false, message = '' } = {}) {
-    const int = Number(value)
-    const isPositiveInteger = Number.isInteger(int) && int >= 1
-    const isUiid = UUID_REGEXP.test(value)
-    const isValidId = isPositiveInteger || isUiid
-    if (!isValidId && required) Assert.fail(value, 'UUID or Number', message)
-    if (value !== undefined && !isValidId) Assert.fail(value, 'UUID or Number', message)
+    const isValidId = typeof value === 'string' && UUID_REGEXP.test(value)
+    if (!isValidId && required) Assert.fail(value, 'UUID', message)
+    if (value !== undefined && !isValidId) Assert.fail(value, 'UUID', message)
   }
 
   static uuid (value, { required = false, message = '' } = {}) {
