@@ -34,11 +34,23 @@
           <div class="field-block">
             <span class="field-block__label">Tier</span>
             <div class="option-list">
-              <label v-for="(tier, i) in directTicketTypes" :key="tier.id" class="option-row" :class="{ 'is-selected': selectedTierIndex === i }">
-                <input type="radio" name="tier" :value="i" v-model.number="selectedTierIndex">
+              <label
+                v-for="tier in allTicketTypes"
+                :key="tier.id"
+                class="option-row"
+                :class="{ 'is-selected': selectedTierId === tier.id, 'is-disabled': tier.sale_method !== 'direct' }">
+                <input
+                  type="radio"
+                  name="tier"
+                  :value="tier.id"
+                  v-model="selectedTierId"
+                  :disabled="tier.sale_method !== 'direct'">
                 <span class="option-row__text">
                   <span class="option-row__title">{{ tierLabel(tier) }}</span>
-                  <span class="option-row__note">{{ remaining(tier) }} left</span>
+                  <span class="option-row__note">
+                    <template v-if="tier.sale_method === 'direct'">{{ remaining(tier) }} left</template>
+                    <template v-else>Lottery only</template>
+                  </span>
                 </span>
                 <span class="option-row__price">&yen;{{ tier.price.toLocaleString('en-US') }}</span>
               </label>
@@ -169,7 +181,7 @@ export default {
   data () {
     return {
       step: 1,
-      selectedTierIndex: 0,
+      selectedTierId: null,
       qty: 1,
       form: {
         name: '',
@@ -193,9 +205,15 @@ export default {
     color () {
       return this.concertsStore.colorForConcert(this.concert)
     },
+    // Every tier for this concert — shown in the picker so buyers can see
+    // lottery-only tiers (e.g. VIP) exist, even though they can't be
+    // selected here (no lottery-entry flow yet).
+    allTicketTypes () {
+      return this.concert ? this.concertsStore.ticketTypesForConcert(this.concert.id) : []
+    },
     // Only ticket types sold directly — this page has no lottery-entry flow.
     directTicketTypes () {
-      return this.concert ? this.concertsStore.ticketTypesForConcert(this.concert.id).filter(tier => tier.sale_method === 'direct') : []
+      return this.allTicketTypes.filter(tier => tier.sale_method === 'direct')
     },
     eligible () {
       return !!this.concert && this.concert.status === 'on_sale' && this.directTicketTypes.length > 0
@@ -209,7 +227,7 @@ export default {
       return 'Tickets for this show aren\'t on sale yet.'
     },
     selectedTier () {
-      return this.directTicketTypes[this.selectedTierIndex] || this.directTicketTypes[0]
+      return this.directTicketTypes.find(tier => tier.id === this.selectedTierId) || this.directTicketTypes[0] || null
     },
     total () {
       return this.selectedTier ? this.selectedTier.price * this.qty : 0
@@ -235,6 +253,16 @@ export default {
         this.concertsStore.fetchAll().then(() => {
           if (this.concert) this.concertsStore.fetchConcertExtras(this.concert.id)
         })
+      }
+    },
+    // Default to the first direct tier once ticket types load, and fall
+    // back if the selected one ever stops being valid (e.g. switching events).
+    directTicketTypes: {
+      immediate: true,
+      handler (tiers) {
+        if (!tiers.some(tier => tier.id === this.selectedTierId)) {
+          this.selectedTierId = tiers.length ? tiers[0].id : null
+        }
       }
     }
   },
@@ -478,6 +506,15 @@ export default {
   &.is-selected {
     border-color: $color-brand;
     background: $color-brand-tint-2;
+  }
+
+  &.is-disabled {
+    cursor: default;
+    opacity: .55;
+
+    &:hover {
+      border-color: $color-line;
+    }
   }
 }
 
