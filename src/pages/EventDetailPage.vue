@@ -1,7 +1,5 @@
 <template>
-  <div v-if="loading" class="loading-state">
-    <UiSpinnerWave color="#E4007F"/>
-  </div>
+  <UiPageLoader v-if="loading"/>
 
   <div v-else-if="concert" class="event-detail-page">
     <section class="hero">
@@ -145,12 +143,12 @@ import UnitPill from '@/components/UnitPill.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import IdolPortrait from '@/components/IdolPortrait.vue'
 import VenueSeatMap from '@/components/VenueSeatMap.vue'
-import UiSpinnerWave from '@/components/progress-loaders/UiSpinnerWave.vue'
+import UiPageLoader from '@/components/progress-loaders/UiPageLoader.vue'
 
 export default {
   name: 'EventDetailPage',
 
-  components: { UnitPill, StatusBadge, IdolPortrait, VenueSeatMap, UiSpinnerWave },
+  components: { UnitPill, StatusBadge, IdolPortrait, VenueSeatMap, UiPageLoader },
 
   props: {
     id: { type: String, required: true }
@@ -281,11 +279,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.loading-state {
-  flex: 1;
-  height: 300px;
-}
-
 .event-detail-page {
   width: 100%;
   flex: 1;

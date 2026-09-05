@@ -1,6 +1,6 @@
 <template>
   <div class="ui-spinner-wave component">
-    <div class="loader">
+    <div class="loader" :style="{ width: `${size}px`, height: `${size}px` }">
       <span class="loader__ring"></span>
       <span class="loader__bow" :style="{ color }">
         <BowIcon/>
@@ -19,6 +19,10 @@ export default {
     color: {
       type: String,
       default: '#bebebe'
+    },
+    size: {
+      type: Number,
+      default: 52
     }
   }
 }
@@ -35,8 +39,6 @@ export default {
 
 .loader {
   position: relative;
-  width: 52px;
-  height: 52px;
 }
 
 .loader__ring {
@@ -49,7 +51,7 @@ export default {
   &::after {
     content: '';
     position: absolute;
-    inset: 5px;
+    inset: 9%;
     border-radius: 50%;
     background: $color-white;
   }
@@ -64,8 +66,8 @@ export default {
   animation: loader-pulse 1.1s ease-in-out infinite;
 
   svg {
-    width: 20px;
-    height: 20px;
+    width: 38%;
+    height: 38%;
   }
 }
 

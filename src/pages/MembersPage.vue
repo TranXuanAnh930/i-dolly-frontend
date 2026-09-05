@@ -11,9 +11,7 @@
     <div class="wrapper content">
       <p v-if="idolsStore.error" class="fetch-error">{{ idolsStore.error }}</p>
 
-      <div v-if="idolsStore.loading && !idolsStore.loaded" class="loading-state">
-        <UiSpinnerWave color="#E4007F"/>
-      </div>
+      <UiPageLoader v-if="idolsStore.loading && !idolsStore.loaded"/>
 
       <template v-else>
         <div v-if="idolUnits.length" class="filter-card">
@@ -48,12 +46,12 @@
 import { useIdolsStore } from '@/store/idols'
 import UnitPill from '@/components/UnitPill.vue'
 import IdolCard from '@/components/IdolCard.vue'
-import UiSpinnerWave from '@/components/progress-loaders/UiSpinnerWave.vue'
+import UiPageLoader from '@/components/progress-loaders/UiPageLoader.vue'
 
 export default {
   name: 'MembersPage',
 
-  components: { UnitPill, IdolCard, UiSpinnerWave },
+  components: { UnitPill, IdolCard, UiPageLoader },
 
   data () {
     return {
@@ -154,10 +152,6 @@ export default {
   font-family: $font-content;
   font-size: 13px;
   font-weight: 700;
-}
-
-.loading-state {
-  height: 200px;
 }
 
 .filter-card {

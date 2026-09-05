@@ -11,9 +11,7 @@
     <div class="wrapper content">
       <p v-if="fetchError" class="fetch-error">{{ fetchError }}</p>
 
-      <div v-if="isLoading" class="loading-state">
-        <UiSpinnerWave color="#E4007F"/>
-      </div>
+      <UiPageLoader v-if="isLoading"/>
 
       <template v-else>
         <div class="filter-card">
@@ -66,12 +64,12 @@ import { useCatalogStore } from '@/store/catalog'
 import { useIdolsStore } from '@/store/idols'
 import UnitPill from '@/components/UnitPill.vue'
 import ReleaseCard from '@/components/ReleaseCard.vue'
-import UiSpinnerWave from '@/components/progress-loaders/UiSpinnerWave.vue'
+import UiPageLoader from '@/components/progress-loaders/UiPageLoader.vue'
 
 export default {
   name: 'StorePage',
 
-  components: { UnitPill, ReleaseCard, UiSpinnerWave },
+  components: { UnitPill, ReleaseCard, UiPageLoader },
 
   data () {
     return {
@@ -204,10 +202,6 @@ export default {
   font-family: $font-content;
   font-size: 13px;
   font-weight: 700;
-}
-
-.loading-state {
-  height: 200px;
 }
 
 .filter-card {

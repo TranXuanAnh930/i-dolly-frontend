@@ -1,7 +1,5 @@
 <template>
-  <div v-if="loading" class="loading-state">
-    <UiSpinnerWave color="#E4007F"/>
-  </div>
+  <UiPageLoader v-if="loading"/>
 
   <div v-else-if="member" class="idol-detail-page">
     <section class="hero">
@@ -80,12 +78,12 @@ import { resolveMediaUrl } from '@/utils/media'
 import { fallbackPortraitFor } from '@/utils/idolPortrait'
 import { formatDate } from '@/utils/format'
 import IdolPortrait from '@/components/IdolPortrait.vue'
-import UiSpinnerWave from '@/components/progress-loaders/UiSpinnerWave.vue'
+import UiPageLoader from '@/components/progress-loaders/UiPageLoader.vue'
 
 export default {
   name: 'IdolDetailPage',
 
-  components: { IdolPortrait, UiSpinnerWave },
+  components: { IdolPortrait, UiPageLoader },
 
   props: {
     id: { type: String, required: true }
@@ -165,11 +163,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.loading-state {
-  flex: 1;
-  height: 300px;
-}
-
 .idol-detail-page {
   width: 100%;
   flex: 1;

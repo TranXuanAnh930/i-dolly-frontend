@@ -16,9 +16,7 @@
 
       <p v-if="concertsStore.error" class="fetch-error">{{ concertsStore.error }}</p>
 
-      <div v-if="concertsStore.loading && !concertsStore.loaded" class="loading-state">
-        <UiSpinnerWave color="#E4007F"/>
-      </div>
+      <UiPageLoader v-if="concertsStore.loading && !concertsStore.loaded"/>
 
       <template v-else>
         <p class="result-count">{{ $t('events.resultCount', { count: filteredEvents.length }) }}</p>
@@ -41,12 +39,12 @@
 import { useConcertsStore } from '@/store/concerts'
 import EventFilters from '@/components/EventFilters.vue'
 import EventCard from '@/components/EventCard.vue'
-import UiSpinnerWave from '@/components/progress-loaders/UiSpinnerWave.vue'
+import UiPageLoader from '@/components/progress-loaders/UiPageLoader.vue'
 
 export default {
   name: 'EventsPage',
 
-  components: { EventFilters, EventCard, UiSpinnerWave },
+  components: { EventFilters, EventCard, UiPageLoader },
 
   data () {
     return {
@@ -151,10 +149,6 @@ export default {
   font-family: $font-content;
   font-size: 13px;
   font-weight: 700;
-}
-
-.loading-state {
-  height: 200px;
 }
 
 .result-count {

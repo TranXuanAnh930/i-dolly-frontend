@@ -293,9 +293,8 @@ export default {
     top: calc(100% + 16px);
     left: -10px;
     right: -10px;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 2px;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
     background: $color-brand;
     padding: 8px 10px 18px;
     box-shadow: 0 20px 30px -12px rgba($color-ink, .35);
@@ -303,20 +302,30 @@ export default {
     overflow-y: auto;
 
     &.is-open {
-      display: flex;
+      display: grid;
     }
 
     li {
       width: 100%;
-
-      &:not(:last-child) {
-        border-bottom: 1px solid rgba(255, 255, 255, .15);
-      }
+      min-width: 0;
     }
 
     :deep(.lang-switch) {
-      display: inline-flex;
-      margin: 10px 0;
+      display: block;
+      width: 100%;
+      border: none;
+      border-radius: 0;
+      background: none;
+      padding: 12px 8px;
+      color: $color-white;
+      font-family: $font-content;
+      font-weight: 700;
+      font-size: 14px;
+      text-align: left;
+
+      &:hover {
+        background: none;
+      }
     }
   }
 }
