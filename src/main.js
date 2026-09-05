@@ -1,31 +1,22 @@
-import Vue from 'vue'
+import { createApp } from 'vue'
 
 import AppLayout from './layout/index.vue'
 import router from './router'
-import store from './store'
+import pinia from './store/pinia'
+import i18n from './i18n'
 
-import './mixins'
-import './plugins'
-import './thirdParty'
+import { registerMixins } from './mixins'
+import { registerPlugins } from './plugins'
 
 import './scss/style.scss'
-import './assets/fonts/bebasneue.css'
 
-Vue.config.productionTip = false
+const app = createApp(AppLayout)
 
-const commitWindowWidth = () => store.commit('dom/SET_WINDOW_WIDTH', window.innerWidth)
+app.use(pinia)
+app.use(router)
+app.use(i18n)
 
-new Vue({
-  name: 'Root',
-  router,
-  store,
-  mounted () {
-    commitWindowWidth()
-    window.addEventListener('resize', commitWindowWidth)
-  },
+registerMixins(app)
+registerPlugins(app)
 
-  beforeDestroy () {
-    window.removeEventListener('resize', commitWindowWidth)
-  },
-  render: h => h(AppLayout)
-}).$mount('#app')
+app.mount('#app')

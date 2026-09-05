@@ -1,34 +1,77 @@
 <template>
-  <div class="login">
-    <div class="main">
-      <div class="header">Вход</div>
-      <div class="content">
-        <label for="email">E-mail</label>
-        <input id="email" type="text" v-model="email">
-
-        <label for="password">password</label>
-        <input id="password" type="password" v-model="password" @keyup.enter="makeLogin">
-      </div>
-      <div class="buttons">
-        <button @click="makeLogin">login</button>
+  <div class="login-page">
+    <div class="login-card">
+      <div class="badge" aria-hidden="true">
+        <BowIcon class="badge__icon"/>
       </div>
 
-      <div class="error" v-if="error">
-        {{ error }}
-      </div>
+      <p class="eyebrow">{{ $t('login.eyebrow') }}</p>
+      <h1 class="title">{{ $t('login.title') }}<span class="title__accent">!</span></h1>
+      <p class="subtitle">{{ $t('login.subtitle') }}</p>
+
+      <form class="form" @submit.prevent="makeLogin">
+        <label class="field">
+          <span class="field__label">{{ $t('common.email') }}</span>
+          <div class="field__control">
+            <svg class="field__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <rect x="2" y="4" width="16" height="12" rx="2.5" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M3 5.5 10 11 17 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <input id="email" type="text" v-model="email" placeholder="you@example.com" autocomplete="username">
+          </div>
+        </label>
+
+        <label class="field">
+          <span class="field__label">{{ $t('common.password') }}</span>
+          <div class="field__control">
+            <svg class="field__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <rect x="4" y="9" width="12" height="9" rx="2.2" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M6.5 9V6.5a3.5 3.5 0 0 1 7 0V9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+            <input
+              id="password"
+              :type="showPassword ? 'text' : 'password'"
+              v-model="password"
+              placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"
+              autocomplete="current-password">
+            <button type="button" class="field__toggle" @click="showPassword = !showPassword" :aria-label="showPassword ? 'Hide password' : 'Show password'">
+              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <path d="M1.5 10S4.5 4 10 4s8.5 6 8.5 6-3 6-8.5 6-8.5-6-8.5-6Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                <circle cx="10" cy="10" r="2.4" stroke="currentColor" stroke-width="1.5"/>
+                <line v-if="!showPassword" x1="3" y1="17" x2="17" y2="3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </div>
+        </label>
+
+        <p class="form-error" v-if="error" :key="error">{{ error }}</p>
+
+        <button type="submit" class="submit-btn">{{ $t('login.submit') }}</button>
+      </form>
+
+      <p class="register-link">
+        {{ $t('login.noAccount') }} <router-link to="/register">{{ $t('login.register') }}</router-link>
+      </p>
     </div>
   </div>
 </template>
 
 <script>
 import { AuthService } from '@/services/auth.service'
+import { useUserStore } from '@/store/user'
+import { useToastStore } from '@/store/toast'
+import BowIcon from '@/components/icons/BowIcon.vue'
 
 export default {
   name: 'Login',
+
+  components: { BowIcon },
+
   data () {
     return {
       email: 'user@user.com',
       password: '123456',
+      showPassword: false,
       error: ''
     }
   },
@@ -36,12 +79,12 @@ export default {
   methods: {
     async makeLogin () {
       try {
-        await AuthService.makeLogin({ email: this.email, password: this.password })
+        await AuthService.makeLogin({ username: this.email, password: this.password })
         this.error = ''
-        await this.$store.dispatch('user/getCurrent')
-        await this.$router.push('profile')
+        await useUserStore().getCurrent()
+        await this.$router.push('/')
       } catch (error) {
-        this.$store.commit('toast/NEW', { type: 'error', message: error.message })
+        useToastStore().add({ type: 'error', message: error.message })
         this.error = error.status === 404 ? 'User with same email not found' : error.message
       }
     }
@@ -50,37 +93,221 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.login {
+.login-page {
+  flex: 1;
+  min-height: 520px;
   width: 100%;
-  height: 70%;
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  padding: 60px 16px;
+}
 
-  .main {
-    padding: 30px 15px;
-    background: #fff;
-    width: 400px;
-    border-radius: 2px;
-    box-shadow: 0 11px 15px -7px rgba(0, 0, 0, .2),
-    0 24px 38px 3px rgba(0, 0, 0, .14),
-    0 9px 46px 8px rgba(0, 0, 0, .12);
+.login-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  background: $color-white;
+  border-radius: 28px;
+  padding: 44px 36px 36px;
+  box-shadow: 0 30px 60px -24px rgba($color-brand, .3), 0 10px 24px -10px rgba($color-ink, .15);
+}
 
-    .header {
-      text-align: center;
-    }
+.badge {
+  position: absolute;
+  top: -26px;
+  right: 28px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, #e4007f, #f2b705, #1f8fd6, #b6379c, #1fa876, #e4007f);
+  padding: 3px;
+  animation: spin 10s linear infinite;
 
-    .buttons {
-      display: flex;
-      justify-content: flex-end;
-    }
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
 
-    .error {
-      background-color: red;
-      padding: 10px;
-      font-size: 12px;
-      opacity: 1;
-      transition: all 0.5s;
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.badge__icon {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: $color-brand;
+  color: $color-white;
+  padding: 15px;
+  box-sizing: border-box;
+}
+
+.eyebrow {
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: $color-gray-400;
+}
+
+.title {
+  margin-top: 6px;
+  font-family: $font-title;
+  font-weight: 900;
+  font-style: italic;
+  font-size: 38px;
+  color: $color-brand;
+  transform: rotate(-1.5deg);
+  transform-origin: left center;
+}
+
+.title__accent {
+  color: $color-brand;
+}
+
+.subtitle {
+  margin-top: 10px;
+  font-family: $font-content;
+  font-size: 14px;
+  color: $color-font-main;
+}
+
+.form {
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field__label {
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 12px;
+  color: $color-gray-500;
+}
+
+.field__control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1.5px solid $color-line;
+  border-radius: 999px;
+  padding: 12px 18px;
+  transition: border-color .15s ease, box-shadow .15s ease;
+
+  &:focus-within {
+    border-color: $color-brand;
+    box-shadow: 0 0 0 4px $color-brand-tint;
+  }
+}
+
+.field__icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: $color-gray-300;
+}
+
+.field__control input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  font-family: $font-content;
+  font-size: 14px;
+  color: $color-ink;
+
+  &::placeholder {
+    color: $color-gray-300;
+  }
+}
+
+.field__toggle {
+  flex: none;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  color: $color-gray-300;
+  display: flex;
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    color: $color-gray-500;
+  }
+}
+
+.form-error {
+  background: #fdeaf1;
+  color: $color-error;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-family: $font-content;
+  font-size: 13px;
+  font-weight: 700;
+  animation: shake .4s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(3px); }
+}
+
+.submit-btn {
+  margin-top: 4px;
+  border: none;
+  border-radius: 999px;
+  padding: 14px;
+  background: $color-brand;
+  color: $color-white;
+  font-family: $font-content;
+  font-weight: 900;
+  font-size: 15px;
+  cursor: pointer;
+  transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+  box-shadow: 0 10px 20px -8px rgba($color-brand, .55);
+
+  &:hover {
+    background: $color-brand-deep;
+    transform: translateY(-2px);
+    box-shadow: 0 14px 24px -8px rgba($color-brand, .6);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.register-link {
+  margin-top: 20px;
+  text-align: center;
+  font-family: $font-content;
+  font-size: 13px;
+  color: $color-gray-500;
+
+  a {
+    color: $color-brand;
+    font-weight: 700;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
     }
   }
 }

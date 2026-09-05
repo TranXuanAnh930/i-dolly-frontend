@@ -1,5 +1,5 @@
 <template>
-  <span class="ui-icon-base component" v-on="$listeners">
+  <span class="ui-icon-base component">
     <component
       :is="iconName"
       :width="width"

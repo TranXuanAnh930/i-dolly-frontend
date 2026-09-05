@@ -11,6 +11,8 @@
 
 <script>
 import UiToast from './UiToast'
+import { useToastStore } from '@/store/toast'
+
 export default {
   name: 'UiToastList',
 
@@ -27,17 +29,17 @@ export default {
 
   computed: {
     toastsList () {
-      return this.$store.state.toast.toastsList
+      return useToastStore().toastsList
     }
   },
 
   methods: {
     onRemove (id) {
-      this.$store.commit('toast/REMOVE', { id })
+      useToastStore().remove(id)
     },
     clearToastList () {
       if (this.toastsList.length) {
-        this.$store.commit('toast/CLEAR_LIST')
+        useToastStore().clear()
       }
     }
   }

@@ -1,14 +1,11 @@
-import Vue from 'vue'
-import Router from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 
 import { initCurrentUserStateMiddleware, checkAccessMiddleware, setPageTitleMiddleware } from './middlewares'
 import { routes } from './routes'
 
-Vue.use(Router)
-
-const router = new Router({
+const router = createRouter({
+  history: createWebHistory(),
   linkActiveClass: 'is-active',
-  mode: 'history',
   routes
 })
 

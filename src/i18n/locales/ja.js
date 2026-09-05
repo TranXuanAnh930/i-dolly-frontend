@@ -1,0 +1,224 @@
+export default {
+  common: {
+    save: '保存',
+    submit: '送信',
+    cancel: 'キャンセル',
+    name: 'お名前',
+    email: 'メールアドレス',
+    password: 'パスワード',
+    confirmPassword: 'パスワード（確認）',
+    address: '住所',
+    city: '市区町村',
+    postalCode: '郵便番号'
+  },
+
+  nav: {
+    events: 'イベント',
+    members: 'メンバー',
+    store: 'ストア',
+    login: 'ログイン',
+    logout: 'ログアウト',
+    cart: 'カート',
+    notifications: '通知'
+  },
+
+  notifications: {
+    title: '通知',
+    markAllRead: 'すべて既読にする',
+    empty: '通知はまだありません。',
+    more: 'もっと見る'
+  },
+
+  menu: {
+    accountSettings: { title: 'アカウント設定', desc: 'プロフィールと設定' },
+    contact: { title: 'お問い合わせ', desc: 'ご質問はこちらから' },
+    guidelines: { title: 'ご利用ガイド', desc: '抽選や会場について' },
+    about: { title: 'I-Dollyについて', desc: 'サービス紹介' }
+  },
+
+  footer: {
+    tagline: 'モック予約デモ'
+  },
+
+  notificationBar: {
+    message: '新しいアルバム・シングルがストアに入荷 — 今週の新譜をチェック'
+  },
+
+  events: {
+    eyebrow: 'スクールアイドルチケット',
+    title: '次のライブを見つけよう',
+    sub: '先着販売も抽選も、6ユニットが同じステージへ。',
+    searchPlaceholder: 'イベント・ユニット・会場を検索…',
+    sortSoonest: '開催日が近い順',
+    sortPriceAsc: '価格が安い順',
+    sortPriceDesc: '価格が高い順',
+    resultCount: '{count}件のイベント',
+    noResults: '条件に一致するイベントが見つかりません。',
+    noResultsHint: '検索条件をリセットするか、別のユニットを選んでみてください。',
+    clearFilters: 'フィルターをリセット'
+  },
+
+  members: {
+    eyebrow: 'スクールアイドル名鑑',
+    title: 'メンバーを見る',
+    sub: '18人のアイドル、6ユニット。気になる顔をタップして次のライブをチェック。',
+    filterByUnit: 'ユニットで絞り込む',
+    resultCount: '{count}人のメンバー',
+    noResults: 'そのユニットのメンバーはまだいません。'
+  },
+
+  store: {
+    eyebrow: 'アルバム・シングル・グッズ',
+    title: '音楽を持ち帰ろう',
+    sub: '全ユニットのディスコグラフィーに加え、ペンライトやグッズもレーベルから直接。',
+    typeLabel: '種類',
+    typeAll: 'すべて',
+    typeAlbum: 'アルバム',
+    typeSingle: 'シングル',
+    unitLabel: 'ユニット',
+    resultCount: '{count}件のアイテム',
+    noResults: '条件に一致するアイテムが見つかりません。'
+  },
+
+  cart: {
+    eyebrow: 'ショッピングバッグ',
+    title: 'カート',
+    orderSummary: 'ご注文内容',
+    subtotal: '小計（{count}点）',
+    shipping: '送料',
+    free: '無料',
+    total: '合計',
+    checkout: 'レジに進む',
+    continueShopping: '買い物を続ける',
+    emptyTitle: 'カートは空です。',
+    emptyHint: 'ストアをチェックしてお気に入りを見つけよう。',
+    goToStore: 'ストアへ'
+  },
+
+  checkout: {
+    eyebrow: 'あと少し',
+    title: 'チェックアウト',
+    contactShipping: '連絡先・配送先',
+    fullName: 'お名前',
+    paymentMock: 'お支払い（モック）',
+    cardNumber: 'カード番号',
+    expiry: '有効期限',
+    cvc: 'セキュリティコード',
+    orderSummary: 'ご注文内容',
+    total: '合計',
+    placeOrder: '注文を確定する',
+    errorContact: 'お名前・メールアドレス・住所を入力してください。',
+    errorPayment: 'お支払い情報（モック）を入力してください。',
+    orderPlaced: 'ご注文ありがとうございます！',
+    orderConfirmed: '注文番号 {orderNumber} を承りました。これはモックのチェックアウトのため、実際の請求は発生しません。',
+    keepShopping: '買い物を続ける',
+    backToEvents: 'イベント一覧へ戻る',
+    emptyTitle: 'カートは空です。',
+    emptyHint: 'チェックアウトする商品がありません。',
+    notificationTitle: '注文完了',
+    notificationMessage: '注文番号 {orderNumber}（¥{amount}）が確定しました。'
+  },
+
+  history: {
+    eyebrow: 'アクティビティ',
+    title: '履歴',
+    sub: '購入完了通知や抽選結果をまとめて確認。',
+    entries: '{count}件の履歴',
+    markAllRead: 'すべて既読にする',
+    emptyTitle: 'まだ履歴がありません。',
+    emptyHint: '購入や抽選結果はここに表示されます。'
+  },
+
+  account: {
+    eyebrow: 'アカウント',
+    title: '設定',
+    profile: 'プロフィール',
+    saveChanges: '変更を保存',
+    profileSaved: 'プロフィールを更新しました。',
+    preferences: '通知設定',
+    savePreferences: '設定を保存',
+    preferencesSaved: '設定を保存しました。',
+    lotteryAlertsTitle: '抽選のお知らせ',
+    lotteryAlertsDesc: 'フォロー中のユニットの抽選開始をメールでお知らせします。',
+    orderReceiptsTitle: '注文の領収書',
+    orderReceiptsDesc: '注文完了時に領収書をメールで送信します。',
+    releaseAlertsTitle: '新譜のお知らせ',
+    releaseAlertsDesc: 'ストアに新しいアルバムやシングルが追加されたらお知らせします。'
+  },
+
+  guidelines: {
+    eyebrow: 'ご利用の前に',
+    title: 'ご利用ガイド',
+    sub: '購入・抽選・当日の流れについて。',
+    directSaleTitle: '先着販売チケット',
+    directSaleBody: '「発売中」のイベントは先着順です。イベントページで座席を選んでカートに追加し、そのままチェックアウトへ — お支払いが完了した時点で座席が確保されます。',
+    lotteryTitle: '抽選チケット',
+    lotteryBody: '人気公演は抽選での販売となります。応募期間中にエントリーしてください（応募時点での費用はかかりません）。当選された方は公演の約2週間前に決済とメール・通知ベルでのお知らせを行います。落選した場合も履歴に結果が表示されますので、ぜひ次の公演にもご応募ください。',
+    releasesTitle: 'アルバム＆シングル',
+    releasesBody: 'ストアの商品はチケットとは別便で発送されます。チケットと一緒に、またはリリース単体でもカートに追加でき、チェックアウトはまとめて1回で完了します。',
+    venueTitle: '会場にて',
+    venueItem1: '開場の30分前までにはお越しください。手荷物検査に時間がかかる場合があります。',
+    venueItem2: '会場内でのプロ用カメラ・録音機材の使用はご遠慮ください。',
+    venueItem3: 'ペンライトの使用は歓迎ですが、バラード中は肩より低い位置でお願いします。',
+    venueItem4: '一度退場すると再入場はできません。',
+    venueItem5: '入場時にチケットのお名前と写真付き身分証の確認を行います。',
+    supportTitle: '返金・サポート',
+    supportBody: 'チケットは原則返金不可ですが、I-Dolly側の都合による公演中止・延期の場合は自動的に返金いたします。その他のお困りごとは、履歴のご注文からお問い合わせください。'
+  },
+
+  about: {
+    eyebrow: 'I-Dollyについて',
+    title: 'I-Dollyとは',
+    sub: '6つのスクールアイドルユニットのチケット・抽選・新譜をひとつの場所で。',
+    intro: 'I-Dollyは、6つの異なるファンクラブ、6つのチケット窓口、6つのリリースカレンダーを一本化するために生まれました。Starlight Ariaのアリーナツアーから、デビューしたばかりのMint Paradeまで、すべてのユニットのチケット購入・抽選応募・アルバム購入を1つのアカウントで行えます。',
+    statUnits: 'ユニット',
+    statIdols: 'アイドル',
+    statShows: '年間公演数',
+    statVenues: '会場',
+    noteTitle: 'このデモについて',
+    noteBody: 'I-Dollyはデモ用の予約サイトです。登場するユニット・アイドル・会場・リリースはすべて架空のもので、チェックアウトもモックのため実際の請求は発生しません。実際のバックエンドと接続しているのはログインのみで、それ以外はすべてお使いのブラウザ内にデータを保存しています。'
+  },
+
+  contact: {
+    eyebrow: 'サポート',
+    title: 'お問い合わせ',
+    sub: 'ご注文や抽選など、ご不明な点はお気軽にお問い合わせください。',
+    subjectLabel: '件名',
+    subjectGeneral: '一般的なご質問',
+    subjectOrder: 'ご注文について',
+    subjectLottery: '抽選について',
+    subjectAccount: 'アカウントについて',
+    subjectOther: 'その他',
+    messageLabel: 'お問い合わせ内容',
+    messagePlaceholder: '内容をご記入ください…',
+    submit: '送信する',
+    errorRequired: 'お名前・メールアドレス・お問い合わせ内容を入力してください。',
+    successTitle: '送信しました！',
+    successBody: 'お問い合わせありがとうございます。こちらはモックフォームですが、実際のサイトではメールにてご返信いたします。',
+    sendAnother: 'もう一度送信する',
+    backEvents: 'イベント一覧へ戻る'
+  },
+
+  login: {
+    eyebrow: 'I-Dollyアカウント',
+    title: 'おかえりなさい',
+    subtitle: 'ログインして座席の確保や抽選応募をしよう。',
+    submit: 'ログイン',
+    noAccount: 'アカウントをお持ちでない方は',
+    register: '新規登録'
+  },
+
+  register: {
+    eyebrow: 'I-Dollyアカウント',
+    title: 'ようこそ',
+    subtitle: 'アカウントを作成して座席の確保や抽選応募をしよう。',
+    submit: 'アカウントを作成',
+    haveAccount: 'すでにアカウントをお持ちの方は',
+    login: 'ログイン',
+    errorName: 'お名前を入力してください。',
+    errorEmail: '正しいメールアドレスを入力してください。',
+    errorPasswordLength: 'パスワードは6文字以上で入力してください。',
+    errorPasswordMatch: 'パスワードが一致しません。',
+    successMessage: '{name}さん、ようこそ！アカウントの準備ができました。ログインしてください。'
+  }
+}

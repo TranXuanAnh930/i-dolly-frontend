@@ -15,30 +15,27 @@ import UiBaseIcon from './icons/UiBaseIcon'
 export default {
   name: 'UiSortableHeading',
   props: {
-    value: {
+    modelValue: {
       type: String,
       'default': ''
     }
   },
 
-  model: {
-    prop: 'value',
-    event: 'change'
-  },
+  emits: ['reset', 'update:modelValue'],
 
   components: {
     UiBaseIcon
   },
 
   watch: {
-    value (value) {
+    modelValue (value) {
       this.sort = value || ''
     }
   },
 
   data () {
     return {
-      sort: this.value
+      sort: this.modelValue
     }
   },
   methods: {
@@ -53,7 +50,7 @@ export default {
       // at first send reset events
       this.$emit('reset')
       // and ONLY after reset event send change event
-      this.$emit('change', this.sort)
+      this.$emit('update:modelValue', this.sort)
     }
   },
   computed: {

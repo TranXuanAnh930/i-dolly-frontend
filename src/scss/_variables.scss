@@ -1,22 +1,31 @@
 // GLOBAL COLORS
 $color-white: #fff;
-$color-body: #1e2221;
-$color-error: red;
+$color-body: #1e1420;
+$color-error: #e0004d;
 
-$color-line: #eceae8;
-$color-black-transparent: rgba(27, 31, 35, .15);
+$color-line: #f3e2ef;
+$color-black-transparent: rgba(30, 15, 30, .12);
 
 // fonts color
-$color-font-main: #5a5a5a;
-$color-font-dim: #ccc;
-$color-font-placeholder: #e5e5e5;
+$color-font-main: #4a3a46;
+$color-font-dim: #b79db0;
+$color-font-placeholder: #e9d7e4;
 
-$color-line: #e5e5e5;
+$color-gray-50: #ede3ea;
+$color-gray-100: #ddd0da;
+$color-gray-200: #c7b5c3;
+$color-gray-300: #a993a3;
+$color-gray-400: #8a7286;
+$color-gray-450: #74616f;
+$color-gray-500: #63525d;
 
-$color-gray-50: #d1d1d1;
-$color-gray-100: #cccccc;
-$color-gray-200: #bfbfbf;
-$color-gray-300: #adadad;
-$color-gray-400: #989898;
-$color-gray-450: #808080;
-$color-gray-500: #7a7a7a;
+// brand — "I-Dolly" theme (inspired by lovelive-anime.jp)
+$color-brand: #e4007f;
+$color-brand-deep: #ad0062;
+$color-brand-tint: #ffecfb;
+$color-brand-tint-2: #fff5fb;
+$color-ink: #1e1420;
+
+// default app-wide backdrop (pastel wash behind every page) — matches the
+// six-stop rainbow gradient used site-wide on bang-dream.com
+$gradient-backdrop: linear-gradient(90deg, #fdf1f4, #faf2fd, #ebf9fd, #eafdf3, #fdfcea, #fdf2ec);

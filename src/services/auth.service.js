@@ -1,13 +1,12 @@
-import * as Fingerprint2 from 'fingerprintjs2'
-import * as UAParser from 'ua-parser-js'
 import axios from 'axios'
 
 import { Http } from './http.init'
 import { ResponseWrapper, ErrorWrapper } from './util'
-import $store from '../store'
+import { useAuthStore } from '../store/auth'
+import { useUserStore } from '../store/user'
 import $router from '../router'
 
-import { API_URL } from '../.env'
+import { API_URL } from '../env'
 
 let BEARER = ''
 
@@ -18,49 +17,56 @@ export class AuthService {
    ******************************
    */
 
-  static async makeLogin ({ email, password }) {
+  static async makeLogin ({ username, password }) {
     try {
-      const fingerprint = await _getFingerprint()
-      const response = await axios.post(`${API_URL}/auth/login`,
-        { email, password, fingerprint },
+      const payload = new URLSearchParams()
+      payload.append('username', username)
+      payload.append('password', password)
+      payload.append('grant_type', 'password')
+
+      // withCredentials: the refresh token comes back as an httpOnly
+      // Set-Cookie (see POST /account/login in docs/api-spec.md), not in the
+      // JSON body — the browser needs to be told to accept/store it.
+      const response = await axios.post(`${API_URL}/account/login`,
+        payload,
         { withCredentials: true })
       _setAuthData({
-        accessToken: response.data.data.accessToken,
-        exp: _parseTokenData(response.data.data.accessToken).exp
+        accessToken: response.data.access_token,
+        exp: _parseTokenData(response.data.access_token).exp
       })
-      return new ResponseWrapper(response, response.data.data)
+      return new ResponseWrapper(response, response.data)
     } catch (error) {
-      throw new ErrorWrapper(error)
+      throw new ErrorWrapper(error, error.response && error.response.data ? error.response.data.detail : undefined)
     }
   }
 
   static async makeLogout () {
     try {
-      const response = await new Http({ auth: true }).post('auth/logout', {}, { withCredentials: true })
+      const response = await new Http({ auth: true }).post('profile/logout', {}, { withCredentials: true })
       _resetAuthData()
       $router.push({ name: 'login' }).catch(() => {})
-      return new ResponseWrapper(response, response.data.data)
+      return new ResponseWrapper(response, response.data)
     } catch (error) {
-      throw new ErrorWrapper(error)
+      throw new ErrorWrapper(error, error.response && error.response.data ? error.response.data.detail : undefined)
     }
   }
 
   static async refreshTokens () {
     try {
-      const response = await axios.post(`${API_URL}/auth/refresh-tokens`, {
-        fingerprint: await _getFingerprint()
-      }, { withCredentials: true })
+      // POST /account/refresh reads the refresh token straight off the
+      // httpOnly cookie set at login — nothing to send in the body, just
+      // withCredentials so the cookie rides along.
+      const response = await axios.post(`${API_URL}/account/refresh`, {}, { withCredentials: true })
 
       _setAuthData({
-        accessToken: response.data.data.accessToken,
-        exp: _parseTokenData(response.data.data.accessToken).exp
+        accessToken: response.data.access_token,
+        exp: _parseTokenData(response.data.access_token).exp
       })
-      return new ResponseWrapper(response, response.data.data)
+      return new ResponseWrapper(response, response.data)
     } catch (error) {
-      console.log(error.response.data.code)
       _resetAuthData()
       $router.push({ name: 'login' }).catch(() => {})
-      throw new ErrorWrapper(error)
+      throw new ErrorWrapper(error, error.response && error.response.data ? error.response.data.detail : undefined)
     }
   }
 
@@ -75,7 +81,7 @@ export class AuthService {
    */
 
   static isAccessTokenExpired () {
-    const accessTokenExpDate = $store.state.auth.accessTokenExpDate - 10
+    const accessTokenExpDate = useAuthStore().accessTokenExpDate - 10
     const nowTime = Math.floor(new Date().getTime() / 1000)
 
     return accessTokenExpDate <= nowTime
@@ -147,8 +153,8 @@ function _parseTokenData (accessToken) {
 
 function _resetAuthData () {
   // reset userData in store
-  $store.commit('user/SET_CURRENT_USER', {})
-  $store.commit('auth/SET_ATOKEN_EXP_DATE', null)
+  useUserStore().setCurrentUser({})
+  useAuthStore().setAccessTokenExpDate(null)
   // reset tokens
   AuthService.setRefreshToken('')
   AuthService.setBearer('')
@@ -157,50 +163,5 @@ function _resetAuthData () {
 function _setAuthData ({ accessToken, exp } = {}) {
   AuthService.setRefreshToken('true')
   AuthService.setBearer(accessToken)
-  $store.commit('auth/SET_ATOKEN_EXP_DATE', exp)
-}
-
-function _getFingerprint () {
-  return new Promise((resolve, reject) => {
-    async function getHash () {
-      const options = {
-        excludes: {
-          plugins: true,
-          localStorage: true,
-          adBlock: true,
-          screenResolution: true,
-          availableScreenResolution: true,
-          enumerateDevices: true,
-          pixelRatio: true,
-          doNotTrack: true,
-          preprocessor: (key, value) => {
-            if (key === 'userAgent') {
-              const parser = new UAParser(value)
-              // return customized user agent (without browser version)
-              return `${parser.getOS().name} :: ${parser.getBrowser().name} :: ${parser.getEngine().name}`
-            }
-            return value
-          }
-        }
-      }
-
-      try {
-        const components = await Fingerprint2.getPromise(options)
-        const values = components.map(component => component.value)
-        console.log('fingerprint hash components', components)
-
-        return String(Fingerprint2.x64hash128(values.join(''), 31))
-      } catch (e) {
-        reject(e)
-      }
-    }
-
-    if (window.requestIdleCallback) {
-      console.log('get fp hash @ requestIdleCallback')
-      requestIdleCallback(async () => resolve(await getHash()))
-    } else {
-      console.log('get fp hash @ setTimeout')
-      setTimeout(async () => resolve(await getHash()), 500)
-    }
-  })
+  useAuthStore().setAccessTokenExpDate(exp)
 }

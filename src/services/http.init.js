@@ -6,8 +6,7 @@
 
 import axios from 'axios'
 
-import { AuthService } from '@/services/auth.service'
-import { API_URL } from '../.env'
+import { API_URL } from '../env'
 
 export class Http {
   constructor (status) {
@@ -21,13 +20,17 @@ export class Http {
 
   init () {
     if (this.isAuth) {
-      this.instance.interceptors.request.use(request => {
+      this.instance.interceptors.request.use(async request => {
+        // dynamic import breaks the http.init <-> auth.service module cycle
+        // (auth.service -> store/user -> users.service -> base.service -> http.init)
+        const { AuthService } = await import('@/services/auth.service')
+
         request.headers.authorization = AuthService.getBearer()
         // if access token expired and refreshToken is exist >> go to API and get new access token
         if (AuthService.isAccessTokenExpired() && AuthService.hasRefreshToken()) {
           return AuthService.debounceRefreshTokens()
             .then(response => {
-              AuthService.setBearer(response.data.accessToken)
+              AuthService.setBearer(response.data.access_token)
               request.headers.authorization = AuthService.getBearer()
               return request
             }).catch(error => Promise.reject(error))

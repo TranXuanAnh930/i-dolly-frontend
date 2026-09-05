@@ -15,9 +15,10 @@
         :type="inputType"
         :style="inputHeight"
         :class="inputClasses"
-        :value="value"
+        :value="modelValue"
         :placeholder="placeholder"
-        v-on="listeners">
+        v-bind="$attrs"
+        @input="$emit('update:modelValue', $event.target.value)">
 
       <div class="slot-bottom" v-if="$slots.bottom">
         <slot name="bottom"/>
@@ -34,17 +35,21 @@
 export default {
   name: 'UiInputText',
 
+  inheritAttrs: false,
+
   props: {
     label: { type: String },
     height: { type: String, default: '44px' },
     password: { type: Boolean, default: false },
-    value: { required: true },
+    modelValue: { required: true },
     placeholder: { type: String },
     error: {
       type: [String, Boolean],
       default: false
     }
   },
+
+  emits: ['update:modelValue'],
 
   methods: {
     getRandomInt () {
@@ -70,12 +75,6 @@ export default {
     },
     inputType () {
       return this.password ? 'password' : 'text'
-    },
-    listeners () {
-      return {
-        ...this.$listeners,
-        input: event => this.$emit('input', event.target.value)
-      }
     }
   }
 }

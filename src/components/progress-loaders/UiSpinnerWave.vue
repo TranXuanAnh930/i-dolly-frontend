@@ -30,6 +30,8 @@ export default {
 </script>
 
 <style scoped lang="scss">
+@use "sass:math";
+
 .ui-spinner-wave {
   height: 100%;
   width: 100%;
@@ -62,7 +64,7 @@ $spinkit-size: 40px !default;
   }
   @for $i from 1 through $rectCount {
     .sk-rect#{$i} {
-      animation-delay: - $animationDuration + $delayRange / ($rectCount - 1) * ($i - 1);
+      animation-delay: - $animationDuration + math.div($delayRange, $rectCount - 1) * ($i - 1);
     }
   }
 }

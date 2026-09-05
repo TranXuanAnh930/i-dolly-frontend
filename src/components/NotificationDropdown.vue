@@ -1,0 +1,294 @@
+<template>
+  <UiOnClickOutside :do="close">
+    <div class="notif">
+      <button type="button" class="notif__trigger" :aria-label="$t('nav.notifications')" @click="toggle">
+        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <path d="M10 3a4 4 0 0 1 4 4v2.2c0 1.3.4 2.6 1.2 3.6l.7.9a1 1 0 0 1-.8 1.6H4.9a1 1 0 0 1-.8-1.6l.7-.9c.8-1 1.2-2.3 1.2-3.6V7a4 4 0 0 1 4-4Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M8 16.5a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <span v-if="unreadCount" class="notif__badge">{{ unreadCount }}</span>
+      </button>
+
+      <div v-if="open" class="notif__panel">
+        <div class="notif__header">
+          <span>{{ $t('notifications.title') }}</span>
+          <button v-if="unreadCount" type="button" class="notif__mark-read" @click="markAllRead">{{ $t('notifications.markAllRead') }}</button>
+        </div>
+
+        <div v-if="items.length" class="notif__list">
+          <router-link
+            v-for="item in items"
+            :key="item.id"
+            :to="item.to || '/history'"
+            class="notif__item"
+            :class="{ 'is-unread': !item.read }"
+            @click="onItemClick(item)">
+            <span class="notif__icon" :class="`notif__icon--${item.type}`">
+              <svg v-if="item.type === 'purchase'" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <path d="M5 6.5h10l-.8 8.5a1.5 1.5 0 0 1-1.5 1.4H7.3a1.5 1.5 0 0 1-1.5-1.4L5 6.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                <path d="M7 6.5V5a3 3 0 0 1 6 0v1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              <svg v-else-if="item.type === 'lottery-won'" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <path fill="currentColor" d="M10 2 11.9 7.1 17.5 7.5 13.2 11 14.5 16.5 10 13.3 5.5 16.5 6.8 11 2.5 7.5 8.1 7.1 10 2Z"/>
+              </svg>
+              <svg v-else viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="1.5"/>
+              </svg>
+            </span>
+            <span class="notif__body">
+              <span class="notif__title">{{ item.title }}</span>
+              <span class="notif__message">{{ item.message }}</span>
+              <span class="notif__time">{{ relativeTime(item.timestamp) }}</span>
+            </span>
+          </router-link>
+        </div>
+        <p v-else class="notif__empty">{{ $t('notifications.empty') }}</p>
+
+        <router-link to="/history" class="notif__more" @click="close">{{ $t('notifications.more') }} &rarr;</router-link>
+      </div>
+    </div>
+  </UiOnClickOutside>
+</template>
+
+<script>
+import { formatDistanceToNow, parseISO } from 'date-fns'
+
+import { useNotificationStore } from '@/store/notifications'
+import UiOnClickOutside from './UiOnClickOutside.vue'
+
+export default {
+  name: 'NotificationDropdown',
+
+  components: { UiOnClickOutside },
+
+  data () {
+    return {
+      open: false
+    }
+  },
+
+  computed: {
+    notifications () {
+      return useNotificationStore()
+    },
+    items () {
+      return this.notifications.sorted.slice(0, 5)
+    },
+    unreadCount () {
+      return this.notifications.unreadCount
+    }
+  },
+
+  methods: {
+    toggle () {
+      this.open = !this.open
+    },
+    close () {
+      this.open = false
+    },
+    onItemClick (item) {
+      this.notifications.markRead(item.id)
+      this.close()
+    },
+    markAllRead () {
+      this.notifications.markAllRead()
+    },
+    relativeTime (timestamp) {
+      return formatDistanceToNow(parseISO(timestamp), { addSuffix: true })
+    }
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+.notif {
+  position: relative;
+}
+
+.notif__trigger {
+  position: relative;
+  display: flex;
+  border: none;
+  background: none;
+  padding: 0;
+  color: $color-white;
+  cursor: pointer;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  &:hover {
+    opacity: .8;
+  }
+}
+
+.notif__badge {
+  position: absolute;
+  top: -7px;
+  right: -8px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  border-radius: 999px;
+  background: #f2b705;
+  color: $color-ink;
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 10px;
+  line-height: 16px;
+  text-align: center;
+}
+
+.notif__panel {
+  position: absolute;
+  top: calc(100% + 14px);
+  right: -10px;
+  width: 320px;
+  max-width: calc(100vw - 20px);
+  background: $color-white;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px -14px rgba($color-ink, .35);
+  overflow: hidden;
+  z-index: 10;
+
+  @include media_mobile {
+    right: -60px;
+  }
+}
+
+.notif__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid $color-line;
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 14px;
+  color: $color-ink;
+}
+
+.notif__mark-read {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 11px;
+  color: $color-brand;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.notif__list {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.notif__item {
+  display: flex;
+  gap: 10px;
+  padding: 12px 16px;
+  text-decoration: none;
+  border-bottom: 1px solid $color-line;
+  transition: background .12s ease;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: $color-gray-50;
+  }
+
+  &.is-unread {
+    background: $color-brand-tint-2;
+  }
+}
+
+.notif__icon {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  &--purchase {
+    background: $color-brand-tint;
+    color: $color-brand;
+  }
+
+  &--lottery-won {
+    background: #e6f7ef;
+    color: #147a52;
+  }
+
+  &--lottery-lost {
+    background: $color-gray-50;
+    color: $color-gray-400;
+  }
+}
+
+.notif__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.notif__title {
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 12.5px;
+  color: $color-ink;
+}
+
+.notif__message {
+  font-family: $font-content;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: $color-font-main;
+}
+
+.notif__time {
+  font-family: $font-content;
+  font-size: 11px;
+  color: $color-gray-400;
+}
+
+.notif__empty {
+  padding: 24px 16px;
+  text-align: center;
+  font-family: $font-content;
+  font-size: 13px;
+  color: $color-gray-500;
+}
+
+.notif__more {
+  display: block;
+  text-align: center;
+  padding: 12px;
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 13px;
+  color: $color-brand;
+  text-decoration: none;
+  border-top: 1px solid $color-line;
+
+  &:hover {
+    background: $color-gray-50;
+  }
+}
+</style>

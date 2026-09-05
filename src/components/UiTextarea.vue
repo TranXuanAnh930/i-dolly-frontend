@@ -17,15 +17,17 @@
 export default {
   name: 'UiTextarea',
   props: {
-    value: { type: String },
+    modelValue: { type: String },
     placeholder: { type: String },
     underline: { type: Boolean, default: false },
     autosize: { type: Boolean, default: true },
     refresh: { type: [String, Number, Date] }
   },
 
+  emits: ['update:modelValue'],
+
   watch: {
-    value (newVal) {
+    modelValue (newVal) {
       this.localValue = newVal
       this.applyStyles()
     },
@@ -36,14 +38,14 @@ export default {
 
   data () {
     return {
-      localValue: this.value,
+      localValue: this.modelValue,
       textareaHeight: false
     }
   },
 
   methods: {
     handleChange (e) {
-      this.$emit('input', e.target.value)
+      this.$emit('update:modelValue', e.target.value)
     },
     getTextAreaLineSize () {
       const style = window.getComputedStyle(this.$el)

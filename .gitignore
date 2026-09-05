@@ -2,6 +2,9 @@
 node_modules
 /dist
 
+# Claude Code local config
+.claude/
+
 # local env files
 .env.local
 .env.*.local

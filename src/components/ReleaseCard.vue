@@ -1,0 +1,241 @@
+<template>
+  <div class="release-card">
+    <div class="cover" :style="!coverPhoto ? { background: `linear-gradient(155deg, ${color.hex} 0%, rgba(0,0,0,.38) 115%)` } : null">
+      <img v-if="coverPhoto" :src="coverPhoto" :alt="release.name" class="cover__photo">
+      <span v-else class="cover__watermark" :style="{ color: color.text }">{{ release.name.charAt(0) }}</span>
+      <span class="cover__type">{{ release.category }}</span>
+    </div>
+
+    <div class="body">
+      <span class="artist" v-if="artist" :style="{ color: color.hex }">{{ artist.name }}</span>
+      <h3 class="title">{{ release.name }}</h3>
+      <p class="meta" v-if="metaLine">{{ metaLine }}</p>
+      <div class="genre-row" v-if="genres.length">
+        <span class="genre-chip" v-for="genre in genres" :key="genre.id">{{ genre.name }}</span>
+      </div>
+      <p class="blurb">{{ release.description }}</p>
+
+      <div class="footer">
+        <span class="price">${{ formattedPrice }}</span>
+        <button type="button" class="add-to-cart-btn" :class="{ 'is-added': justAdded }" @click="addToCart">
+          {{ justAdded ? 'Added ✓' : 'Add to Cart' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import { format, parseISO } from 'date-fns'
+
+import { useCatalogStore } from '@/store/catalog'
+import { useCartStore } from '@/store/cart'
+import { resolveMediaUrl } from '@/utils/media'
+
+export default {
+  name: 'ReleaseCard',
+
+  props: {
+    release: { type: Object, required: true }
+  },
+
+  data () {
+    return {
+      justAdded: false
+    }
+  },
+
+  computed: {
+    artist () {
+      return useCatalogStore().artistForAlbum(this.release)
+    },
+    color () {
+      return useCatalogStore().colorForRelease(this.release)
+    },
+    coverPhoto () {
+      const album = this.release.album || {}
+      return resolveMediaUrl(album.cover_image_url || this.release.image_url)
+    },
+    metaLine () {
+      const album = this.release.album || {}
+      const parts = []
+      if (album.track_count) parts.push(`${album.track_count} ${album.track_count === 1 ? 'track' : 'tracks'}`)
+      if (album.release_date) parts.push(format(parseISO(album.release_date), 'MMM d, yyyy'))
+      return parts.join(' · ')
+    },
+    formattedPrice () {
+      return this.release.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    },
+    genres () {
+      return useCatalogStore().genresForRelease(this.release.id)
+    }
+  },
+
+  created () {
+    useCatalogStore().fetchGenresForProduct(this.release.id)
+  },
+
+  beforeUnmount () {
+    clearTimeout(this.addedTimer)
+  },
+
+  methods: {
+    addToCart () {
+      useCartStore().addItem(this.release.id)
+      this.justAdded = true
+      clearTimeout(this.addedTimer)
+      this.addedTimer = setTimeout(() => { this.justAdded = false }, 1500)
+    }
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+.release-card {
+  display: flex;
+  flex-direction: column;
+  background: $color-white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px 0 rgba($color-gray-500, .12), 0 0 1px 1px rgba($color-gray-500, .05);
+  transition: transform .15s ease, box-shadow .15s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px -6px rgba($color-ink, .18);
+  }
+}
+
+.cover {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+}
+
+.cover__photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cover__watermark {
+  position: absolute;
+  right: -10px;
+  bottom: -30px;
+  font-family: $font-title;
+  font-weight: 900;
+  font-size: 128px;
+  line-height: 1;
+  opacity: .18;
+  user-select: none;
+}
+
+.cover__type {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(255, 255, 255, .85);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 11px;
+  color: $color-ink;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  flex: 1;
+}
+
+.artist {
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.title {
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 16px;
+  color: $color-ink;
+}
+
+.meta {
+  font-family: $font-content;
+  font-size: 12.5px;
+  color: $color-gray-500;
+}
+
+.genre-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.genre-chip {
+  border-radius: 999px;
+  padding: 3px 10px;
+  background: $color-brand-tint-2;
+  color: $color-brand-deep;
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 10.5px;
+  letter-spacing: .02em;
+}
+
+.blurb {
+  margin-top: 4px;
+  font-family: $font-content;
+  font-size: 13px;
+  line-height: 1.5;
+  color: $color-font-main;
+}
+
+.footer {
+  margin-top: auto;
+  padding-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-top: 1px solid $color-line;
+}
+
+.price {
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 14px;
+  color: $color-ink;
+  font-variant-numeric: tabular-nums;
+}
+
+.add-to-cart-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 8px 16px;
+  background: $color-brand;
+  color: $color-white;
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 12.5px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .12s ease, transform .12s ease;
+
+  &:hover {
+    background: $color-brand-deep;
+    transform: translateY(-1px);
+  }
+
+  &.is-added {
+    background: #1fa876;
+  }
+}
+</style>

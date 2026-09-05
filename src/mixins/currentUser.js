@@ -1,7 +1,9 @@
+import { useUserStore } from '@/store/user'
+
 export default {
   computed: {
     $currentUser () {
-      return this.$store.state.user.currentUser
+      return useUserStore().currentUser
     }
   }
 }

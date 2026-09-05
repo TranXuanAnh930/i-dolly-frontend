@@ -1,8 +1,9 @@
-import Vue from 'vue'
-const eventBus = new Vue()
+import mitt from 'mitt'
+
+const eventBus = mitt()
 
 export default {
-  install (Vue) {
-    Vue.prototype.$bus = eventBus
+  install (app) {
+    app.config.globalProperties.$bus = eventBus
   }
 }

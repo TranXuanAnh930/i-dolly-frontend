@@ -3,8 +3,9 @@
     <UiBaseIcon class="ok" width="8px" iconName="done"/>
     <input
       :id="labelId"
-      :checked="checked"
-      v-on="listeners"
+      :checked="modelValue"
+      v-bind="$attrs"
+      @change="$emit('update:modelValue', $event.target.checked)"
       type="checkbox">
     <label :for="labelId"></label>
   </div>
@@ -16,15 +17,13 @@ import UiBaseIcon from '../components/icons/UiBaseIcon'
 export default {
   name: 'UiCheckbox',
 
+  inheritAttrs: false,
+
   props: {
-    checked: { type: Boolean, required: true }, // v-model
-    value: { type: [String, Number, Boolean] }
+    modelValue: { type: Boolean, required: true }
   },
 
-  model: {
-    prop: 'checked',
-    event: 'change'
-  },
+  emits: ['update:modelValue'],
 
   components: {
     UiBaseIcon
@@ -41,12 +40,6 @@ export default {
   computed: {
     labelId () {
       return `inputId${this.getRandomInt()}`
-    },
-    listeners () {
-      return {
-        ...this.$listeners,
-        change: event => this.$emit('change', event.target.checked)
-      }
     }
   }
 

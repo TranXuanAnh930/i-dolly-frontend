@@ -38,6 +38,26 @@ export class BaseService {
    * ------------------------------
    */
 
+  /**
+   * GET {entity}/all — this backend's "list everything" convention (see
+   * docs/api-spec.md in the E-commerce backend repo): unpaginated, no auth,
+   * and — unlike a typical REST list endpoint — an EMPTY collection responds
+   * 404 rather than `[]`. Treat that specific 404 as an empty list instead
+   * of an error so callers don't have to special-case it themselves.
+   */
+  static async getAllPublic () {
+    try {
+      const response = await this.request().get(`${this.entity}/all`)
+      return new ResponseWrapper(response, response.data)
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
+        return new ResponseWrapper(error.response, [])
+      }
+      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
+      throw new ErrorWrapper(error, message)
+    }
+  }
+
   static async getListPublic (parameters = {}) {
     assert.object(parameters)
 
@@ -62,9 +82,9 @@ export class BaseService {
 
     try {
       const response = await this.request().get(`${this.entity}/${id}`)
-      return new ResponseWrapper(response, response.data.data)
+      return new ResponseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response.data ? error.response.data.error : error.response.statusText
+      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
       throw new ErrorWrapper(error, message)
     }
   }
