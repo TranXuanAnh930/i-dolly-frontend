@@ -4,8 +4,8 @@
       <div class="wrapper hero__inner">
         <router-link to="/history" class="back-link">&larr; {{ $t('ticketDetails.backToHistory') }}</router-link>
         <p class="hero__eyebrow">{{ $t('ticketDetails.title') }}</p>
-        <h1 class="hero__title">{{ ticket.detail.orderNumber }}</h1>
-        <p class="hero__meta">{{ formatTimestamp(ticket.timestamp) }}</p>
+        <h1 class="hero__title">{{ ticket.id.slice(0, 8) }}</h1>
+        <p class="hero__meta">{{ formatTimestamp(ticket.created_at) }}</p>
       </div>
     </section>
 
@@ -14,26 +14,30 @@
         <div class="info-row">
           <span class="info-row__label">{{ $t('ticketDetails.event') }}</span>
           <span class="info-row__value">
-            <router-link v-if="ticket.detail.concertId" :to="`/events/${ticket.detail.concertId}`" class="info-row__link">{{ ticket.detail.concertTitle }}</router-link>
-            <template v-else>{{ ticket.detail.concertTitle }}</template>
+            <router-link v-if="concert" :to="`/events/${concert.id}`" class="info-row__link">{{ concert.title }}</router-link>
+            <template v-else>—</template>
           </span>
         </div>
         <div class="info-row">
           <span class="info-row__label">{{ $t('ticketDetails.tier') }}</span>
-          <span class="info-row__value">{{ ticket.detail.tier }}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-row__label">{{ $t('ticketDetails.quantity') }}</span>
-          <span class="info-row__value">{{ ticket.detail.qty }}</span>
+          <span class="info-row__value">{{ tierLabel }}</span>
         </div>
         <div class="info-row">
           <span class="info-row__label">{{ $t('ticketDetails.total') }}</span>
-          <span class="info-row__value">&yen;{{ formatNumber(ticket.detail.total) }}</span>
+          <span class="info-row__value">&yen;{{ formatNumber(total) }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-row__label">{{ $t('ticketDetails.status') }}</span>
+          <span class="info-row__value">{{ statusLabel }}</span>
         </div>
       </div>
 
-      <router-link v-if="ticket.detail.concertId" :to="`/events/${ticket.detail.concertId}`" class="cta-btn">{{ $t('ticketDetails.viewEvent') }}</router-link>
+      <router-link v-if="concert" :to="`/events/${concert.id}`" class="cta-btn">{{ $t('ticketDetails.viewEvent') }}</router-link>
     </div>
+  </div>
+
+  <div v-else-if="loading" class="not-found">
+    <p class="not-found__title">{{ $t('common.loading') }}</p>
   </div>
 
   <div v-else class="not-found">
@@ -45,8 +49,10 @@
 <script>
 import { parseISO } from 'date-fns'
 
-import { useNotificationStore } from '@/store/notifications'
+import { useTicketsStore } from '@/store/tickets'
+import { useConcertsStore } from '@/store/concerts'
 import { formatDate, formatNumber } from '@/utils/format'
+import { withTax } from '@/utils/tax'
 
 export default {
   name: 'TicketDetailsPage',
@@ -55,10 +61,39 @@ export default {
     orderNumber: { type: String, required: true }
   },
 
+  data () {
+    return {
+      loading: true
+    }
+  },
+
   computed: {
+    ticketsStore () {
+      return useTicketsStore()
+    },
+    concertsStore () {
+      return useConcertsStore()
+    },
+    // The route param is named orderNumber for consistency with
+    // order-details/lottery-details, but carries the ticket's real id —
+    // same convention CheckoutPage uses when it links here.
     ticket () {
-      const item = useNotificationStore().byOrderNumber(this.orderNumber)
-      return item && item.type === 'ticket' ? item : null
+      return this.ticketsStore.byId(this.orderNumber)
+    },
+    concert () {
+      return this.ticket ? this.concertsStore.concertById(this.ticket.ticket_type.concert_id) : null
+    },
+    tierLabel () {
+      const tier = this.ticket && this.ticket.ticket_type.tier
+      return tier ? tier.charAt(0).toUpperCase() + tier.slice(1) : ''
+    },
+    total () {
+      return this.ticket ? withTax(this.ticket.ticket_type.price) : 0
+    },
+    statusLabel () {
+      if (!this.ticket) return ''
+      const key = this.ticket.status.split('_').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('')
+      return this.$t(`ticketDetails.status${key}`)
     }
   },
 
@@ -66,9 +101,16 @@ export default {
     ticket: {
       immediate: true,
       handler (ticket) {
-        if (ticket) document.title = `${ticket.detail.orderNumber} | I-Dolly`
+        if (ticket) document.title = `${ticket.id.slice(0, 8)} | I-Dolly`
       }
     }
+  },
+
+  created () {
+    this.concertsStore.fetchAll()
+    Promise.all([this.ticketsStore.fetchAll()]).finally(() => {
+      this.loading = false
+    })
   },
 
   methods: {

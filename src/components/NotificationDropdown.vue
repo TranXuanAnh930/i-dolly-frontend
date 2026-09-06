@@ -59,7 +59,9 @@ import { parseISO } from 'date-fns'
 
 import { useNotificationStore } from '@/store/notifications'
 import { useOrdersStore } from '@/store/orders'
+import { useTicketsStore } from '@/store/tickets'
 import { formatNumber, formatRelativeTime } from '@/utils/format'
+import { withTax } from '@/utils/tax'
 import UiOnClickOutside from './UiOnClickOutside.vue'
 
 export default {
@@ -93,8 +95,24 @@ export default {
         messageParams: { orderNumber: order.id.slice(0, 8), amount: formatNumber(order.total_price) }
       }))
     },
+    // Real tickets (see ticketsStore) — same "always read" reasoning as
+    // orderItems above. Named generically ("Ticket #12345678") rather than
+    // by concert title, same as orderItems not naming its products, so this
+    // never needs concertsStore loaded just to render a notification.
+    ticketItems () {
+      return useTicketsStore().sorted.map(ticket => ({
+        id: `ticket-${ticket.id}`,
+        type: 'ticket',
+        read: true,
+        timestamp: ticket.created_at,
+        to: `/history/tickets/${ticket.id}`,
+        titleKey: ticket.status === 'cancelled' ? 'history.ticketCancelledTitle' : 'history.ticketPurchasedTitle',
+        messageKey: ticket.status === 'cancelled' ? 'history.ticketCancelledMessage' : 'history.ticketPurchasedMessage',
+        messageParams: { orderNumber: ticket.id.slice(0, 8), amount: formatNumber(withTax(ticket.ticket_type.price)) }
+      }))
+    },
     items () {
-      return [...this.orderItems, ...this.notifications.sorted]
+      return [...this.orderItems, ...this.ticketItems, ...this.notifications.sorted]
         .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
         .slice(0, 5)
     },

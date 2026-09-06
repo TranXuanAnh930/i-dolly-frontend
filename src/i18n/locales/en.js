@@ -46,9 +46,9 @@ export default {
   },
 
   notifications: {
-    eyebrow: 'Updates',
+    eyebrow: 'Tea, served fresh',
     title: 'Notifications',
-    sub: 'Order confirmations, lottery results, and other account updates.',
+    sub: 'Order confirmations, lottery results, and whatever else deserves a little ding.',
     entries: '{count} notifications',
     markAllRead: 'Mark all read',
     empty: 'No notifications yet.',
@@ -73,9 +73,9 @@ export default {
   },
 
   events: {
-    eyebrow: 'Idol tickets',
-    title: 'Find your next live',
-    sub: 'Direct sale or lottery, six units, one stage at a time.',
+    eyebrow: 'Six units, one stage',
+    title: 'Your next bias era starts here',
+    sub: 'Grab direct-sale seats or shoot your shot in the lottery — no waiting rooms, just tickets.',
     searchPlaceholder: 'Search events, units, venues…',
     sortSoonest: 'Soonest first',
     sortPriceAsc: 'Price: low to high',
@@ -99,18 +99,18 @@ export default {
   },
 
   members: {
-    eyebrow: 'Idol roster',
-    title: 'Meet the members',
-    sub: 'Eighteen idols, six units. Pick a face to see where they\'re playing next.',
+    eyebrow: 'The full roster',
+    title: 'Meet your next bias',
+    sub: 'Eighteen idols, six units, zero wrong answers. Tap a face and fall down the rabbit hole.',
     filterByUnit: 'Filter by unit',
     resultCount: '{count} members',
     noResults: 'No members in that unit yet.'
   },
 
   store: {
-    eyebrow: 'Albums, singles & merch',
-    title: 'Take the music home',
-    sub: 'Every unit\'s discography, plus lightsticks and merch, straight from the label.',
+    eyebrow: 'Retail therapy, idol edition',
+    title: 'Take the music (and the lightstick) home',
+    sub: 'Every unit\'s discography, plus lightsticks and merch, straight from the label. Your wallet has been warned.',
     typeLabel: 'Type',
     typeAll: 'All',
     typeAlbum: 'Album',
@@ -130,7 +130,7 @@ export default {
   },
 
   cart: {
-    eyebrow: 'Your bag',
+    eyebrow: 'Shopping bag, activated',
     title: 'Cart',
     orderSummary: 'Order Summary',
     subtotal: 'Subtotal ({count} items)',
@@ -148,7 +148,7 @@ export default {
   },
 
   checkout: {
-    eyebrow: 'Almost there',
+    eyebrow: 'The final boss: payment',
     title: 'Checkout',
     shippingAddress: 'Shipping address',
     editAddress: 'Edit address',
@@ -177,20 +177,24 @@ export default {
   },
 
   history: {
-    eyebrow: 'Activity',
+    eyebrow: 'Your paper trail',
     title: 'History',
-    sub: 'Every purchase confirmation and lottery result, in one place.',
+    sub: 'Every order, entry, and "did I really just buy that" moment, in one place.',
     entries: '{count} entries',
     emptyTitle: 'Nothing here yet.',
     emptyHint: 'Purchases and lottery results will show up here as they happen.',
     orderPlacedTitle: 'Order placed',
     orderPlacedMessage: 'Order #{orderNumber} (¥{amount}) was placed successfully.',
     orderCancelledTitle: 'Order cancelled',
-    orderCancelledMessage: 'Order #{orderNumber} (¥{amount}) was cancelled.'
+    orderCancelledMessage: 'Order #{orderNumber} (¥{amount}) was cancelled.',
+    ticketPurchasedTitle: 'Ticket confirmed',
+    ticketPurchasedMessage: 'Ticket #{orderNumber} (¥{amount}) is confirmed.',
+    ticketCancelledTitle: 'Ticket purchase declined',
+    ticketCancelledMessage: 'Ticket #{orderNumber} (¥{amount}) was declined.'
   },
 
   account: {
-    eyebrow: 'Your account',
+    eyebrow: 'Behind the scenes',
     title: 'Settings',
     profile: 'Profile',
     saveChanges: 'Save changes',
@@ -209,9 +213,9 @@ export default {
   },
 
   guidelines: {
-    eyebrow: 'Before you go',
-    title: 'Guidelines',
-    sub: 'How buying, lotteries, and show days work on I-Dolly.',
+    eyebrow: 'Read before you regret it',
+    title: 'How this all works',
+    sub: 'The need-to-know on buying, lotteries, and show day — so you\'re never caught off guard.',
     directSaleTitle: 'Direct sale tickets',
     directSaleBody: 'Events marked "On Sale" are first-come, first-served. Pick your seats on the event page, add them to your cart, and check out — your seats are yours the moment payment goes through.',
     lotteryTitle: 'Lottery tickets',
@@ -229,9 +233,9 @@ export default {
   },
 
   about: {
-    eyebrow: 'About',
-    title: 'What I-Dolly is',
-    sub: 'One place for tickets, lotteries, and releases from six idol units.',
+    eyebrow: 'The origin story',
+    title: 'Why I-Dolly exists',
+    sub: 'One login, six units, zero juggling six different fan club apps.',
     intro: 'I-Dolly started as a way to stop juggling six different fan clubs, six different ticket queues, and six different release calendars. Now every unit — from Starlight Aria\'s arena tours to Mint Parade\'s first steps — sells tickets, runs lotteries, and ships albums through one account.',
     statUnits: 'Units',
     statIdols: 'Idols',
@@ -242,9 +246,9 @@ export default {
   },
 
   contact: {
-    eyebrow: 'We\'re here to help',
-    title: 'Contact',
-    sub: 'Questions about an order, a lottery, or anything else — send them our way.',
+    eyebrow: 'Got a question?',
+    title: 'We\'re all ears',
+    sub: 'Order mix-ups, lottery nerves, and every other idol-related crisis — send it our way.',
     subjectLabel: 'Subject',
     subjectGeneral: 'General question',
     subjectOrder: 'Order issue',
@@ -262,9 +266,9 @@ export default {
   },
 
   login: {
-    eyebrow: 'I-Dolly account',
+    eyebrow: 'One account, six fandoms',
     title: 'Welcome back',
-    subtitle: 'Log in to grab seats and enter lotteries.',
+    subtitle: 'Log in and let the chaos — tickets, lotteries, all of it — begin.',
     submit: 'Log in',
     noAccount: 'Don\'t have an account?',
     register: 'Register',
@@ -272,9 +276,9 @@ export default {
   },
 
   register: {
-    eyebrow: 'I-Dolly account',
+    eyebrow: 'One account, six fandoms',
     title: 'Join the club',
-    subtitle: 'Create an account to grab seats and enter lotteries.',
+    subtitle: 'Sign up once, stan responsibly forever.',
     submit: 'Create account',
     haveAccount: 'Already have an account?',
     login: 'Log in',
@@ -363,6 +367,8 @@ export default {
     wentTitle: 'You\'re going!',
     appliedNote: 'Entry {orderNumber} for {tier} · {title} is in. Winners are notified by email roughly two weeks before the show.',
     wentNote: 'Order {orderNumber} is confirmed for {title} · {date}. This is a mock checkout, so nothing was actually charged.',
+    declinedTitle: 'Payment declined',
+    declinedNote: 'This mock payment was declined, so no ticket was issued — head back and try again.',
     viewHistory: 'View in History',
     backToEvents: 'Back to events',
     backToEvent: 'Back to event',
@@ -374,9 +380,7 @@ export default {
     errorContactEmail: 'Fill in your name and email.',
     errorPayment: 'Enter mock payment details to continue.',
     notifLotteryTitle: 'Lottery entry submitted',
-    notifLotteryMessage: 'Entry {orderNumber} for {tier} · {title} is in.',
-    notifPurchaseTitle: 'Tickets confirmed',
-    notifPurchaseMessage: 'Order {orderNumber} for {title} ({amount}) is confirmed.'
+    notifLotteryMessage: 'Entry {orderNumber} for {tier} · {title} is in.'
   },
 
   productDetail: {
@@ -405,10 +409,16 @@ export default {
     title: 'Ticket details',
     event: 'Event',
     tier: 'Tier',
-    quantity: 'Quantity',
     total: 'Total',
+    status: 'Status',
+    statusReserved: 'Reserved',
+    statusPendingPayment: 'Pending payment',
+    statusPaid: 'Paid',
+    statusCancelled: 'Cancelled',
+    statusExpired: 'Expired',
+    statusUsed: 'Used',
     viewEvent: 'View event',
-    notFound: 'We couldn\'t find that ticket order.'
+    notFound: 'We couldn\'t find that ticket.'
   },
 
   lotteryDetails: {
@@ -433,9 +443,9 @@ export default {
   },
 
   groupsPage: {
-    eyebrow: 'Idol units',
-    title: 'Meet the units',
-    sub: 'Six units, one roster each. Pick a unit to see its members, shows, and releases.',
+    eyebrow: 'Pick your favorite chaos',
+    title: 'Which unit are you falling for?',
+    sub: 'Six units, six personalities. Tap one to see its members, shows, and releases.',
     resultCount: '{count} units',
     noResults: 'No units yet.'
   },

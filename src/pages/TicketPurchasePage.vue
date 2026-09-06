@@ -49,7 +49,10 @@
             </div>
           </div>
 
-          <div class="field-block">
+          <!-- Direct-sale tickets are capped at one per concert per fan
+               server-side (trg_tickets_one_per_concert) — only lottery
+               entries (still a client-side mock) offer a quantity. -->
+          <div class="field-block" v-if="isLotteryTier">
             <span class="field-block__label">{{ $t('ticketPurchase.quantity') }}</span>
             <div class="qty-control">
               <button type="button" class="qty-btn" @click="qty = Math.max(1, qty - 1)" :aria-label="$t('common.decreaseQuantity')">&minus;</button>
@@ -112,11 +115,20 @@
             </label>
           </div>
 
+          <label class="mock-option">
+            <input type="radio" name="simulate" :value="true" v-model="simulateSucc">
+            <span>{{ $t('checkout.simulateSuccess') }}</span>
+          </label>
+          <label class="mock-option">
+            <input type="radio" name="simulate" :value="false" v-model="simulateSucc">
+            <span>{{ $t('checkout.simulateFailure') }}</span>
+          </label>
+
           <p class="form-error" v-if="error" :key="error">{{ error }}</p>
 
           <div class="form-actions">
             <button type="button" class="back-btn" @click="step = 1">&larr; {{ $t('ticketPurchase.back') }}</button>
-            <button type="submit" class="place-order-btn">{{ $t('ticketPurchase.placeOrder') }} &rarr;</button>
+            <button type="submit" class="place-order-btn" :disabled="placing">{{ placing ? $t('checkout.placingOrder') : `${$t('ticketPurchase.placeOrder')} →` }}</button>
           </div>
         </form>
 
@@ -136,11 +148,18 @@
       </div>
 
       <!-- Step 3: finish -->
-      <div v-else class="confirmation">
-        <div class="confirmation__badge">&check;</div>
+      <div v-else class="confirmation" :class="{ 'confirmation--declined': outcome === 'declined' }">
+        <div class="confirmation__badge" :class="{ 'confirmation__badge--declined': outcome === 'declined' }">
+          <template v-if="outcome === 'declined'">&times;</template>
+          <template v-else>&check;</template>
+        </div>
         <template v-if="outcome === 'lottery'">
           <h2 class="confirmation__title">{{ $t('ticketPurchase.appliedTitle') }}</h2>
           <p class="confirmation__note">{{ $t('ticketPurchase.appliedNote', { orderNumber, tier: tierLabel(selectedTier), title: concert.title }) }}</p>
+        </template>
+        <template v-else-if="outcome === 'declined'">
+          <h2 class="confirmation__title confirmation__title--declined">{{ $t('ticketPurchase.declinedTitle') }}</h2>
+          <p class="confirmation__note">{{ $t('ticketPurchase.declinedNote') }}</p>
         </template>
         <template v-else>
           <h2 class="confirmation__title">{{ $t('ticketPurchase.wentTitle') }}</h2>
@@ -165,6 +184,8 @@ import { parseISO } from 'date-fns'
 
 import { useConcertsStore } from '@/store/concerts'
 import { useNotificationStore } from '@/store/notifications'
+import { useTicketsStore } from '@/store/tickets'
+import { TicketService } from '@/services/ticket.service'
 import { formatDate, formatNumber } from '@/utils/format'
 import { withTax } from '@/utils/tax'
 import VenueSeatMap from '@/components/VenueSeatMap.vue'
@@ -190,6 +211,8 @@ export default {
         cardExpiry: '',
         cardCvc: ''
       },
+      simulateSucc: true,
+      placing: false,
       error: '',
       orderNumber: '',
       outcome: null
@@ -267,6 +290,15 @@ export default {
           this.selectedTierId = tiers.length ? tiers[0].id : null
         }
       }
+    },
+    // A direct-sale ticket can only ever be bought one at a time
+    // (trg_tickets_one_per_concert) — the quantity stepper only applies to
+    // the still-mocked lottery path.
+    isLotteryTier: {
+      immediate: true,
+      handler (isLottery) {
+        if (!isLottery) this.qty = 1
+      }
     }
   },
 
@@ -317,7 +349,10 @@ export default {
         to: `/history/lottery/${this.orderNumber}`
       })
     },
-    placeOrder () {
+    // Real direct-sale checkout — see ticket.service.js / POST
+    // /tickets/checkout. Card fields aren't sent anywhere (same mock as
+    // CheckoutPage.vue) — only simulateSucc reaches the backend.
+    async placeOrder () {
       if (!this.form.name.trim() || !this.form.email.trim()) {
         this.error = this.$t('ticketPurchase.errorContactEmail')
         return
@@ -328,25 +363,31 @@ export default {
       }
 
       this.error = ''
-      this.orderNumber = `ID-${Math.floor(100000 + Math.random() * 900000)}`
-      this.outcome = 'purchase'
-      this.step = 3
+      this.placing = true
 
-      useNotificationStore().add({
-        type: 'ticket',
-        titleKey: 'ticketPurchase.notifPurchaseTitle',
-        messageKey: 'ticketPurchase.notifPurchaseMessage',
-        messageParams: { orderNumber: this.orderNumber, title: this.concert.title, amount: `¥${formatNumber(this.total)}` },
-        detail: {
-          orderNumber: this.orderNumber,
-          concertId: this.concert.id,
-          concertTitle: this.concert.title,
-          tier: this.tierLabel(this.selectedTier),
-          qty: this.qty,
-          total: this.total
-        },
-        to: `/history/tickets/${this.orderNumber}`
-      })
+      try {
+        const response = await TicketService.checkout({
+          ticket_type_id: this.selectedTier.id,
+          amount: this.total,
+          gateway: 'mock',
+          simulate_succ: this.simulateSucc
+        })
+        const ticket = response.data
+        useTicketsStore().add(ticket)
+
+        this.orderNumber = ticket.id.slice(0, 8)
+        this.outcome = ticket.status === 'paid' ? 'purchase' : 'declined'
+        this.step = 3
+
+        // The tier's sold_quantity just changed server-side (on a
+        // successful purchase) — force a refetch so remaining() reflects it
+        // if the buyer navigates back to step 1.
+        this.concertsStore.fetchTicketTypesForConcert(this.concert.id, { force: true })
+      } catch (err) {
+        this.error = err.message
+      } finally {
+        this.placing = false
+      }
     }
   }
 }
@@ -688,6 +729,22 @@ export default {
   }
 }
 
+.mock-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: $font-content;
+  font-size: 14px;
+  color: $color-ink;
+  cursor: pointer;
+
+  input {
+    accent-color: $color-brand;
+    width: 16px;
+    height: 16px;
+  }
+}
+
 .form-error {
   margin-top: 14px;
   background: #fdeaf1;
@@ -735,9 +792,14 @@ export default {
   transition: transform .12s ease, background .12s ease;
   box-shadow: 0 10px 20px -8px rgba($color-brand, .5);
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: $color-brand-deep;
     transform: translateY(-2px);
+  }
+
+  &:disabled {
+    opacity: .5;
+    cursor: not-allowed;
   }
 }
 
@@ -835,6 +897,10 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+
+  &--declined {
+    background: $color-error;
+  }
 }
 
 .confirmation__title {
@@ -843,6 +909,10 @@ export default {
   font-style: italic;
   font-size: 28px;
   color: $color-brand;
+
+  &--declined {
+    color: $color-error;
+  }
 }
 
 .confirmation__note {

@@ -61,7 +61,9 @@ import { parseISO } from 'date-fns'
 
 import { useNotificationStore } from '@/store/notifications'
 import { useOrdersStore } from '@/store/orders'
+import { useTicketsStore } from '@/store/tickets'
 import { formatDate, formatNumber } from '@/utils/format'
+import { withTax } from '@/utils/tax'
 
 export default {
   name: 'HistoryPage',
@@ -71,13 +73,14 @@ export default {
     // once Header's own fetch resolves — this just covers a direct/refresh
     // landing straight on this page.
     useOrdersStore().fetchAll()
+    useTicketsStore().fetchAll()
   },
 
   computed: {
-    // Real orders come from the backend (see ordersStore) while
-    // ticket/lottery entries are still client-only (no backend for those
-    // yet) — mapped to the same shape the list/icons below already render,
-    // then merged with the notification store's entries and re-sorted.
+    // Real orders come from the backend (see ordersStore) while lottery
+    // entries are still client-only (no backend for those yet) — mapped to
+    // the same shape the list/icons below already render, then merged with
+    // ticketItems and the notification store's entries and re-sorted.
     orderItems () {
       return useOrdersStore().sorted.map(order => ({
         id: `order-${order.id}`,
@@ -89,8 +92,21 @@ export default {
         messageParams: { orderNumber: order.id.slice(0, 8), amount: formatNumber(order.total_price) }
       }))
     },
+    // Real tickets from the backend (see ticketsStore) — direct-sale
+    // purchases only for now, same as ticketsStore itself.
+    ticketItems () {
+      return useTicketsStore().sorted.map(ticket => ({
+        id: `ticket-${ticket.id}`,
+        type: 'ticket',
+        timestamp: ticket.created_at,
+        to: `/history/tickets/${ticket.id}`,
+        titleKey: ticket.status === 'cancelled' ? 'history.ticketCancelledTitle' : 'history.ticketPurchasedTitle',
+        messageKey: ticket.status === 'cancelled' ? 'history.ticketCancelledMessage' : 'history.ticketPurchasedMessage',
+        messageParams: { orderNumber: ticket.id.slice(0, 8), amount: formatNumber(withTax(ticket.ticket_type.price)) }
+      }))
+    },
     items () {
-      return [...this.orderItems, ...useNotificationStore().sorted]
+      return [...this.orderItems, ...this.ticketItems, ...useNotificationStore().sorted]
         .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
     }
   },

@@ -46,9 +46,9 @@ export default {
   },
 
   notifications: {
-    eyebrow: 'お知らせ',
+    eyebrow: '最新情報、届いています',
     title: '通知',
-    sub: 'ご注文の確認、抽選結果など、アカウントに関するお知らせをまとめて確認。',
+    sub: 'ご注文の確認、抽選結果、その他お知らせをまとめてチェック。',
     entries: '{count}件の通知',
     markAllRead: 'すべて既読にする',
     empty: '通知はまだありません。',
@@ -73,9 +73,9 @@ export default {
   },
 
   events: {
-    eyebrow: 'アイドルチケット',
-    title: '次のライブを見つけよう',
-    sub: '先着販売も抽選も、6ユニットが同じステージへ。',
+    eyebrow: '6ユニット、ひとつのステージ',
+    title: '推し活、次のステージへ',
+    sub: '先着販売も抽選も、待つのはここだけ。あとはチケットを取るだけ。',
     searchPlaceholder: 'イベント・ユニット・会場を検索…',
     sortSoonest: '開催日が近い順',
     sortPriceAsc: '価格が安い順',
@@ -99,18 +99,18 @@ export default {
   },
 
   members: {
-    eyebrow: 'アイドル名鑑',
-    title: 'メンバーを見る',
-    sub: '18人のアイドル、6ユニット。気になる顔をタップして次のライブをチェック。',
+    eyebrow: '全員集合',
+    title: '推しは、この中にいる',
+    sub: '18人のアイドル、6ユニット、正解しかない選択。気になる顔をタップしてどうぞ。',
     filterByUnit: 'ユニットで絞り込む',
     resultCount: '{count}人のメンバー',
     noResults: 'そのユニットのメンバーはまだいません。'
   },
 
   store: {
-    eyebrow: 'アルバム・シングル・グッズ',
-    title: '音楽を持ち帰ろう',
-    sub: '全ユニットのディスコグラフィーに加え、ペンライトやグッズもレーベルから直接。',
+    eyebrow: '推し活、爆買い注意報',
+    title: '音楽もペンライトも、まるごと持ち帰ろう',
+    sub: '全ユニットのディスコグラフィーに加え、ペンライトやグッズもレーベルから直接。財布の準備はいいですか。',
     typeLabel: '種類',
     typeAll: 'すべて',
     typeAlbum: 'アルバム',
@@ -130,7 +130,7 @@ export default {
   },
 
   cart: {
-    eyebrow: 'ショッピングバッグ',
+    eyebrow: '推し活の戦利品',
     title: 'カート',
     orderSummary: 'ご注文内容',
     subtotal: '小計（{count}点）',
@@ -148,7 +148,7 @@ export default {
   },
 
   checkout: {
-    eyebrow: 'あと少し',
+    eyebrow: 'ラスボスはお会計',
     title: 'チェックアウト',
     shippingAddress: 'お届け先',
     editAddress: '住所を編集',
@@ -177,20 +177,24 @@ export default {
   },
 
   history: {
-    eyebrow: 'アクティビティ',
+    eyebrow: '推し活の記録',
     title: '履歴',
-    sub: '購入完了通知や抽選結果をまとめて確認。',
+    sub: '注文も抽選結果も「あれ、買ったっけ」も、まとめてここに。',
     entries: '{count}件の履歴',
     emptyTitle: 'まだ履歴がありません。',
     emptyHint: '購入や抽選結果はここに表示されます。',
     orderPlacedTitle: '注文完了',
     orderPlacedMessage: '注文番号 #{orderNumber}（¥{amount}）が確定しました。',
     orderCancelledTitle: '注文がキャンセルされました',
-    orderCancelledMessage: '注文番号 #{orderNumber}（¥{amount}）はキャンセルされました。'
+    orderCancelledMessage: '注文番号 #{orderNumber}（¥{amount}）はキャンセルされました。',
+    ticketPurchasedTitle: 'チケットが確定しました',
+    ticketPurchasedMessage: 'チケット #{orderNumber}（¥{amount}）が確定しました。',
+    ticketCancelledTitle: 'チケット購入が失敗しました',
+    ticketCancelledMessage: 'チケット #{orderNumber}（¥{amount}）は決済できませんでした。'
   },
 
   account: {
-    eyebrow: 'アカウント',
+    eyebrow: '舞台裏設定',
     title: '設定',
     profile: 'プロフィール',
     saveChanges: '変更を保存',
@@ -209,9 +213,9 @@ export default {
   },
 
   guidelines: {
-    eyebrow: 'ご利用の前に',
-    title: 'ご利用ガイド',
-    sub: '購入・抽選・当日の流れについて。',
+    eyebrow: '読まずに後悔する前に',
+    title: 'これだけ知っておこう',
+    sub: '購入・抽選・当日の流れを、迷わないようにまとめました。',
     directSaleTitle: '先着販売チケット',
     directSaleBody: '「発売中」のイベントは先着順です。イベントページで座席を選んでカートに追加し、そのままチェックアウトへ — お支払いが完了した時点で座席が確保されます。',
     lotteryTitle: '抽選チケット',
@@ -229,9 +233,9 @@ export default {
   },
 
   about: {
-    eyebrow: 'I-Dollyについて',
-    title: 'I-Dollyとは',
-    sub: '6つのアイドルユニットのチケット・抽選・新譜をひとつの場所で。',
+    eyebrow: '誕生の理由',
+    title: 'なぜI-Dollyが生まれたのか',
+    sub: 'アカウント1つで、6ユニット分のアプリを行き来する手間ゼロに。',
     intro: 'I-Dollyは、6つの異なるファンクラブ、6つのチケット窓口、6つのリリースカレンダーを一本化するために生まれました。Starlight Ariaのアリーナツアーから、デビューしたばかりのMint Paradeまで、すべてのユニットのチケット購入・抽選応募・アルバム購入を1つのアカウントで行えます。',
     statUnits: 'ユニット',
     statIdols: 'アイドル',
@@ -242,9 +246,9 @@ export default {
   },
 
   contact: {
-    eyebrow: 'サポート',
-    title: 'お問い合わせ',
-    sub: 'ご注文や抽選など、ご不明な点はお気軽にお問い合わせください。',
+    eyebrow: '気になることがあれば',
+    title: '何でも聞いてください',
+    sub: '注文のトラブルも、抽選のドキドキも、推し活特有の悩みも、まるごと受け止めます。',
     subjectLabel: '件名',
     subjectGeneral: '一般的なご質問',
     subjectOrder: 'ご注文について',
@@ -262,9 +266,9 @@ export default {
   },
 
   login: {
-    eyebrow: 'I-Dollyアカウント',
+    eyebrow: 'アカウント1つで6ユニット分',
     title: 'おかえりなさい',
-    subtitle: 'ログインして座席の確保や抽選応募をしよう。',
+    subtitle: 'ログインして、座席の確保も抽選応募も、心置きなく。',
     submit: 'ログイン',
     noAccount: 'アカウントをお持ちでない方は',
     register: '新規登録',
@@ -272,9 +276,9 @@ export default {
   },
 
   register: {
-    eyebrow: 'I-Dollyアカウント',
+    eyebrow: 'アカウント1つで6ユニット分',
     title: 'ようこそ',
-    subtitle: 'アカウントを作成して座席の確保や抽選応募をしよう。',
+    subtitle: '登録は一度だけ。あとは思う存分、推し活を。',
     submit: 'アカウントを作成',
     haveAccount: 'すでにアカウントをお持ちの方は',
     login: 'ログイン',
@@ -363,6 +367,8 @@ export default {
     wentTitle: '参加確定！',
     appliedNote: 'エントリー番号 {orderNumber}（{tier} · {title}）を受け付けました。当選者には公演の約2週間前にメールでお知らせします。',
     wentNote: '注文番号 {orderNumber}（{title} · {date}）が確定しました。これはモックのチェックアウトのため、実際の請求は発生しません。',
+    declinedTitle: 'お支払いが拒否されました',
+    declinedNote: 'このモック決済は拒否されたため、チケットは発行されませんでした。もう一度お試しください。',
     viewHistory: '履歴で見る',
     backToEvents: 'イベント一覧へ戻る',
     backToEvent: 'イベントページへ戻る',
@@ -374,9 +380,7 @@ export default {
     errorContactEmail: 'お名前とメールアドレスを入力してください。',
     errorPayment: 'お支払い情報（モック）を入力してください。',
     notifLotteryTitle: '抽選応募を受け付けました',
-    notifLotteryMessage: 'エントリー番号 {orderNumber}（{tier} · {title}）を受け付けました。',
-    notifPurchaseTitle: 'チケットが確定しました',
-    notifPurchaseMessage: '注文番号 {orderNumber}（{title}・{amount}）が確定しました。'
+    notifLotteryMessage: 'エントリー番号 {orderNumber}（{tier} · {title}）を受け付けました。'
   },
 
   productDetail: {
@@ -405,10 +409,16 @@ export default {
     title: 'チケット詳細',
     event: 'イベント',
     tier: '種別',
-    quantity: '枚数',
     total: '合計',
+    status: 'ステータス',
+    statusReserved: '仮予約',
+    statusPendingPayment: '支払い待ち',
+    statusPaid: '支払い済み',
+    statusCancelled: 'キャンセル済み',
+    statusExpired: '期限切れ',
+    statusUsed: '使用済み',
     viewEvent: 'イベントを見る',
-    notFound: 'そのチケットの注文が見つかりませんでした。'
+    notFound: 'そのチケットが見つかりませんでした。'
   },
 
   lotteryDetails: {
@@ -433,9 +443,9 @@ export default {
   },
 
   groupsPage: {
-    eyebrow: 'アイドルユニット',
-    title: 'ユニットを見る',
-    sub: '6ユニット、それぞれのメンバー。気になるユニットをタップしてメンバー・公演・リリースをチェック。',
+    eyebrow: '推しユニットを選ぼう',
+    title: 'どのユニットに沼る?',
+    sub: '6ユニット、それぞれの個性。気になるユニットをタップしてメンバー・公演・リリースをチェック。',
     resultCount: '{count}ユニット',
     noResults: 'ユニットはまだありません。'
   },
