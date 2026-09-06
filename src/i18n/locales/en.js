@@ -20,7 +20,17 @@ export default {
     hidePassword: 'Hide password',
     decreaseQuantity: 'Decrease quantity',
     increaseQuantity: 'Increase quantity',
-    menu: 'Menu'
+    menu: 'Menu',
+    edit: 'Edit',
+    delete: 'Delete',
+    confirmDelete: 'Delete {name}? This can\'t be undone.',
+    errorNameRequired: 'Name is required.',
+    none: 'None',
+    company: 'Company',
+    selectCompanyPlaceholder: 'Select a company…',
+    description: 'Description',
+    photo: 'Photo',
+    saving: 'Saving…'
   },
 
   nav: {
@@ -410,5 +420,111 @@ export default {
     sub: 'Six units, one roster each. Pick a unit to see its members, shows, and releases.',
     resultCount: '{count} units',
     noResults: 'No units yet.'
+  },
+
+  notFoundPage: {
+    eyebrow: '404 Error',
+    title: 'Off the Setlist',
+    sub: 'We couldn\'t find the page you were looking for. It may have been moved, renamed, or never existed.',
+    backHome: 'Back to Events',
+    goToStore: 'Browse the Store'
+  },
+
+  managerIdols: {
+    title: 'Idols',
+    addIdol: '+ Add idol',
+    group: 'Group',
+    selectCompanyPrompt: 'Select a company above to manage its idols.',
+    noResults: 'No idols yet for this company.'
+  },
+
+  managerIdolForm: {
+    backToIdols: 'Back to idols',
+    selectCompanyPrompt: 'Select a company above to add an idol.',
+    addTitle: 'Add idol',
+    editTitle: 'Edit idol',
+    dateOfBirth: 'Date of birth',
+    color: 'Color',
+    shortIntro: 'Short intro',
+    longDescription: 'Long description'
+  },
+
+  managerGroups: {
+    title: 'Groups',
+    addGroup: '+ Add group',
+    debutDate: 'Debut date',
+    selectCompanyPrompt: 'Select a company above to manage its groups.',
+    noResults: 'No groups yet for this company.'
+  },
+
+  managerGroupForm: {
+    backToGroups: 'Back to groups',
+    selectCompanyPrompt: 'Select a company above to add a group.',
+    addTitle: 'Add group',
+    editTitle: 'Edit group'
+  },
+
+  managerEvents: {
+    title: 'Events',
+    addEvent: '+ Add event',
+    titleLabel: 'Title',
+    venue: 'Venue',
+    date: 'Date',
+    status: 'Status',
+    selectCompanyPrompt: 'Select a company above to manage its events.',
+    noResults: 'No events yet for this company.',
+    confirmDelete: 'Delete "{title}"? This can\'t be undone.'
+  },
+
+  managerEventForm: {
+    backToEvents: 'Back to events',
+    selectCompanyPrompt: 'Select a company above to add an event.',
+    addTitle: 'Add event',
+    editTitle: 'Edit event',
+    selectVenuePlaceholder: 'Select a venue…',
+    capacity: 'Capacity',
+    eventDateTime: 'Event date & time',
+    doorsOpen: 'Doors open',
+    errorRequired: 'Title, venue and event date are required.'
+  },
+
+  managerProducts: {
+    title: 'Products',
+    addProduct: '+ Add product',
+    category: 'Category',
+    price: 'Price',
+    quantity: 'Quantity',
+    noResults: 'No products yet.'
+  },
+
+  managerProductForm: {
+    backToProducts: 'Back to products',
+    addTitle: 'Add product',
+    editTitle: 'Edit product',
+    selectCategoryPlaceholder: 'Select a category…',
+    errorRequired: 'Name, category and description are required.'
+  },
+
+  adminCompanies: {
+    title: 'Companies',
+    addCompany: '+ Add company',
+    contactEmail: 'Contact email',
+    addManagerAccount: '+ Manager account',
+    noResults: 'No companies yet.'
+  },
+
+  adminCompanyForm: {
+    backToCompanies: 'Back to companies',
+    addTitle: 'Add company',
+    editTitle: 'Edit company'
+  },
+
+  adminManagerAccountForm: {
+    title: 'New manager account',
+    titleForCompany: 'New manager account for {company}',
+    createAccount: 'Create account',
+    creating: 'Creating…',
+    errorRequired: 'Name, email and a password of at least 6 characters are required.',
+    successMessage: 'Manager account created for {email}.'
   }
 }

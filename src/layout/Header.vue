@@ -28,19 +28,19 @@
           <ul class="menu" :class="{ 'is-open': mobileOpen }">
             <template v-if="isStaff">
               <li>
-                <router-link :to="{ name: 'manager-idols' }" class="menu__link">Idols</router-link>
+                <router-link :to="{ name: 'manager-idols' }" class="menu__link">{{ $t('managerIdols.title') }}</router-link>
               </li>
               <li>
-                <router-link :to="{ name: 'manager-groups' }" class="menu__link">Groups</router-link>
+                <router-link :to="{ name: 'manager-groups' }" class="menu__link">{{ $t('managerGroups.title') }}</router-link>
               </li>
               <li>
-                <router-link :to="{ name: 'manager-events' }" class="menu__link">Events</router-link>
+                <router-link :to="{ name: 'manager-events' }" class="menu__link">{{ $t('managerEvents.title') }}</router-link>
               </li>
               <li>
-                <router-link :to="{ name: 'manager-products' }" class="menu__link">Products</router-link>
+                <router-link :to="{ name: 'manager-products' }" class="menu__link">{{ $t('managerProducts.title') }}</router-link>
               </li>
               <li v-if="isAdmin">
-                <router-link :to="{ name: 'admin-companies' }" class="menu__link">Companies</router-link>
+                <router-link :to="{ name: 'admin-companies' }" class="menu__link">{{ $t('adminCompanies.title') }}</router-link>
               </li>
             </template>
             <template v-else>

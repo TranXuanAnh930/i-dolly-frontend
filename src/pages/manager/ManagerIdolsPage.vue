@@ -1,19 +1,19 @@
 <template>
   <div class="wrapper crud-page">
     <div class="page-head">
-      <h2 class="page-head__title">Idols</h2>
-      <router-link v-if="companyId" :to="{ name: 'manager-idols-new', query: adminQuery }" class="add-btn">+ Add idol</router-link>
+      <h2 class="page-head__title">{{ $t('managerIdols.title') }}</h2>
+      <router-link v-if="companyId" :to="{ name: 'manager-idols-new', query: adminQuery }" class="add-btn">{{ $t('managerIdols.addIdol') }}</router-link>
     </div>
 
     <label class="company-picker" v-if="isAdmin">
-      <span>Company</span>
+      <span>{{ $t('common.company') }}</span>
       <select v-model="selectedCompanyId">
-        <option value="">Select a company…</option>
+        <option value="">{{ $t('common.selectCompanyPlaceholder') }}</option>
         <option v-for="company in companiesStore.companies" :key="company.id" :value="company.id">{{ company.name }}</option>
       </select>
     </label>
 
-    <p class="empty-note" v-if="!companyId">Select a company above to manage its idols.</p>
+    <p class="empty-note" v-if="!companyId">{{ $t('managerIdols.selectCompanyPrompt') }}</p>
 
     <template v-else>
       <div class="table-card" v-if="myIdols.length">
@@ -21,9 +21,9 @@
           <thead>
             <tr>
               <th></th>
-              <th>Name</th>
-              <th>Group</th>
-              <th>Hometown</th>
+              <th>{{ $t('common.name') }}</th>
+              <th>{{ $t('managerIdols.group') }}</th>
+              <th>{{ $t('idolDetail.hometown') }}</th>
               <th></th>
             </tr>
           </thead>
@@ -36,14 +36,14 @@
               <td>{{ groupName(idol.group_id) }}</td>
               <td>{{ idol.hometown || '—' }}</td>
               <td class="actions">
-                <router-link :to="{ name: 'manager-idols-edit', params: { id: idol.id } }">Edit</router-link>
-                <button type="button" class="danger" @click="remove(idol)">Delete</button>
+                <router-link :to="{ name: 'manager-idols-edit', params: { id: idol.id } }">{{ $t('common.edit') }}</router-link>
+                <button type="button" class="danger" @click="remove(idol)">{{ $t('common.delete') }}</button>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
-      <p class="empty-note" v-else>No idols yet for this company.</p>
+      <p class="empty-note" v-else>{{ $t('managerIdols.noResults') }}</p>
     </template>
 
     <p class="form-error" v-if="error">{{ error }}</p>
@@ -110,7 +110,7 @@ export default {
       return group ? group.name : '—'
     },
     async remove (idol) {
-      if (!window.confirm(`Delete ${idol.name}? This can't be undone.`)) return
+      if (!window.confirm(this.$t('common.confirmDelete', { name: idol.name }))) return
       try {
         await IdolsService.remove(idol.id)
         await this.fetchPage()

@@ -1,48 +1,50 @@
 <template>
   <div class="wrapper crud-page">
-    <router-link :to="{ name: 'manager-products' }" class="back-link">&larr; Back to products</router-link>
+    <router-link :to="{ name: 'manager-products' }" class="back-link">&larr; {{ $t('managerProductForm.backToProducts') }}</router-link>
 
-    <form class="form-card" @submit.prevent="save">
-      <h3 class="form-card__title">{{ isEditing ? 'Edit product' : 'Add product' }}</h3>
+    <div class="form-wrap">
+      <h3 class="form-card__title">{{ isEditing ? $t('managerProductForm.editTitle') : $t('managerProductForm.addTitle') }}</h3>
 
-      <div class="field-grid">
-        <label class="field">
-          <span class="field__label">Name</span>
-          <input v-model="form.name" required>
-        </label>
-        <label class="field">
-          <span class="field__label">Category</span>
-          <select v-model="form.category_id" required>
-            <option value="" disabled>Select a category…</option>
-            <option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option>
-          </select>
-        </label>
-        <label class="field">
-          <span class="field__label">Price</span>
-          <input type="number" min="0.01" step="0.01" v-model.number="form.price" required>
-        </label>
-        <label class="field">
-          <span class="field__label">Quantity</span>
-          <input type="number" min="0" v-model.number="form.quantity" required>
-        </label>
-        <label class="field">
-          <span class="field__label">Photo</span>
-          <input type="file" accept="image/*" @change="onImageChange">
-        </label>
-      </div>
+      <form class="form-card" @submit.prevent="save">
+        <div class="field-grid">
+          <label class="field">
+            <span class="field__label">{{ $t('common.name') }}</span>
+            <input v-model="form.name" required>
+          </label>
+          <label class="field">
+            <span class="field__label">{{ $t('managerProducts.category') }}</span>
+            <select v-model="form.category_id" required>
+              <option value="" disabled>{{ $t('managerProductForm.selectCategoryPlaceholder') }}</option>
+              <option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="field__label">{{ $t('managerProducts.price') }}</span>
+            <input type="number" min="0.01" step="0.01" v-model.number="form.price" required>
+          </label>
+          <label class="field">
+            <span class="field__label">{{ $t('managerProducts.quantity') }}</span>
+            <input type="number" min="0" v-model.number="form.quantity" required>
+          </label>
+          <label class="field">
+            <span class="field__label">{{ $t('common.photo') }}</span>
+            <input type="file" accept="image/*" @change="onImageChange">
+          </label>
+        </div>
 
-      <label class="field">
-        <span class="field__label">Description</span>
-        <textarea v-model="form.description" rows="4" required></textarea>
-      </label>
+        <label class="field">
+          <span class="field__label">{{ $t('common.description') }}</span>
+          <textarea v-model="form.description" rows="4" required></textarea>
+        </label>
 
-      <p class="form-error" v-if="error">{{ error }}</p>
+        <p class="form-error" v-if="error">{{ error }}</p>
 
-      <div class="form-actions">
-        <router-link :to="{ name: 'manager-products' }" class="cancel-btn">Cancel</router-link>
-        <button type="submit" class="save-btn" :disabled="saving">{{ saving ? 'Saving…' : 'Save' }}</button>
-      </div>
-    </form>
+        <div class="form-actions">
+          <router-link :to="{ name: 'manager-products' }" class="cancel-btn">{{ $t('common.cancel') }}</router-link>
+          <button type="submit" class="save-btn" :disabled="saving">{{ saving ? $t('common.saving') : $t('common.save') }}</button>
+        </div>
+      </form>
+    </div>
   </div>
 </template>
 
@@ -123,7 +125,7 @@ export default {
     },
     async save () {
       if (!this.form.name.trim() || !this.form.category_id || !this.form.description.trim()) {
-        this.error = 'Name, category and description are required.'
+        this.error = this.$t('managerProductForm.errorRequired')
         return
       }
       this.saving = true
@@ -174,6 +176,15 @@ export default {
   }
 }
 
+.form-wrap {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 .form-card {
   background: $color-white;
   border-radius: 20px;
@@ -182,7 +193,6 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  max-width: 640px;
 }
 
 .form-card__title {

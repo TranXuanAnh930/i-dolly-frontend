@@ -64,10 +64,7 @@
     </div>
   </div>
 
-  <div v-else class="not-found">
-    <p class="not-found__title">{{ error || $t('idolDetail.notFound') }}</p>
-    <router-link to="/members" class="not-found__link">&larr; {{ $t('idolDetail.backLink') }}</router-link>
-  </div>
+  <NotFound v-else/>
 </template>
 
 <script>
@@ -80,11 +77,12 @@ import { fallbackPortraitFor } from '@/utils/idolPortrait'
 import { formatDate } from '@/utils/format'
 import IdolPortrait from '@/components/IdolPortrait.vue'
 import UiPageLoader from '@/components/progress-loaders/UiPageLoader.vue'
+import NotFound from '@/pages/NotFound.vue'
 
 export default {
   name: 'IdolDetailPage',
 
-  components: { IdolPortrait, UiPageLoader },
+  components: { IdolPortrait, UiPageLoader, NotFound },
 
   props: {
     id: { type: String, required: true }
@@ -95,8 +93,7 @@ export default {
       member: null,
       group: null,
       relatedIdols: [],
-      loading: true,
-      error: null
+      loading: true
     }
   },
 
@@ -147,15 +144,13 @@ export default {
     fallbackPortraitFor,
     async fetchPage () {
       this.loading = true
-      this.error = null
       try {
         const response = await IdolsService.getDetailPublic(this.id)
         this.member = response.data.idol
         this.group = response.data.group
         this.relatedIdols = response.data.siblings
-      } catch (error) {
+      } catch {
         this.member = null
-        this.error = error.message
       } finally {
         this.loading = false
       }
@@ -384,33 +379,4 @@ export default {
   text-overflow: ellipsis;
 }
 
-.not-found {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  padding: 80px 20px;
-  text-align: center;
-}
-
-.not-found__title {
-  font-family: $font-content;
-  font-weight: 700;
-  font-size: 16px;
-  color: $color-ink;
-}
-
-.not-found__link {
-  color: $color-brand;
-  font-family: $font-content;
-  font-weight: 700;
-  font-size: 14px;
-  text-decoration: none;
-
-  &:hover {
-    text-decoration: underline;
-  }
-}
 </style>

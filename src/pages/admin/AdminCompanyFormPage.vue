@@ -1,33 +1,35 @@
 <template>
   <div class="wrapper crud-page">
-    <router-link :to="{ name: 'admin-companies' }" class="back-link">&larr; Back to companies</router-link>
+    <router-link :to="{ name: 'admin-companies' }" class="back-link">&larr; {{ $t('adminCompanyForm.backToCompanies') }}</router-link>
 
-    <form class="form-card" @submit.prevent="save">
-      <h3 class="form-card__title">{{ isEditing ? 'Edit company' : 'Add company' }}</h3>
+    <div class="form-wrap">
+      <h3 class="form-card__title">{{ isEditing ? $t('adminCompanyForm.editTitle') : $t('adminCompanyForm.addTitle') }}</h3>
 
-      <div class="field-grid">
+      <form class="form-card" @submit.prevent="save">
+        <div class="field-grid">
+          <label class="field">
+            <span class="field__label">{{ $t('common.name') }}</span>
+            <input v-model="form.name" required>
+          </label>
+          <label class="field">
+            <span class="field__label">{{ $t('adminCompanies.contactEmail') }}</span>
+            <input type="email" v-model="form.contact_email">
+          </label>
+        </div>
+
         <label class="field">
-          <span class="field__label">Name</span>
-          <input v-model="form.name" required>
+          <span class="field__label">{{ $t('common.description') }}</span>
+          <textarea v-model="form.description" rows="4"></textarea>
         </label>
-        <label class="field">
-          <span class="field__label">Contact email</span>
-          <input type="email" v-model="form.contact_email">
-        </label>
-      </div>
 
-      <label class="field">
-        <span class="field__label">Description</span>
-        <textarea v-model="form.description" rows="4"></textarea>
-      </label>
+        <p class="form-error" v-if="error">{{ error }}</p>
 
-      <p class="form-error" v-if="error">{{ error }}</p>
-
-      <div class="form-actions">
-        <router-link :to="{ name: 'admin-companies' }" class="cancel-btn">Cancel</router-link>
-        <button type="submit" class="save-btn" :disabled="saving">{{ saving ? 'Saving…' : 'Save' }}</button>
-      </div>
-    </form>
+        <div class="form-actions">
+          <router-link :to="{ name: 'admin-companies' }" class="cancel-btn">{{ $t('common.cancel') }}</router-link>
+          <button type="submit" class="save-btn" :disabled="saving">{{ saving ? $t('common.saving') : $t('common.save') }}</button>
+        </div>
+      </form>
+    </div>
   </div>
 </template>
 
@@ -86,7 +88,7 @@ export default {
   methods: {
     async save () {
       if (!this.form.name.trim()) {
-        this.error = 'Name is required.'
+        this.error = this.$t('common.errorNameRequired')
         return
       }
       this.saving = true
@@ -134,6 +136,15 @@ export default {
   }
 }
 
+.form-wrap {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 .form-card {
   background: $color-white;
   border-radius: 20px;
@@ -142,7 +153,6 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  max-width: 640px;
 }
 
 .form-card__title {

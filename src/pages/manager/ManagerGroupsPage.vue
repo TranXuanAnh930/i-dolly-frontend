@@ -1,28 +1,28 @@
 <template>
   <div class="wrapper crud-page">
     <div class="page-head">
-      <h2 class="page-head__title">Groups</h2>
-      <router-link v-if="companyId" :to="{ name: 'manager-groups-new', query: adminQuery }" class="add-btn">+ Add group</router-link>
+      <h2 class="page-head__title">{{ $t('managerGroups.title') }}</h2>
+      <router-link v-if="companyId" :to="{ name: 'manager-groups-new', query: adminQuery }" class="add-btn">{{ $t('managerGroups.addGroup') }}</router-link>
     </div>
 
     <label class="company-picker" v-if="isAdmin">
-      <span>Company</span>
+      <span>{{ $t('common.company') }}</span>
       <select v-model="selectedCompanyId">
-        <option value="">Select a company…</option>
+        <option value="">{{ $t('common.selectCompanyPlaceholder') }}</option>
         <option v-for="company in companiesStore.companies" :key="company.id" :value="company.id">{{ company.name }}</option>
       </select>
     </label>
 
-    <p class="empty-note" v-if="!companyId">Select a company above to manage its groups.</p>
+    <p class="empty-note" v-if="!companyId">{{ $t('managerGroups.selectCompanyPrompt') }}</p>
 
     <template v-else>
       <div class="table-card" v-if="myGroups.length">
         <table class="table">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Debut date</th>
-              <th>Description</th>
+              <th>{{ $t('common.name') }}</th>
+              <th>{{ $t('managerGroups.debutDate') }}</th>
+              <th>{{ $t('common.description') }}</th>
               <th></th>
             </tr>
           </thead>
@@ -32,14 +32,14 @@
               <td>{{ group.debut_date || '—' }}</td>
               <td class="description-cell">{{ group.description || '—' }}</td>
               <td class="actions">
-                <router-link :to="{ name: 'manager-groups-edit', params: { id: group.id } }">Edit</router-link>
-                <button type="button" class="danger" @click="remove(group)">Delete</button>
+                <router-link :to="{ name: 'manager-groups-edit', params: { id: group.id } }">{{ $t('common.edit') }}</router-link>
+                <button type="button" class="danger" @click="remove(group)">{{ $t('common.delete') }}</button>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
-      <p class="empty-note" v-else>No groups yet for this company.</p>
+      <p class="empty-note" v-else>{{ $t('managerGroups.noResults') }}</p>
     </template>
 
     <p class="form-error" v-if="error">{{ error }}</p>
@@ -94,7 +94,7 @@ export default {
       }
     },
     async remove (group) {
-      if (!window.confirm(`Delete ${group.name}? This can't be undone.`)) return
+      if (!window.confirm(this.$t('common.confirmDelete', { name: group.name }))) return
       try {
         await GroupsService.remove(group.id)
         await this.fetchPage()

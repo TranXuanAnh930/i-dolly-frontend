@@ -20,7 +20,17 @@ export default {
     hidePassword: 'パスワードを隠す',
     decreaseQuantity: '数量を減らす',
     increaseQuantity: '数量を増やす',
-    menu: 'メニュー'
+    menu: 'メニュー',
+    edit: '編集',
+    delete: '削除',
+    confirmDelete: '{name}を削除しますか？この操作は取り消せません。',
+    errorNameRequired: '名前を入力してください。',
+    none: 'なし',
+    company: '会社',
+    selectCompanyPlaceholder: '会社を選択…',
+    description: '説明',
+    photo: '写真',
+    saving: '保存中…'
   },
 
   nav: {
@@ -410,5 +420,111 @@ export default {
     sub: '6ユニット、それぞれのメンバー。気になるユニットをタップしてメンバー・公演・リリースをチェック。',
     resultCount: '{count}ユニット',
     noResults: 'ユニットはまだありません。'
+  },
+
+  notFoundPage: {
+    eyebrow: '404エラー',
+    title: 'セットリストにないページです',
+    sub: 'お探しのページが見つかりませんでした。移動または削除された可能性があります。',
+    backHome: 'イベント一覧へ戻る',
+    goToStore: 'ストアを見る'
+  },
+
+  managerIdols: {
+    title: 'アイドル',
+    addIdol: '+ アイドルを追加',
+    group: 'ユニット',
+    selectCompanyPrompt: '上で会社を選択するとアイドルを管理できます。',
+    noResults: 'この会社のアイドルはまだいません。'
+  },
+
+  managerIdolForm: {
+    backToIdols: 'アイドル一覧へ戻る',
+    selectCompanyPrompt: '上で会社を選択するとアイドルを追加できます。',
+    addTitle: 'アイドルを追加',
+    editTitle: 'アイドルを編集',
+    dateOfBirth: '生年月日',
+    color: 'カラー',
+    shortIntro: '簡単な紹介',
+    longDescription: '詳しい紹介'
+  },
+
+  managerGroups: {
+    title: 'ユニット',
+    addGroup: '+ ユニットを追加',
+    debutDate: 'デビュー日',
+    selectCompanyPrompt: '上で会社を選択するとユニットを管理できます。',
+    noResults: 'この会社のユニットはまだいません。'
+  },
+
+  managerGroupForm: {
+    backToGroups: 'ユニット一覧へ戻る',
+    selectCompanyPrompt: '上で会社を選択するとユニットを追加できます。',
+    addTitle: 'ユニットを追加',
+    editTitle: 'ユニットを編集'
+  },
+
+  managerEvents: {
+    title: 'イベント',
+    addEvent: '+ イベントを追加',
+    titleLabel: 'タイトル',
+    venue: '会場',
+    date: '日程',
+    status: 'ステータス',
+    selectCompanyPrompt: '上で会社を選択するとイベントを管理できます。',
+    noResults: 'この会社のイベントはまだありません。',
+    confirmDelete: '「{title}」を削除しますか？この操作は取り消せません。'
+  },
+
+  managerEventForm: {
+    backToEvents: 'イベント一覧へ戻る',
+    selectCompanyPrompt: '上で会社を選択するとイベントを追加できます。',
+    addTitle: 'イベントを追加',
+    editTitle: 'イベントを編集',
+    selectVenuePlaceholder: '会場を選択…',
+    capacity: '収容人数',
+    eventDateTime: '開催日時',
+    doorsOpen: '開場時間',
+    errorRequired: 'タイトル・会場・開催日は必須です。'
+  },
+
+  managerProducts: {
+    title: '商品',
+    addProduct: '+ 商品を追加',
+    category: 'カテゴリー',
+    price: '価格',
+    quantity: '数量',
+    noResults: '商品はまだありません。'
+  },
+
+  managerProductForm: {
+    backToProducts: '商品一覧へ戻る',
+    addTitle: '商品を追加',
+    editTitle: '商品を編集',
+    selectCategoryPlaceholder: 'カテゴリーを選択…',
+    errorRequired: '名前・カテゴリー・説明は必須です。'
+  },
+
+  adminCompanies: {
+    title: '会社',
+    addCompany: '+ 会社を追加',
+    contactEmail: '連絡先メールアドレス',
+    addManagerAccount: '+ マネージャーアカウント',
+    noResults: '会社はまだありません。'
+  },
+
+  adminCompanyForm: {
+    backToCompanies: '会社一覧へ戻る',
+    addTitle: '会社を追加',
+    editTitle: '会社を編集'
+  },
+
+  adminManagerAccountForm: {
+    title: '新しいマネージャーアカウント',
+    titleForCompany: '{company}の新しいマネージャーアカウント',
+    createAccount: 'アカウントを作成',
+    creating: '作成中…',
+    errorRequired: '名前・メールアドレス・6文字以上のパスワードが必要です。',
+    successMessage: '{email}宛にマネージャーアカウントを作成しました。'
   }
 }

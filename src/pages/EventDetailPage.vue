@@ -130,10 +130,7 @@
     </div>
   </div>
 
-  <div v-else class="not-found">
-    <p class="not-found__title">{{ error || $t('eventDetail.notFound') }}</p>
-    <router-link to="/events" class="not-found__link">&larr; {{ $t('checkout.backToEvents') }}</router-link>
-  </div>
+  <NotFound v-else/>
 </template>
 
 <script>
@@ -150,11 +147,12 @@ import StatusBadge from '@/components/StatusBadge.vue'
 import IdolPortrait from '@/components/IdolPortrait.vue'
 import VenueSeatMap from '@/components/VenueSeatMap.vue'
 import UiPageLoader from '@/components/progress-loaders/UiPageLoader.vue'
+import NotFound from '@/pages/NotFound.vue'
 
 export default {
   name: 'EventDetailPage',
 
-  components: { UnitPill, StatusBadge, IdolPortrait, VenueSeatMap, UiPageLoader },
+  components: { UnitPill, StatusBadge, IdolPortrait, VenueSeatMap, UiPageLoader, NotFound },
 
   props: {
     id: { type: String, required: true }
@@ -167,8 +165,7 @@ export default {
       ticketTypes: [],
       lineup: [],
       performingGroups: [],
-      loading: true,
-      error: null
+      loading: true
     }
   },
 
@@ -238,7 +235,6 @@ export default {
     fallbackPortraitFor,
     async fetchPage () {
       this.loading = true
-      this.error = null
       try {
         const response = await ConcertsService.getDetailPublic(this.id)
         this.concert = response.data.concert
@@ -246,9 +242,8 @@ export default {
         this.ticketTypes = response.data.ticket_types
         this.lineup = response.data.lineup
         this.performingGroups = response.data.performing_groups
-      } catch (error) {
+      } catch {
         this.concert = null
-        this.error = error.message
       } finally {
         this.loading = false
       }
@@ -331,9 +326,17 @@ export default {
   font-family: $font-title;
   font-weight: 900;
   font-style: italic;
-  font-size: clamp(28px, 4.6vw, 44px);
-  line-height: 1.08;
-  max-width: 22ch;
+  font-size: clamp(20px, 4.6vw, 44px);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  @include media_mobile {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
 }
 
 .hero__meta {
@@ -677,33 +680,4 @@ export default {
   color: $color-font-main;
 }
 
-.not-found {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  padding: 80px 20px;
-  text-align: center;
-}
-
-.not-found__title {
-  font-family: $font-content;
-  font-weight: 700;
-  font-size: 16px;
-  color: $color-ink;
-}
-
-.not-found__link {
-  color: $color-brand;
-  font-family: $font-content;
-  font-weight: 700;
-  font-size: 14px;
-  text-decoration: none;
-
-  &:hover {
-    text-decoration: underline;
-  }
-}
 </style>

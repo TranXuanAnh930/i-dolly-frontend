@@ -1,69 +1,71 @@
 <template>
   <div class="wrapper crud-page">
-    <router-link :to="{ name: 'manager-idols' }" class="back-link">&larr; Back to idols</router-link>
+    <router-link :to="{ name: 'manager-idols' }" class="back-link">&larr; {{ $t('managerIdolForm.backToIdols') }}</router-link>
 
     <label class="company-picker" v-if="isAdmin && !isEditing">
-      <span>Company</span>
+      <span>{{ $t('common.company') }}</span>
       <select v-model="selectedCompanyId">
-        <option value="">Select a company…</option>
+        <option value="">{{ $t('common.selectCompanyPlaceholder') }}</option>
         <option v-for="company in companiesStore.companies" :key="company.id" :value="company.id">{{ company.name }}</option>
       </select>
     </label>
 
-    <p class="empty-note" v-if="!isEditing && !companyId">Select a company above to add an idol.</p>
+    <p class="empty-note" v-if="!isEditing && !companyId">{{ $t('managerIdolForm.selectCompanyPrompt') }}</p>
 
-    <form class="form-card" v-else @submit.prevent="save">
-      <h3 class="form-card__title">{{ isEditing ? 'Edit idol' : 'Add idol' }}</h3>
+    <div class="form-wrap" v-else>
+      <h3 class="form-card__title">{{ isEditing ? $t('managerIdolForm.editTitle') : $t('managerIdolForm.addTitle') }}</h3>
 
-      <div class="field-grid">
-        <label class="field">
-          <span class="field__label">Name</span>
-          <input v-model="form.name" required>
-        </label>
-        <label class="field">
-          <span class="field__label">Group</span>
-          <select v-model="form.group_id">
-            <option value="">None</option>
-            <option v-for="group in myGroups" :key="group.id" :value="group.id">{{ group.name }}</option>
-          </select>
-        </label>
-        <label class="field">
-          <span class="field__label">Date of birth</span>
-          <input type="date" v-model="form.date_of_birth">
-        </label>
-        <label class="field">
-          <span class="field__label">Hometown</span>
-          <input v-model="form.hometown">
-        </label>
-        <label class="field">
-          <span class="field__label">Color</span>
-          <select v-model="form.color_id">
-            <option value="">None</option>
-            <option v-for="color in colors" :key="color.id" :value="color.id">{{ color.name }}</option>
-          </select>
-        </label>
-        <label class="field">
-          <span class="field__label">Photo</span>
-          <input type="file" accept="image/*" @change="onImageChange">
-        </label>
-      </div>
+      <form class="form-card" @submit.prevent="save">
+        <div class="field-grid">
+          <label class="field">
+            <span class="field__label">{{ $t('common.name') }}</span>
+            <input v-model="form.name" required>
+          </label>
+          <label class="field">
+            <span class="field__label">{{ $t('managerIdols.group') }}</span>
+            <select v-model="form.group_id">
+              <option value="">{{ $t('common.none') }}</option>
+              <option v-for="group in myGroups" :key="group.id" :value="group.id">{{ group.name }}</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="field__label">{{ $t('managerIdolForm.dateOfBirth') }}</span>
+            <input type="date" v-model="form.date_of_birth">
+          </label>
+          <label class="field">
+            <span class="field__label">{{ $t('idolDetail.hometown') }}</span>
+            <input v-model="form.hometown">
+          </label>
+          <label class="field">
+            <span class="field__label">{{ $t('managerIdolForm.color') }}</span>
+            <select v-model="form.color_id">
+              <option value="">{{ $t('common.none') }}</option>
+              <option v-for="color in colors" :key="color.id" :value="color.id">{{ color.name }}</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="field__label">{{ $t('common.photo') }}</span>
+            <input type="file" accept="image/*" @change="onImageChange">
+          </label>
+        </div>
 
-      <label class="field">
-        <span class="field__label">Short intro</span>
-        <input v-model="form.short_intro" maxlength="500">
-      </label>
-      <label class="field">
-        <span class="field__label">Long description</span>
-        <textarea v-model="form.long_description" rows="4"></textarea>
-      </label>
+        <label class="field">
+          <span class="field__label">{{ $t('managerIdolForm.shortIntro') }}</span>
+          <input v-model="form.short_intro" maxlength="500">
+        </label>
+        <label class="field">
+          <span class="field__label">{{ $t('managerIdolForm.longDescription') }}</span>
+          <textarea v-model="form.long_description" rows="4"></textarea>
+        </label>
 
-      <p class="form-error" v-if="error">{{ error }}</p>
+        <p class="form-error" v-if="error">{{ error }}</p>
 
-      <div class="form-actions">
-        <router-link :to="{ name: 'manager-idols' }" class="cancel-btn">Cancel</router-link>
-        <button type="submit" class="save-btn" :disabled="saving">{{ saving ? 'Saving…' : 'Save' }}</button>
-      </div>
-    </form>
+        <div class="form-actions">
+          <router-link :to="{ name: 'manager-idols' }" class="cancel-btn">{{ $t('common.cancel') }}</router-link>
+          <button type="submit" class="save-btn" :disabled="saving">{{ saving ? $t('common.saving') : $t('common.save') }}</button>
+        </div>
+      </form>
+    </div>
   </div>
 </template>
 
@@ -166,7 +168,7 @@ export default {
     },
     async save () {
       if (!this.form.name.trim()) {
-        this.error = 'Name is required.'
+        this.error = this.$t('common.errorNameRequired')
         return
       }
       this.saving = true
@@ -250,6 +252,15 @@ export default {
   padding: 20px 0;
 }
 
+.form-wrap {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 .form-card {
   background: $color-white;
   border-radius: 20px;
@@ -258,7 +269,6 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  max-width: 640px;
 }
 
 .form-card__title {

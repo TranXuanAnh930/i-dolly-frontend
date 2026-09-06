@@ -38,10 +38,7 @@
     </div>
   </div>
 
-  <div v-else class="not-found">
-    <p class="not-found__title">{{ error || $t('groupDetail.notFound') }}</p>
-    <router-link to="/members" class="not-found__link">&larr; {{ $t('idolDetail.backToMembers') }}</router-link>
-  </div>
+  <NotFound v-else/>
 </template>
 
 <script>
@@ -54,11 +51,12 @@ import IdolCard from '@/components/IdolCard.vue'
 import EventCard from '@/components/EventCard.vue'
 import ReleaseCard from '@/components/ReleaseCard.vue'
 import UiPageLoader from '@/components/progress-loaders/UiPageLoader.vue'
+import NotFound from '@/pages/NotFound.vue'
 
 export default {
   name: 'GroupDetailPage',
 
-  components: { IdolCard, EventCard, ReleaseCard, UiPageLoader },
+  components: { IdolCard, EventCard, ReleaseCard, UiPageLoader, NotFound },
 
   props: {
     id: { type: String, required: true }
@@ -70,8 +68,7 @@ export default {
       members: [],
       events: [],
       products: [],
-      loading: true,
-      error: null
+      loading: true
     }
   },
 
@@ -102,16 +99,14 @@ export default {
   methods: {
     async fetchPage () {
       this.loading = true
-      this.error = null
       try {
         const response = await GroupsService.getDetailPublic(this.id)
         this.group = response.data.group
         this.members = response.data.members
         this.events = response.data.events
         this.products = response.data.products
-      } catch (error) {
+      } catch {
         this.group = null
-        this.error = error.message
       } finally {
         this.loading = false
       }
@@ -218,33 +213,4 @@ export default {
   gap: 20px;
 }
 
-.not-found {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  padding: 80px 20px;
-  text-align: center;
-}
-
-.not-found__title {
-  font-family: $font-content;
-  font-weight: 700;
-  font-size: 16px;
-  color: $color-ink;
-}
-
-.not-found__link {
-  color: $color-brand;
-  font-family: $font-content;
-  font-weight: 700;
-  font-size: 14px;
-  text-decoration: none;
-
-  &:hover {
-    text-decoration: underline;
-  }
-}
 </style>

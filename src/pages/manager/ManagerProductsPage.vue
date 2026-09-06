@@ -1,8 +1,8 @@
 <template>
   <div class="wrapper crud-page">
     <div class="page-head">
-      <h2 class="page-head__title">Products</h2>
-      <router-link :to="{ name: 'manager-products-new' }" class="add-btn">+ Add product</router-link>
+      <h2 class="page-head__title">{{ $t('managerProducts.title') }}</h2>
+      <router-link :to="{ name: 'manager-products-new' }" class="add-btn">{{ $t('managerProducts.addProduct') }}</router-link>
     </div>
 
     <div class="table-card" v-if="products.length">
@@ -10,10 +10,10 @@
         <thead>
           <tr>
             <th></th>
-            <th>Name</th>
-            <th>Category</th>
-            <th>Price</th>
-            <th>Quantity</th>
+            <th>{{ $t('common.name') }}</th>
+            <th>{{ $t('managerProducts.category') }}</th>
+            <th>{{ $t('managerProducts.price') }}</th>
+            <th>{{ $t('managerProducts.quantity') }}</th>
             <th></th>
           </tr>
         </thead>
@@ -27,14 +27,14 @@
             <td>&yen;{{ product.price.toLocaleString('en-US') }}</td>
             <td>{{ product.quantity }}</td>
             <td class="actions">
-              <router-link :to="{ name: 'manager-products-edit', params: { id: product.id } }">Edit</router-link>
-              <button type="button" class="danger" @click="remove(product)">Delete</button>
+              <router-link :to="{ name: 'manager-products-edit', params: { id: product.id } }">{{ $t('common.edit') }}</router-link>
+              <button type="button" class="danger" @click="remove(product)">{{ $t('common.delete') }}</button>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-    <p class="empty-note" v-else>No products yet.</p>
+    <p class="empty-note" v-else>{{ $t('managerProducts.noResults') }}</p>
 
     <p class="form-error" v-if="error">{{ error }}</p>
   </div>
@@ -80,7 +80,7 @@ export default {
       }
     },
     async remove (product) {
-      if (!window.confirm(`Delete ${product.name}? This can't be undone.`)) return
+      if (!window.confirm(this.$t('common.confirmDelete', { name: product.name }))) return
       try {
         await ProductsService.remove(product.id)
         await this.fetchPage()

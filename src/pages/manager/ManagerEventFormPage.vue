@@ -1,64 +1,66 @@
 <template>
   <div class="wrapper crud-page">
-    <router-link :to="{ name: 'manager-events' }" class="back-link">&larr; Back to events</router-link>
+    <router-link :to="{ name: 'manager-events' }" class="back-link">&larr; {{ $t('managerEventForm.backToEvents') }}</router-link>
 
     <label class="company-picker" v-if="isAdmin && !isEditing">
-      <span>Company</span>
+      <span>{{ $t('common.company') }}</span>
       <select v-model="selectedCompanyId">
-        <option value="">Select a company…</option>
+        <option value="">{{ $t('common.selectCompanyPlaceholder') }}</option>
         <option v-for="company in companiesStore.companies" :key="company.id" :value="company.id">{{ company.name }}</option>
       </select>
     </label>
 
-    <p class="empty-note" v-if="!isEditing && !companyId">Select a company above to add an event.</p>
+    <p class="empty-note" v-if="!isEditing && !companyId">{{ $t('managerEventForm.selectCompanyPrompt') }}</p>
 
-    <form class="form-card" v-else @submit.prevent="save">
-      <h3 class="form-card__title">{{ isEditing ? 'Edit event' : 'Add event' }}</h3>
+    <div class="form-wrap" v-else>
+      <h3 class="form-card__title">{{ isEditing ? $t('managerEventForm.editTitle') : $t('managerEventForm.addTitle') }}</h3>
 
-      <div class="field-grid">
-        <label class="field">
-          <span class="field__label">Title</span>
-          <input v-model="form.title" required>
-        </label>
-        <label class="field">
-          <span class="field__label">Venue</span>
-          <select v-model="form.venue_id" required>
-            <option value="" disabled>Select a venue…</option>
-            <option v-for="venue in venues" :key="venue.id" :value="venue.id">{{ venue.name }} · {{ venue.city }}</option>
-          </select>
-        </label>
-        <label class="field">
-          <span class="field__label">Capacity</span>
-          <input type="number" min="1" v-model.number="form.capacity" required>
-        </label>
-        <label class="field" v-if="isEditing">
-          <span class="field__label">Status</span>
-          <select v-model="form.status">
-            <option v-for="status in statusOptions" :key="status" :value="status">{{ status }}</option>
-          </select>
-        </label>
-        <label class="field">
-          <span class="field__label">Event date &amp; time</span>
-          <input type="datetime-local" v-model="form.event_datetime" required>
-        </label>
-        <label class="field">
-          <span class="field__label">Doors open</span>
-          <input type="datetime-local" v-model="form.doors_open_at">
-        </label>
-      </div>
+      <form class="form-card" @submit.prevent="save">
+        <div class="field-grid">
+          <label class="field">
+            <span class="field__label">{{ $t('managerEvents.titleLabel') }}</span>
+            <input v-model="form.title" required>
+          </label>
+          <label class="field">
+            <span class="field__label">{{ $t('managerEvents.venue') }}</span>
+            <select v-model="form.venue_id" required>
+              <option value="" disabled>{{ $t('managerEventForm.selectVenuePlaceholder') }}</option>
+              <option v-for="venue in venues" :key="venue.id" :value="venue.id">{{ venue.name }} · {{ venue.city }}</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="field__label">{{ $t('managerEventForm.capacity') }}</span>
+            <input type="number" min="1" v-model.number="form.capacity" required>
+          </label>
+          <label class="field" v-if="isEditing">
+            <span class="field__label">{{ $t('managerEvents.status') }}</span>
+            <select v-model="form.status">
+              <option v-for="status in statusOptions" :key="status" :value="status">{{ statusLabel(status) }}</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="field__label">{{ $t('managerEventForm.eventDateTime') }}</span>
+            <input type="datetime-local" v-model="form.event_datetime" required>
+          </label>
+          <label class="field">
+            <span class="field__label">{{ $t('managerEventForm.doorsOpen') }}</span>
+            <input type="datetime-local" v-model="form.doors_open_at">
+          </label>
+        </div>
 
-      <label class="field">
-        <span class="field__label">Description</span>
-        <textarea v-model="form.description" rows="4"></textarea>
-      </label>
+        <label class="field">
+          <span class="field__label">{{ $t('common.description') }}</span>
+          <textarea v-model="form.description" rows="4"></textarea>
+        </label>
 
-      <p class="form-error" v-if="error">{{ error }}</p>
+        <p class="form-error" v-if="error">{{ error }}</p>
 
-      <div class="form-actions">
-        <router-link :to="{ name: 'manager-events' }" class="cancel-btn">Cancel</router-link>
-        <button type="submit" class="save-btn" :disabled="saving">{{ saving ? 'Saving…' : 'Save' }}</button>
-      </div>
-    </form>
+        <div class="form-actions">
+          <router-link :to="{ name: 'manager-events' }" class="cancel-btn">{{ $t('common.cancel') }}</router-link>
+          <button type="submit" class="save-btn" :disabled="saving">{{ saving ? $t('common.saving') : $t('common.save') }}</button>
+        </div>
+      </form>
+    </div>
   </div>
 </template>
 
@@ -154,9 +156,13 @@ export default {
         this.error = error.message
       }
     },
+    statusLabel (status) {
+      const key = 'status' + status.split('_').map(part => part[0].toUpperCase() + part.slice(1)).join('')
+      return this.$t(`events.${key}`)
+    },
     async save () {
       if (!this.form.title.trim() || !this.form.venue_id || !this.form.event_datetime) {
-        this.error = 'Title, venue and event date are required.'
+        this.error = this.$t('managerEventForm.errorRequired')
         return
       }
       this.saving = true
@@ -238,6 +244,15 @@ export default {
   padding: 20px 0;
 }
 
+.form-wrap {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 .form-card {
   background: $color-white;
   border-radius: 20px;
@@ -246,7 +261,6 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  max-width: 640px;
 }
 
 .form-card__title {

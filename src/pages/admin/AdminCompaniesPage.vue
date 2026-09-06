@@ -1,16 +1,16 @@
 <template>
   <div class="wrapper crud-page">
     <div class="page-head">
-      <h2 class="page-head__title">Companies</h2>
-      <router-link :to="{ name: 'admin-companies-new' }" class="add-btn">+ Add company</router-link>
+      <h2 class="page-head__title">{{ $t('adminCompanies.title') }}</h2>
+      <router-link :to="{ name: 'admin-companies-new' }" class="add-btn">{{ $t('adminCompanies.addCompany') }}</router-link>
     </div>
 
     <div class="table-card" v-if="companiesStore.companies.length">
       <table class="table">
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Contact email</th>
+            <th>{{ $t('common.name') }}</th>
+            <th>{{ $t('adminCompanies.contactEmail') }}</th>
             <th></th>
           </tr>
         </thead>
@@ -19,15 +19,15 @@
             <td>{{ company.name }}</td>
             <td>{{ company.contact_email || '—' }}</td>
             <td class="actions">
-              <router-link :to="{ name: 'admin-companies-edit', params: { id: company.id } }">Edit</router-link>
-              <button type="button" class="danger" @click="remove(company)">Delete</button>
-              <router-link :to="{ name: 'admin-manager-account-new', params: { id: company.id } }">+ Manager account</router-link>
+              <router-link :to="{ name: 'admin-companies-edit', params: { id: company.id } }">{{ $t('common.edit') }}</router-link>
+              <button type="button" class="danger" @click="remove(company)">{{ $t('common.delete') }}</button>
+              <router-link :to="{ name: 'admin-manager-account-new', params: { id: company.id } }">{{ $t('adminCompanies.addManagerAccount') }}</router-link>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-    <p class="empty-note" v-else>No companies yet.</p>
+    <p class="empty-note" v-else>{{ $t('adminCompanies.noResults') }}</p>
 
     <p class="form-error" v-if="error">{{ error }}</p>
   </div>
@@ -57,7 +57,7 @@ export default {
 
   methods: {
     async remove (company) {
-      if (!window.confirm(`Delete ${company.name}? This can't be undone.`)) return
+      if (!window.confirm(this.$t('common.confirmDelete', { name: company.name }))) return
       try {
         await this.companiesStore.removeCompany(company.id)
       } catch (error) {

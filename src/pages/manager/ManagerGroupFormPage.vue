@@ -1,43 +1,45 @@
 <template>
   <div class="wrapper crud-page">
-    <router-link :to="{ name: 'manager-groups' }" class="back-link">&larr; Back to groups</router-link>
+    <router-link :to="{ name: 'manager-groups' }" class="back-link">&larr; {{ $t('managerGroupForm.backToGroups') }}</router-link>
 
     <label class="company-picker" v-if="isAdmin && !isEditing">
-      <span>Company</span>
+      <span>{{ $t('common.company') }}</span>
       <select v-model="selectedCompanyId">
-        <option value="">Select a company…</option>
+        <option value="">{{ $t('common.selectCompanyPlaceholder') }}</option>
         <option v-for="company in companiesStore.companies" :key="company.id" :value="company.id">{{ company.name }}</option>
       </select>
     </label>
 
-    <p class="empty-note" v-if="!isEditing && !companyId">Select a company above to add a group.</p>
+    <p class="empty-note" v-if="!isEditing && !companyId">{{ $t('managerGroupForm.selectCompanyPrompt') }}</p>
 
-    <form class="form-card" v-else @submit.prevent="save">
-      <h3 class="form-card__title">{{ isEditing ? 'Edit group' : 'Add group' }}</h3>
+    <div class="form-wrap" v-else>
+      <h3 class="form-card__title">{{ isEditing ? $t('managerGroupForm.editTitle') : $t('managerGroupForm.addTitle') }}</h3>
 
-      <div class="field-grid">
+      <form class="form-card" @submit.prevent="save">
+        <div class="field-grid">
+          <label class="field">
+            <span class="field__label">{{ $t('common.name') }}</span>
+            <input v-model="form.name" required>
+          </label>
+          <label class="field">
+            <span class="field__label">{{ $t('managerGroups.debutDate') }}</span>
+            <input type="date" v-model="form.debut_date">
+          </label>
+        </div>
+
         <label class="field">
-          <span class="field__label">Name</span>
-          <input v-model="form.name" required>
+          <span class="field__label">{{ $t('common.description') }}</span>
+          <textarea v-model="form.description" rows="4"></textarea>
         </label>
-        <label class="field">
-          <span class="field__label">Debut date</span>
-          <input type="date" v-model="form.debut_date">
-        </label>
-      </div>
 
-      <label class="field">
-        <span class="field__label">Description</span>
-        <textarea v-model="form.description" rows="4"></textarea>
-      </label>
+        <p class="form-error" v-if="error">{{ error }}</p>
 
-      <p class="form-error" v-if="error">{{ error }}</p>
-
-      <div class="form-actions">
-        <router-link :to="{ name: 'manager-groups' }" class="cancel-btn">Cancel</router-link>
-        <button type="submit" class="save-btn" :disabled="saving">{{ saving ? 'Saving…' : 'Save' }}</button>
-      </div>
-    </form>
+        <div class="form-actions">
+          <router-link :to="{ name: 'manager-groups' }" class="cancel-btn">{{ $t('common.cancel') }}</router-link>
+          <button type="submit" class="save-btn" :disabled="saving">{{ saving ? $t('common.saving') : $t('common.save') }}</button>
+        </div>
+      </form>
+    </div>
   </div>
 </template>
 
@@ -115,7 +117,7 @@ export default {
     },
     async save () {
       if (!this.form.name.trim()) {
-        this.error = 'Name is required.'
+        this.error = this.$t('common.errorNameRequired')
         return
       }
       this.saving = true
@@ -194,6 +196,15 @@ export default {
   padding: 20px 0;
 }
 
+.form-wrap {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 .form-card {
   background: $color-white;
   border-radius: 20px;
@@ -202,7 +213,6 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  max-width: 640px;
 }
 
 .form-card__title {

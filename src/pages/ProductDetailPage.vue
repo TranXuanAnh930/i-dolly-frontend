@@ -51,10 +51,7 @@
     </div>
   </div>
 
-  <div v-else class="not-found">
-    <p class="not-found__title">{{ error || $t('productDetail.notFound') }}</p>
-    <router-link to="/store" class="not-found__link">&larr; {{ $t('productDetail.backToStore') }}</router-link>
-  </div>
+  <NotFound v-else/>
 </template>
 
 <script>
@@ -70,11 +67,12 @@ import { stockStatus } from '@/utils/stock'
 import { withTax } from '@/utils/tax'
 import UiPageLoader from '@/components/progress-loaders/UiPageLoader.vue'
 import ReleaseCard from '@/components/ReleaseCard.vue'
+import NotFound from '@/pages/NotFound.vue'
 
 export default {
   name: 'ProductDetailPage',
 
-  components: { UiPageLoader, ReleaseCard },
+  components: { UiPageLoader, ReleaseCard, NotFound },
 
   props: {
     id: { type: String, required: true }
@@ -85,7 +83,6 @@ export default {
       product: null,
       recommendations: [],
       loading: true,
-      error: null,
       justAdded: false
     }
   },
@@ -153,14 +150,12 @@ export default {
   methods: {
     async fetchPage () {
       this.loading = true
-      this.error = null
       try {
         const response = await ProductsService.getDetailPublic(this.id)
         this.product = response.data.product
         this.recommendations = response.data.recommendations
-      } catch (error) {
+      } catch {
         this.product = null
-        this.error = error.message
       } finally {
         this.loading = false
       }
@@ -430,33 +425,4 @@ export default {
   gap: 20px;
 }
 
-.not-found {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  padding: 80px 20px;
-  text-align: center;
-}
-
-.not-found__title {
-  font-family: $font-content;
-  font-weight: 700;
-  font-size: 16px;
-  color: $color-ink;
-}
-
-.not-found__link {
-  color: $color-brand;
-  font-family: $font-content;
-  font-weight: 700;
-  font-size: 14px;
-  text-decoration: none;
-
-  &:hover {
-    text-decoration: underline;
-  }
-}
 </style>

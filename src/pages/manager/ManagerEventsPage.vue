@@ -1,29 +1,29 @@
 <template>
   <div class="wrapper crud-page">
     <div class="page-head">
-      <h2 class="page-head__title">Events</h2>
-      <router-link v-if="companyId" :to="{ name: 'manager-events-new', query: adminQuery }" class="add-btn">+ Add event</router-link>
+      <h2 class="page-head__title">{{ $t('managerEvents.title') }}</h2>
+      <router-link v-if="companyId" :to="{ name: 'manager-events-new', query: adminQuery }" class="add-btn">{{ $t('managerEvents.addEvent') }}</router-link>
     </div>
 
     <label class="company-picker" v-if="isAdmin">
-      <span>Company</span>
+      <span>{{ $t('common.company') }}</span>
       <select v-model="selectedCompanyId">
-        <option value="">Select a company…</option>
+        <option value="">{{ $t('common.selectCompanyPlaceholder') }}</option>
         <option v-for="company in companiesStore.companies" :key="company.id" :value="company.id">{{ company.name }}</option>
       </select>
     </label>
 
-    <p class="empty-note" v-if="!companyId">Select a company above to manage its events.</p>
+    <p class="empty-note" v-if="!companyId">{{ $t('managerEvents.selectCompanyPrompt') }}</p>
 
     <template v-else>
       <div class="table-card" v-if="myEvents.length">
         <table class="table">
           <thead>
             <tr>
-              <th>Title</th>
-              <th>Venue</th>
-              <th>Date</th>
-              <th>Status</th>
+              <th>{{ $t('managerEvents.titleLabel') }}</th>
+              <th>{{ $t('managerEvents.venue') }}</th>
+              <th>{{ $t('managerEvents.date') }}</th>
+              <th>{{ $t('managerEvents.status') }}</th>
               <th></th>
             </tr>
           </thead>
@@ -32,16 +32,16 @@
               <td>{{ concert.title }}</td>
               <td>{{ venueName(concert.venue_id) }}</td>
               <td>{{ formatDate(concert.event_datetime) }}</td>
-              <td>{{ concert.status }}</td>
+              <td>{{ statusLabel(concert.status) }}</td>
               <td class="actions">
-                <router-link :to="{ name: 'manager-events-edit', params: { id: concert.id } }">Edit</router-link>
-                <button type="button" class="danger" @click="remove(concert)">Delete</button>
+                <router-link :to="{ name: 'manager-events-edit', params: { id: concert.id } }">{{ $t('common.edit') }}</router-link>
+                <button type="button" class="danger" @click="remove(concert)">{{ $t('common.delete') }}</button>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
-      <p class="empty-note" v-else>No events yet for this company.</p>
+      <p class="empty-note" v-else>{{ $t('managerEvents.noResults') }}</p>
     </template>
 
     <p class="form-error" v-if="error">{{ error }}</p>
@@ -106,8 +106,12 @@ export default {
     formatDate (iso) {
       return iso ? format(parseISO(iso), 'MMM d, yyyy · h:mm a') : '—'
     },
+    statusLabel (status) {
+      const key = 'status' + status.split('_').map(part => part[0].toUpperCase() + part.slice(1)).join('')
+      return this.$t(`events.${key}`)
+    },
     async remove (concert) {
-      if (!window.confirm(`Delete "${concert.title}"? This can't be undone.`)) return
+      if (!window.confirm(this.$t('managerEvents.confirmDelete', { title: concert.title }))) return
       try {
         await ConcertsService.remove(concert.id)
         await this.fetchPage()

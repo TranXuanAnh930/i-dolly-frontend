@@ -1,32 +1,34 @@
 <template>
   <div class="wrapper crud-page">
-    <router-link :to="{ name: 'admin-companies' }" class="back-link">&larr; Back to companies</router-link>
+    <router-link :to="{ name: 'admin-companies' }" class="back-link">&larr; {{ $t('adminCompanyForm.backToCompanies') }}</router-link>
 
-    <form class="form-card" @submit.prevent="save">
-      <h3 class="form-card__title">New manager account{{ company ? ` for ${company.name}` : '' }}</h3>
+    <div class="form-wrap">
+      <h3 class="form-card__title">{{ formTitle }}</h3>
 
-      <div class="field-grid">
-        <label class="field">
-          <span class="field__label">Name</span>
-          <input v-model="form.name" required>
-        </label>
-        <label class="field">
-          <span class="field__label">Email</span>
-          <input type="email" v-model="form.email" required>
-        </label>
-        <label class="field">
-          <span class="field__label">Password</span>
-          <input type="password" v-model="form.password" minlength="6" required>
-        </label>
-      </div>
+      <form class="form-card" @submit.prevent="save">
+        <div class="field-grid">
+          <label class="field">
+            <span class="field__label">{{ $t('common.name') }}</span>
+            <input v-model="form.name" required>
+          </label>
+          <label class="field">
+            <span class="field__label">{{ $t('common.email') }}</span>
+            <input type="email" v-model="form.email" required>
+          </label>
+          <label class="field">
+            <span class="field__label">{{ $t('common.password') }}</span>
+            <input type="password" v-model="form.password" minlength="6" required>
+          </label>
+        </div>
 
-      <p class="form-error" v-if="error">{{ error }}</p>
+        <p class="form-error" v-if="error">{{ error }}</p>
 
-      <div class="form-actions">
-        <router-link :to="{ name: 'admin-companies' }" class="cancel-btn">Cancel</router-link>
-        <button type="submit" class="save-btn" :disabled="saving">{{ saving ? 'Creating…' : 'Create account' }}</button>
-      </div>
-    </form>
+        <div class="form-actions">
+          <router-link :to="{ name: 'admin-companies' }" class="cancel-btn">{{ $t('common.cancel') }}</router-link>
+          <button type="submit" class="save-btn" :disabled="saving">{{ saving ? $t('adminManagerAccountForm.creating') : $t('adminManagerAccountForm.createAccount') }}</button>
+        </div>
+      </form>
+    </div>
   </div>
 </template>
 
@@ -55,6 +57,11 @@ export default {
     },
     company () {
       return this.companiesStore.companies.find(c => c.id === this.id)
+    },
+    formTitle () {
+      return this.company
+        ? this.$t('adminManagerAccountForm.titleForCompany', { company: this.company.name })
+        : this.$t('adminManagerAccountForm.title')
     }
   },
 
@@ -65,7 +72,7 @@ export default {
   methods: {
     async save () {
       if (!this.form.name.trim() || !this.form.email.trim() || this.form.password.length < 6) {
-        this.error = 'Name, email and a password of at least 6 characters are required.'
+        this.error = this.$t('adminManagerAccountForm.errorRequired')
         return
       }
       this.saving = true
@@ -77,7 +84,7 @@ export default {
           password: this.form.password,
           company_id: this.id
         })
-        useToastStore().add({ type: 'success', message: `Manager account created for ${this.form.email}.` })
+        useToastStore().add({ type: 'success', message: this.$t('adminManagerAccountForm.successMessage', { email: this.form.email }) })
         this.$router.push({ name: 'admin-companies' })
       } catch (error) {
         this.error = error.message
@@ -110,6 +117,15 @@ export default {
   }
 }
 
+.form-wrap {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 .form-card {
   background: $color-white;
   border-radius: 20px;
@@ -118,7 +134,6 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  max-width: 640px;
 }
 
 .form-card__title {
