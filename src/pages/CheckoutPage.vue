@@ -8,68 +8,76 @@
     </section>
 
     <div class="wrapper content">
-      <div v-if="orderPlaced" class="confirmation">
+      <div v-if="order && order.status === 'confirmed'" class="confirmation">
         <div class="confirmation__badge">✓</div>
         <h2 class="confirmation__title">{{ $t('checkout.orderPlaced') }}</h2>
-        <p class="confirmation__note">{{ $t('checkout.orderConfirmed', { orderNumber }) }}</p>
+        <p class="confirmation__note">{{ $t('checkout.orderConfirmed', { orderNumber: orderShortId }) }}</p>
         <div class="confirmation__actions">
           <router-link to="/store" class="confirmation__btn">{{ $t('checkout.keepShopping') }}</router-link>
           <router-link to="/events" class="confirmation__link">{{ $t('checkout.backToEvents') }}</router-link>
         </div>
       </div>
 
+      <div v-else-if="order" class="confirmation confirmation--declined">
+        <div class="confirmation__badge confirmation__badge--declined">&times;</div>
+        <h2 class="confirmation__title confirmation__title--declined">{{ $t('checkout.orderDeclinedTitle') }}</h2>
+        <p class="confirmation__note">{{ $t('checkout.orderDeclinedNote') }}</p>
+        <div class="confirmation__actions">
+          <router-link to="/store" class="confirmation__btn">{{ $t('cart.goToStore') }}</router-link>
+        </div>
+      </div>
+
       <div v-else-if="lines.length" class="layout">
         <form class="form-panel" @submit.prevent="placeOrder">
-          <h2 class="panel-title">{{ $t('checkout.contactShipping') }}</h2>
+          <h2 class="panel-title">{{ $t('checkout.shippingAddress') }}</h2>
 
-          <div class="field-grid">
-            <label class="field">
-              <span class="field__label">{{ $t('checkout.fullName') }}</span>
-              <input type="text" v-model="form.name" :placeholder="$t('common.yourName')" autocomplete="name">
-            </label>
-            <label class="field">
-              <span class="field__label">{{ $t('common.email') }}</span>
-              <input type="text" v-model="form.email" placeholder="you@example.com" autocomplete="email">
-            </label>
+          <div v-if="addressLoading" class="address-box address-box--muted">
+            {{ $t('common.loading') }}
           </div>
-
-          <label class="field">
-            <span class="field__label">{{ $t('common.address') }}</span>
-            <input type="text" v-model="form.address" :placeholder="$t('common.streetAddress')" autocomplete="street-address">
-          </label>
-
-          <div class="field-grid">
-            <label class="field">
-              <span class="field__label">{{ $t('common.city') }}</span>
-              <input type="text" v-model="form.city" :placeholder="$t('common.city')" autocomplete="address-level2">
-            </label>
-            <label class="field">
-              <span class="field__label">{{ $t('common.postalCode') }}</span>
-              <input type="text" v-model="form.postalCode" placeholder="000-0000" autocomplete="postal-code">
-            </label>
+          <div v-else-if="shippingAddress" class="address-box">
+            <p class="address-box__line">{{ shippingAddress.address_line1 }}<template v-if="shippingAddress.address_line2">, {{ shippingAddress.address_line2 }}</template></p>
+            <p class="address-box__line">{{ shippingAddress.city }}, {{ shippingAddress.state }} {{ shippingAddress.postal_code }}</p>
+            <p class="address-box__line">{{ shippingAddress.country }}</p>
+            <router-link to="/account" class="address-box__edit">{{ $t('checkout.editAddress') }}</router-link>
+          </div>
+          <div v-else class="address-box address-box--empty">
+            <p class="address-box__line">{{ $t('checkout.noAddressHint') }}</p>
+            <router-link to="/account" class="address-box__edit">{{ $t('checkout.goToAccount') }}</router-link>
           </div>
 
           <h2 class="panel-title panel-title--spaced">{{ $t('checkout.paymentMock') }}</h2>
+          <p class="panel-hint">{{ $t('checkout.paymentMockHint') }}</p>
 
           <label class="field">
             <span class="field__label">{{ $t('checkout.cardNumber') }}</span>
-            <input type="text" v-model="form.cardNumber" placeholder="4242 4242 4242 4242" autocomplete="cc-number" inputmode="numeric">
+            <input type="text" v-model="card.number" placeholder="4242 4242 4242 4242" autocomplete="cc-number" inputmode="numeric">
           </label>
 
           <div class="field-grid">
             <label class="field">
               <span class="field__label">{{ $t('checkout.expiry') }}</span>
-              <input type="text" v-model="form.cardExpiry" placeholder="MM / YY" autocomplete="cc-exp">
+              <input type="text" v-model="card.expiry" placeholder="MM / YY" autocomplete="cc-exp">
             </label>
             <label class="field">
               <span class="field__label">{{ $t('checkout.cvc') }}</span>
-              <input type="text" v-model="form.cardCvc" placeholder="123" autocomplete="cc-csc" inputmode="numeric">
+              <input type="text" v-model="card.cvc" placeholder="123" autocomplete="cc-csc" inputmode="numeric">
             </label>
           </div>
 
+          <label class="mock-option">
+            <input type="radio" name="simulate" :value="true" v-model="simulateSucc">
+            <span>{{ $t('checkout.simulateSuccess') }}</span>
+          </label>
+          <label class="mock-option">
+            <input type="radio" name="simulate" :value="false" v-model="simulateSucc">
+            <span>{{ $t('checkout.simulateFailure') }}</span>
+          </label>
+
           <p class="form-error" v-if="error" :key="error">{{ error }}</p>
 
-          <button type="submit" class="place-order-btn">{{ $t('checkout.placeOrder') }} &rarr;</button>
+          <button type="submit" class="place-order-btn" :disabled="!canPlaceOrder">
+            {{ placing ? $t('checkout.placingOrder') : `${$t('checkout.placeOrder')} →` }}
+          </button>
         </form>
 
         <div class="summary">
@@ -101,6 +109,8 @@ import { useCartStore } from '@/store/cart'
 import { useCatalogStore } from '@/store/catalog'
 import { useNotificationStore } from '@/store/notifications'
 import { useToastStore } from '@/store/toast'
+import { OrderService } from '@/services/order.service'
+import { ShippingAddressesService } from '@/services/shippingAddresses.service'
 import { formatNumber } from '@/utils/format'
 
 export default {
@@ -108,19 +118,17 @@ export default {
 
   data () {
     return {
-      form: {
-        name: '',
-        email: '',
-        address: '',
-        city: '',
-        postalCode: '',
-        cardNumber: '',
-        cardExpiry: '',
-        cardCvc: ''
+      shippingAddress: null,
+      addressLoading: true,
+      card: {
+        number: '',
+        expiry: '',
+        cvc: ''
       },
+      simulateSucc: true,
+      placing: false,
       error: '',
-      orderPlaced: false,
-      orderNumber: ''
+      order: null
     }
   },
 
@@ -133,6 +141,12 @@ export default {
     },
     subtotal () {
       return this.cart.subtotal
+    },
+    canPlaceOrder () {
+      return !!this.shippingAddress && this.lines.length > 0 && !this.placing
+    },
+    orderShortId () {
+      return this.order ? this.order.id.slice(0, 8) : ''
     }
   },
 
@@ -141,45 +155,79 @@ export default {
     // Refreshes a logged-in fan's real cart — a no-op for guests/non-fan
     // roles (see cartStore.isServerBacked).
     this.cart.fetchCart()
-    if (this.$currentUser.name) this.form.name = this.$currentUser.name
-    if (this.$currentUser.email) this.form.email = this.$currentUser.email
+    this.fetchAddress()
   },
 
   methods: {
     formatNumber,
-    async placeOrder () {
-      if (!this.form.name.trim() || !this.form.email.trim() || !this.form.address.trim()) {
-        this.error = this.$t('checkout.errorContact')
-        return
+    // Backend only stores one shipping address per user (see
+    // AccountSettingsPage) — checkout just uses that saved address rather
+    // than collecting one inline, and points to /account when there isn't
+    // one yet.
+    async fetchAddress () {
+      try {
+        const response = await ShippingAddressesService.fetchAll()
+        this.shippingAddress = response.data[0] || null
+      } finally {
+        this.addressLoading = false
       }
-      if (!this.form.cardNumber.trim() || !this.form.cardExpiry.trim() || !this.form.cardCvc.trim()) {
+    },
+    async placeOrder () {
+      if (!this.canPlaceOrder) return
+
+      // Card fields aren't sent anywhere — the mock gateway only reads
+      // simulateSucc — but requiring them keeps the flow feeling real
+      // rather than skippable with an empty payment step.
+      if (!this.card.number.trim() || !this.card.expiry.trim() || !this.card.cvc.trim()) {
         this.error = this.$t('checkout.errorPayment')
         return
       }
 
       this.error = ''
-      this.orderNumber = `ID-${Math.floor(100000 + Math.random() * 900000)}`
-      this.orderPlaced = true
+      this.placing = true
 
-      useToastStore().add({ type: 'success', message: this.$t('checkout.orderPlaced') })
+      // Snapshot the lines/subtotal being purchased before the cart is
+      // cleared out from under this computed data by the resync below.
+      const purchasedLines = this.lines.map(line => ({ productId: line.productId, name: line.product.name, qty: line.qty, price: line.product.price }))
+      const purchasedSubtotal = this.subtotal
 
-      useNotificationStore().add({
-        type: 'order',
-        titleKey: 'checkout.notificationTitle',
-        messageKey: 'checkout.notificationMessage',
-        messageParams: { orderNumber: this.orderNumber, amount: formatNumber(this.subtotal) },
-        detail: {
-          orderNumber: this.orderNumber,
-          lines: this.lines.map(line => ({ productId: line.productId, name: line.product.name, qty: line.qty, price: line.product.price })),
-          subtotal: this.subtotal
-        },
-        to: `/history/orders/${this.orderNumber}`
-      })
+      try {
+        const response = await OrderService.checkout({
+          amount: purchasedSubtotal,
+          shipping_address_id: this.shippingAddress.id,
+          gateway: 'mock',
+          simulate_succ: this.simulateSucc
+        })
+        this.order = response.data
 
-      // Checkout itself is still the placeholder flow (Phase 3) — this
-      // just empties whichever cart backed this order (server or local) so
-      // a real fan's server cart doesn't sit around after a "placed" order.
-      await this.cart.clear()
+        // The backend consumes the cart (stock decremented, rows deleted)
+        // as soon as checkout runs, whether the mock payment was approved
+        // or declined — resync from the server rather than assuming which.
+        await this.cart.fetchCart()
+
+        if (this.order.status === 'confirmed') {
+          useToastStore().add({ type: 'success', message: this.$t('checkout.orderPlaced') })
+          useNotificationStore().add({
+            type: 'order',
+            titleKey: 'checkout.notificationTitle',
+            messageKey: 'checkout.notificationMessage',
+            messageParams: { orderNumber: this.orderShortId, amount: formatNumber(purchasedSubtotal) },
+            detail: {
+              orderNumber: this.order.id,
+              lines: purchasedLines,
+              subtotal: purchasedSubtotal,
+              shippingAddress: { ...this.shippingAddress }
+            },
+            to: `/history/orders/${this.order.id}`
+          })
+        } else {
+          useToastStore().add({ type: 'error', message: this.$t('checkout.orderDeclinedTitle') })
+        }
+      } catch (err) {
+        this.error = err.message
+      } finally {
+        this.placing = false
+      }
     }
   }
 }
@@ -252,6 +300,52 @@ export default {
   }
 }
 
+.panel-hint {
+  margin-top: -8px;
+  font-family: $font-content;
+  font-size: 12.5px;
+  color: $color-gray-500;
+}
+
+.address-box {
+  border: 1.5px solid $color-line;
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  &--muted {
+    color: $color-gray-400;
+    font-family: $font-content;
+    font-size: 13px;
+  }
+
+  &--empty {
+    border-style: dashed;
+  }
+}
+
+.address-box__line {
+  font-family: $font-content;
+  font-size: 13.5px;
+  color: $color-ink;
+}
+
+.address-box__edit {
+  margin-top: 8px;
+  align-self: flex-start;
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 12.5px;
+  color: $color-brand;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
 .field-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -295,6 +389,22 @@ export default {
   }
 }
 
+.mock-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: $font-content;
+  font-size: 14px;
+  color: $color-ink;
+  cursor: pointer;
+
+  input {
+    accent-color: $color-brand;
+    width: 16px;
+    height: 16px;
+  }
+}
+
 .form-error {
   background: #fdeaf1;
   color: $color-error;
@@ -319,9 +429,14 @@ export default {
   transition: transform .12s ease, background .12s ease;
   box-shadow: 0 10px 20px -8px rgba($color-brand, .5);
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: $color-brand-deep;
     transform: translateY(-2px);
+  }
+
+  &:disabled {
+    opacity: .5;
+    cursor: not-allowed;
   }
 }
 
@@ -440,6 +555,10 @@ export default {
   align-items: center;
   justify-content: center;
   margin-bottom: 8px;
+
+  &--declined {
+    background: $color-error;
+  }
 }
 
 .confirmation__title {
@@ -448,6 +567,10 @@ export default {
   font-style: italic;
   font-size: 28px;
   color: $color-brand;
+
+  &--declined {
+    color: $color-error;
+  }
 }
 
 .confirmation__note {

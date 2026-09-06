@@ -3,37 +3,54 @@
     <section class="hero">
       <div class="wrapper hero__inner">
         <router-link to="/history" class="back-link">&larr; {{ $t('orderDetails.backToHistory') }}</router-link>
-        <p class="hero__eyebrow">{{ $t('orderDetails.title') }}</p>
-        <h1 class="hero__title">{{ order.detail.orderNumber }}</h1>
-        <p class="hero__meta">{{ formatTimestamp(order.timestamp) }}</p>
+        <h1 class="hero__title">{{ $t('orderDetails.title') }}</h1>
       </div>
     </section>
 
     <div class="wrapper content">
-      <section class="block">
-        <h2 class="block__title">{{ $t('orderDetails.items') }}</h2>
-        <div class="section-rule"></div>
+      <div class="blocks">
+        <section class="block">
+          <h2 class="block__title">{{ $t('orderDetails.orderNumber') }}</h2>
+          <div class="section-rule"></div>
+          <p class="address-line">{{ order.detail.orderNumber }}</p>
 
-        <div class="lines">
-          <component
-            :is="line.productId ? 'router-link' : 'div'"
-            v-for="line in order.detail.lines"
-            :key="line.productId || line.name"
-            :to="line.productId ? `/products/${line.productId}` : undefined"
-            class="line">
-            <span class="line__info">
-              <span class="line__name">{{ line.name }}</span>
-              <span class="line__qty">&times;{{ line.qty }}</span>
-            </span>
-            <span class="line__price">&yen;{{ formatNumber(line.price * line.qty) }}</span>
-          </component>
-        </div>
+          <h2 class="block__title block__title--spaced">{{ $t('orderDetails.orderTime') }}</h2>
+          <div class="section-rule"></div>
+          <p class="address-line">{{ formatTimestamp(order.timestamp) }}</p>
 
-        <div class="summary-row summary-row--total">
-          <span>{{ $t('orderDetails.total') }}</span>
-          <span>&yen;{{ formatNumber(order.detail.subtotal) }}</span>
-        </div>
-      </section>
+          <template v-if="order.detail.shippingAddress">
+            <h2 class="block__title block__title--spaced">{{ $t('orderDetails.shippingAddress') }}</h2>
+            <div class="section-rule"></div>
+
+            <p class="address-line">{{ order.detail.shippingAddress.address_line1 }}<template v-if="order.detail.shippingAddress.address_line2">, {{ order.detail.shippingAddress.address_line2 }}</template></p>
+            <p class="address-line">{{ order.detail.shippingAddress.city }}, {{ order.detail.shippingAddress.state }} {{ order.detail.shippingAddress.postal_code }}</p>
+            <p class="address-line">{{ order.detail.shippingAddress.country }}</p>
+          </template>
+
+          <h2 class="block__title block__title--spaced">{{ $t('orderDetails.items') }}</h2>
+          <div class="section-rule"></div>
+
+          <div class="lines">
+            <component
+              :is="line.productId ? 'router-link' : 'div'"
+              v-for="line in order.detail.lines"
+              :key="line.productId || line.name"
+              :to="line.productId ? `/products/${line.productId}` : undefined"
+              class="line">
+              <span class="line__info">
+                <span class="line__name">{{ line.name }}</span>
+                <span class="line__qty">&times;{{ line.qty }}</span>
+              </span>
+              <span class="line__price">&yen;{{ formatNumber(line.price * line.qty) }}</span>
+            </component>
+          </div>
+
+          <div class="summary-row summary-row--total">
+            <span>{{ $t('orderDetails.total') }}</span>
+            <span>&yen;{{ formatNumber(order.detail.subtotal) }}</span>
+          </div>
+        </section>
+      </div>
     </div>
   </div>
 
@@ -107,18 +124,8 @@ export default {
   }
 }
 
-.hero__eyebrow {
-  margin-top: 16px;
-  font-family: $font-content;
-  font-weight: 700;
-  font-size: 12px;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: $color-gray-400;
-}
-
 .hero__title {
-  margin-top: 4px;
+  margin-top: 16px;
   font-family: $font-title;
   font-weight: 900;
   font-style: italic;
@@ -126,16 +133,16 @@ export default {
   color: $color-brand;
 }
 
-.hero__meta {
-  margin-top: 8px;
-  font-family: $font-content;
-  font-weight: 700;
-  font-size: 13.5px;
-  color: $color-font-main;
-}
-
 .content {
   padding-bottom: 90px;
+}
+
+.blocks {
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .block {
@@ -143,7 +150,12 @@ export default {
   border-radius: 20px;
   padding: 24px;
   box-shadow: 0 10px 24px -12px rgba($color-ink, .18);
-  max-width: 560px;
+}
+
+.address-line {
+  font-family: $font-content;
+  font-size: 13.5px;
+  color: $color-ink;
 }
 
 .block__title {
@@ -151,6 +163,10 @@ export default {
   font-weight: 900;
   font-size: 20px;
   color: $color-ink;
+
+  &--spaced {
+    margin-top: 20px;
+  }
 }
 
 .section-rule {

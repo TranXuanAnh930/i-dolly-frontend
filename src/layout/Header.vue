@@ -162,12 +162,17 @@ export default {
     // Header stays mounted for the whole session, so this is the one place
     // that reliably sees every login/logout — loads the real cart the
     // moment a fan session appears (app boot with an existing session, or
-    // an interactive login), and empties it the moment it disappears, so
-    // logging out always leaves a clean, empty cart on this device.
+    // an interactive login), and empties the cart and notification history
+    // the moment it disappears, so logging out always leaves a clean slate
+    // on this device rather than showing the previous fan's data.
     '$currentUser.id' (id) {
       const cart = useCartStore()
-      if (id) cart.fetchCart()
-      else cart.clearOnLogout()
+      if (id) {
+        cart.fetchCart()
+      } else {
+        cart.clearOnLogout()
+        useNotificationStore().clearOnLogout()
+      }
     }
   },
   created () {

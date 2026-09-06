@@ -30,7 +30,8 @@ export default {
     selectCompanyPlaceholder: '会社を選択…',
     description: '説明',
     photo: '写真',
-    saving: '保存中…'
+    saving: '保存中…',
+    loading: '読み込み中…'
   },
 
   nav: {
@@ -48,10 +49,7 @@ export default {
     title: '通知',
     markAllRead: 'すべて既読にする',
     empty: '通知はまだありません。',
-    more: 'もっと見る',
-    seedLotteryResultTitle: '抽選結果',
-    seedLotteryWonMessage: '{event}の抽選に当選しました！🎉',
-    seedLotteryLostMessage: '{event}の抽選受付は終了しました — 今回は落選となりました。'
+    more: 'もっと見る'
   },
 
   menu: {
@@ -147,25 +145,32 @@ export default {
   checkout: {
     eyebrow: 'あと少し',
     title: 'チェックアウト',
-    contactShipping: '連絡先・配送先',
-    fullName: 'お名前',
-    paymentMock: 'お支払い（モック）',
+    shippingAddress: 'お届け先',
+    editAddress: '住所を編集',
+    noAddressHint: '注文する前にアカウント設定でお届け先を保存してください。',
+    goToAccount: 'アカウント設定へ',
+    paymentMock: 'お支払い（モックゲートウェイ）',
+    paymentMockHint: '実際の決済ゲートウェイはまだ接続されていません — カード情報を入力し、このモック決済の結果を選んでください。',
     cardNumber: 'カード番号',
     expiry: '有効期限',
     cvc: 'セキュリティコード',
+    errorPayment: 'お支払い情報（モック）を入力してください。',
+    simulateSuccess: '決済を承認する',
+    simulateFailure: '決済を拒否する',
     orderSummary: 'ご注文内容',
     total: '合計',
     placeOrder: '注文を確定する',
-    errorContact: 'お名前・メールアドレス・住所を入力してください。',
-    errorPayment: 'お支払い情報（モック）を入力してください。',
+    placingOrder: '注文処理中…',
     orderPlaced: 'ご注文ありがとうございます！',
-    orderConfirmed: '注文番号 {orderNumber} を承りました。これはモックのチェックアウトのため、実際の請求は発生しません。',
+    orderConfirmed: '注文番号 #{orderNumber} を承りました。これはモックのチェックアウトのため、実際の請求は発生しません。',
+    orderDeclinedTitle: '決済が拒否されました',
+    orderDeclinedNote: 'このモック決済は拒否されました。今回の注文分のカートは空になっています — ストアからもう一度商品を追加してください。',
     keepShopping: '買い物を続ける',
     backToEvents: 'イベント一覧へ戻る',
     emptyTitle: 'カートは空です。',
     emptyHint: 'チェックアウトする商品がありません。',
     notificationTitle: '注文完了',
-    notificationMessage: '注文番号 {orderNumber}（¥{amount}）が確定しました。'
+    notificationMessage: '注文番号 #{orderNumber}（¥{amount}）が確定しました。'
   },
 
   history: {
@@ -377,7 +382,10 @@ export default {
   orderDetails: {
     backToHistory: '履歴',
     title: 'ご注文内容',
+    orderNumber: '注文番号',
+    orderTime: '注文日時',
     items: '商品',
+    shippingAddress: 'お届け先',
     total: '合計',
     notFound: 'その注文が見つかりませんでした。'
   },

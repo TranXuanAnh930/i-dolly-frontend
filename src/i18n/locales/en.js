@@ -30,7 +30,8 @@ export default {
     selectCompanyPlaceholder: 'Select a company…',
     description: 'Description',
     photo: 'Photo',
-    saving: 'Saving…'
+    saving: 'Saving…',
+    loading: 'Loading…'
   },
 
   nav: {
@@ -48,10 +49,7 @@ export default {
     title: 'Notifications',
     markAllRead: 'Mark all read',
     empty: 'No notifications yet.',
-    more: 'More',
-    seedLotteryResultTitle: 'Lottery result',
-    seedLotteryWonMessage: 'You won the lottery for {event}! 🎉',
-    seedLotteryLostMessage: 'Entries closed for {event} — not selected this time.'
+    more: 'More'
   },
 
   menu: {
@@ -147,25 +145,32 @@ export default {
   checkout: {
     eyebrow: 'Almost there',
     title: 'Checkout',
-    contactShipping: 'Contact & shipping',
-    fullName: 'Full name',
-    paymentMock: 'Payment (mock)',
+    shippingAddress: 'Shipping address',
+    editAddress: 'Edit address',
+    noAddressHint: 'Save a shipping address in Account Settings before placing an order.',
+    goToAccount: 'Go to Account Settings',
+    paymentMock: 'Payment (mock gateway)',
+    paymentMockHint: 'No real payment gateway is connected yet — enter any card details and choose how the mock payment should behave.',
     cardNumber: 'Card number',
     expiry: 'Expiry',
     cvc: 'CVC',
+    errorPayment: 'Enter mock payment details to continue.',
+    simulateSuccess: 'Approve payment',
+    simulateFailure: 'Decline payment',
     orderSummary: 'Order Summary',
     total: 'Total',
     placeOrder: 'Place Order',
-    errorContact: 'Fill in your name, email, and address.',
-    errorPayment: 'Enter mock payment details to continue.',
+    placingOrder: 'Placing order…',
     orderPlaced: 'Order placed!',
-    orderConfirmed: 'Order {orderNumber} is confirmed. This is a mock checkout, so nothing was actually charged.',
+    orderConfirmed: 'Order #{orderNumber} is confirmed. This is a mock checkout, so nothing was actually charged.',
+    orderDeclinedTitle: 'Payment declined',
+    orderDeclinedNote: 'This mock payment was declined. Your cart for this order has been cleared — head back to the store to add your items again.',
     keepShopping: 'Keep shopping',
     backToEvents: 'Back to events',
     emptyTitle: 'Your cart is empty.',
     emptyHint: 'There\'s nothing to check out yet.',
     notificationTitle: 'Order placed',
-    notificationMessage: 'Order {orderNumber} (¥{amount}) was placed successfully.'
+    notificationMessage: 'Order #{orderNumber} (¥{amount}) was placed successfully.'
   },
 
   history: {
@@ -377,7 +382,10 @@ export default {
   orderDetails: {
     backToHistory: 'History',
     title: 'Order details',
+    orderNumber: 'Order number',
+    orderTime: 'Order time',
     items: 'Items',
+    shippingAddress: 'Shipping address',
     total: 'Total',
     notFound: 'We couldn\'t find that order.'
   },
