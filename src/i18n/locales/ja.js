@@ -173,9 +173,7 @@ export default {
     keepShopping: '買い物を続ける',
     backToEvents: 'イベント一覧へ戻る',
     emptyTitle: 'カートは空です。',
-    emptyHint: 'チェックアウトする商品がありません。',
-    notificationTitle: '注文完了',
-    notificationMessage: '注文番号 #{orderNumber}（¥{amount}）が確定しました。'
+    emptyHint: 'チェックアウトする商品がありません。'
   },
 
   history: {
@@ -184,7 +182,11 @@ export default {
     sub: '購入完了通知や抽選結果をまとめて確認。',
     entries: '{count}件の履歴',
     emptyTitle: 'まだ履歴がありません。',
-    emptyHint: '購入や抽選結果はここに表示されます。'
+    emptyHint: '購入や抽選結果はここに表示されます。',
+    orderPlacedTitle: '注文完了',
+    orderPlacedMessage: '注文番号 #{orderNumber}（¥{amount}）が確定しました。',
+    orderCancelledTitle: '注文がキャンセルされました',
+    orderCancelledMessage: '注文番号 #{orderNumber}（¥{amount}）はキャンセルされました。'
   },
 
   account: {
@@ -388,7 +390,11 @@ export default {
     title: 'ご注文内容',
     orderNumber: '注文番号',
     orderTime: '注文日時',
+    status: 'ステータス',
+    statusConfirmed: '確定',
+    statusCancelled: 'キャンセル済み',
     items: '商品',
+    unknownProduct: '不明な商品',
     shippingAddress: 'お届け先',
     total: '合計',
     notFound: 'その注文が見つかりませんでした。'

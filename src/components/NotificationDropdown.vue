@@ -58,7 +58,8 @@
 import { parseISO } from 'date-fns'
 
 import { useNotificationStore } from '@/store/notifications'
-import { formatRelativeTime } from '@/utils/format'
+import { useOrdersStore } from '@/store/orders'
+import { formatNumber, formatRelativeTime } from '@/utils/format'
 import UiOnClickOutside from './UiOnClickOutside.vue'
 
 export default {
@@ -76,8 +77,26 @@ export default {
     notifications () {
       return useNotificationStore()
     },
+    // Real orders (see ordersStore) have no server-side "read" state, so
+    // they're mapped in as always-read — they show up here and in the
+    // count-free part of the list, but never contribute to unreadCount or
+    // the unread-dot styling the way a local ticket/lottery notification does.
+    orderItems () {
+      return useOrdersStore().sorted.map(order => ({
+        id: `order-${order.id}`,
+        type: 'order',
+        read: true,
+        timestamp: order.created_at,
+        to: `/history/orders/${order.id}`,
+        titleKey: order.status === 'cancelled' ? 'history.orderCancelledTitle' : 'history.orderPlacedTitle',
+        messageKey: order.status === 'cancelled' ? 'history.orderCancelledMessage' : 'history.orderPlacedMessage',
+        messageParams: { orderNumber: order.id.slice(0, 8), amount: formatNumber(order.total_price) }
+      }))
+    },
     items () {
-      return this.notifications.sorted.slice(0, 5)
+      return [...this.orderItems, ...this.notifications.sorted]
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+        .slice(0, 5)
     },
     unreadCount () {
       return this.notifications.unreadCount

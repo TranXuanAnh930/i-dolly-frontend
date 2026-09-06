@@ -60,14 +60,38 @@
 import { parseISO } from 'date-fns'
 
 import { useNotificationStore } from '@/store/notifications'
-import { formatDate } from '@/utils/format'
+import { useOrdersStore } from '@/store/orders'
+import { formatDate, formatNumber } from '@/utils/format'
 
 export default {
   name: 'HistoryPage',
 
+  created () {
+    // A no-op for guests/non-fan roles, and already loaded on every page
+    // once Header's own fetch resolves — this just covers a direct/refresh
+    // landing straight on this page.
+    useOrdersStore().fetchAll()
+  },
+
   computed: {
+    // Real orders come from the backend (see ordersStore) while
+    // ticket/lottery entries are still client-only (no backend for those
+    // yet) — mapped to the same shape the list/icons below already render,
+    // then merged with the notification store's entries and re-sorted.
+    orderItems () {
+      return useOrdersStore().sorted.map(order => ({
+        id: `order-${order.id}`,
+        type: 'order',
+        timestamp: order.created_at,
+        to: `/history/orders/${order.id}`,
+        titleKey: order.status === 'cancelled' ? 'history.orderCancelledTitle' : 'history.orderPlacedTitle',
+        messageKey: order.status === 'cancelled' ? 'history.orderCancelledMessage' : 'history.orderPlacedMessage',
+        messageParams: { orderNumber: order.id.slice(0, 8), amount: formatNumber(order.total_price) }
+      }))
+    },
     items () {
-      return useNotificationStore().sorted
+      return [...this.orderItems, ...useNotificationStore().sorted]
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
     }
   },
 

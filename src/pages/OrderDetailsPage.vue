@@ -12,19 +12,23 @@
         <section class="block">
           <h2 class="block__title">{{ $t('orderDetails.orderNumber') }}</h2>
           <div class="section-rule"></div>
-          <p class="address-line">{{ order.detail.orderNumber }}</p>
+          <p class="address-line">{{ order.id }}</p>
 
           <h2 class="block__title block__title--spaced">{{ $t('orderDetails.orderTime') }}</h2>
           <div class="section-rule"></div>
-          <p class="address-line">{{ formatTimestamp(order.timestamp) }}</p>
+          <p class="address-line">{{ formatTimestamp(order.created_at) }}</p>
 
-          <template v-if="order.detail.shippingAddress">
+          <h2 class="block__title block__title--spaced">{{ $t('orderDetails.status') }}</h2>
+          <div class="section-rule"></div>
+          <p class="address-line" :class="`status-line--${order.status}`">{{ $t(`orderDetails.status${statusLabel}`) }}</p>
+
+          <template v-if="order.shippingaddress">
             <h2 class="block__title block__title--spaced">{{ $t('orderDetails.shippingAddress') }}</h2>
             <div class="section-rule"></div>
 
-            <p class="address-line">{{ order.detail.shippingAddress.address_line1 }}<template v-if="order.detail.shippingAddress.address_line2">, {{ order.detail.shippingAddress.address_line2 }}</template></p>
-            <p class="address-line">{{ order.detail.shippingAddress.city }}, {{ order.detail.shippingAddress.state }} {{ order.detail.shippingAddress.postal_code }}</p>
-            <p class="address-line">{{ order.detail.shippingAddress.country }}</p>
+            <p class="address-line">{{ order.shippingaddress.address_line1 }}<template v-if="order.shippingaddress.address_line2">, {{ order.shippingaddress.address_line2 }}</template></p>
+            <p class="address-line">{{ order.shippingaddress.city }}, {{ order.shippingaddress.state }} {{ order.shippingaddress.postal_code }}</p>
+            <p class="address-line">{{ order.shippingaddress.country }}</p>
           </template>
 
           <h2 class="block__title block__title--spaced">{{ $t('orderDetails.items') }}</h2>
@@ -33,8 +37,8 @@
           <div class="lines">
             <component
               :is="line.productId ? 'router-link' : 'div'"
-              v-for="line in order.detail.lines"
-              :key="line.productId || line.name"
+              v-for="line in orderItems"
+              :key="line.productId"
               :to="line.productId ? `/products/${line.productId}` : undefined"
               class="line">
               <span class="line__info">
@@ -47,11 +51,15 @@
 
           <div class="summary-row summary-row--total">
             <span>{{ $t('orderDetails.total') }}</span>
-            <span>&yen;{{ formatNumber(order.detail.subtotal) }}</span>
+            <span>&yen;{{ formatNumber(order.total_price) }}</span>
           </div>
         </section>
       </div>
     </div>
+  </div>
+
+  <div v-else-if="loading" class="not-found">
+    <p class="not-found__title">{{ $t('common.loading') }}</p>
   </div>
 
   <div v-else class="not-found">
@@ -63,7 +71,8 @@
 <script>
 import { parseISO } from 'date-fns'
 
-import { useNotificationStore } from '@/store/notifications'
+import { useCatalogStore } from '@/store/catalog'
+import { useOrdersStore } from '@/store/orders'
 import { formatDate, formatNumber } from '@/utils/format'
 
 export default {
@@ -75,8 +84,28 @@ export default {
 
   computed: {
     order () {
-      const item = useNotificationStore().byOrderNumber(this.orderNumber)
-      return item && item.type === 'order' ? item : null
+      return useOrdersStore().byId(this.orderNumber)
+    },
+    loading () {
+      return useOrdersStore().loading && !this.order
+    },
+    statusLabel () {
+      return this.order.status.charAt(0).toUpperCase() + this.order.status.slice(1)
+    },
+    // order.items only carries product_id/quantity/price (see
+    // app/schema/order.py OrderItem) — the name is resolved against the
+    // catalog, same as CartPage/CheckoutPage do for their own lines.
+    orderItems () {
+      const catalog = useCatalogStore()
+      return this.order.items.map(item => {
+        const product = catalog.productById(item.product_id)
+        return {
+          productId: item.product_id,
+          name: product ? product.name : this.$t('orderDetails.unknownProduct'),
+          qty: item.quantity,
+          price: item.price
+        }
+      })
     }
   },
 
@@ -84,9 +113,17 @@ export default {
     order: {
       immediate: true,
       handler (order) {
-        if (order) document.title = `${order.detail.orderNumber} | I-Dolly`
+        if (order) document.title = `${order.id} | I-Dolly`
       }
     }
+  },
+
+  created () {
+    useCatalogStore().fetchAll()
+    // A no-op for guests/non-fan roles, and already loaded on every page
+    // once Header's own fetch resolves — this just covers a direct/refresh
+    // landing straight on this page.
+    useOrdersStore().fetchAll()
   },
 
   methods: {
@@ -156,6 +193,16 @@ export default {
   font-family: $font-content;
   font-size: 13.5px;
   color: $color-ink;
+
+  &.status-line--confirmed {
+    font-weight: 700;
+    color: #1fa876;
+  }
+
+  &.status-line--cancelled {
+    font-weight: 700;
+    color: $color-error;
+  }
 }
 
 .block__title {

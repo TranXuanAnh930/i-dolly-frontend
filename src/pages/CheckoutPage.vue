@@ -85,7 +85,7 @@
           <div class="summary__lines">
             <div v-for="line in lines" :key="line.productId" class="summary__line">
               <span>{{ line.product.name }} &times;{{ line.qty }}</span>
-              <span>&yen;{{ formatNumber(line.product.price * line.qty) }}</span>
+              <span>&yen;{{ formatNumber(cart.lineTotal(line)) }}</span>
             </div>
           </div>
           <div class="summary__row summary__row--total">
@@ -107,7 +107,7 @@
 <script>
 import { useCartStore } from '@/store/cart'
 import { useCatalogStore } from '@/store/catalog'
-import { useNotificationStore } from '@/store/notifications'
+import { useOrdersStore } from '@/store/orders'
 import { useToastStore } from '@/store/toast'
 import { OrderService } from '@/services/order.service'
 import { ShippingAddressesService } from '@/services/shippingAddresses.service'
@@ -186,14 +186,9 @@ export default {
       this.error = ''
       this.placing = true
 
-      // Snapshot the lines/subtotal being purchased before the cart is
-      // cleared out from under this computed data by the resync below.
-      const purchasedLines = this.lines.map(line => ({ productId: line.productId, name: line.product.name, qty: line.qty, price: line.product.price }))
-      const purchasedSubtotal = this.subtotal
-
       try {
         const response = await OrderService.checkout({
-          amount: purchasedSubtotal,
+          amount: this.subtotal,
           shipping_address_id: this.shippingAddress.id,
           gateway: 'mock',
           simulate_succ: this.simulateSucc
@@ -205,21 +200,13 @@ export default {
         // or declined — resync from the server rather than assuming which.
         await this.cart.fetchCart()
 
+        // Cache the order directly rather than refetching the whole list —
+        // it's already known in full, and this is what makes it show up in
+        // History immediately (see ordersStore.add).
+        useOrdersStore().add(this.order)
+
         if (this.order.status === 'confirmed') {
           useToastStore().add({ type: 'success', message: this.$t('checkout.orderPlaced') })
-          useNotificationStore().add({
-            type: 'order',
-            titleKey: 'checkout.notificationTitle',
-            messageKey: 'checkout.notificationMessage',
-            messageParams: { orderNumber: this.orderShortId, amount: formatNumber(purchasedSubtotal) },
-            detail: {
-              orderNumber: this.order.id,
-              lines: purchasedLines,
-              subtotal: purchasedSubtotal,
-              shippingAddress: { ...this.shippingAddress }
-            },
-            to: `/history/orders/${this.order.id}`
-          })
         } else {
           useToastStore().add({ type: 'error', message: this.$t('checkout.orderDeclinedTitle') })
         }

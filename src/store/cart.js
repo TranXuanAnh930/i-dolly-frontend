@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 
 import { CartService } from '@/services/cart.service'
+import { withTax } from '@/utils/tax'
 import { useCatalogStore } from './catalog'
 import { useUserStore } from './user'
 
@@ -57,8 +58,15 @@ export const useCartStore = defineStore('cart', {
     itemCount () {
       return this.lines.reduce((sum, line) => sum + line.qty, 0)
     },
+    // Tax is applied per line (matching how the backend taxes each cart
+    // row at checkout — see order_service.checkout) rather than once on
+    // the raw sum, so the total shown here always equals the sum of the
+    // per-line totals shown alongside it.
+    lineTotal () {
+      return (line) => withTax(line.product.price * line.qty)
+    },
     subtotal () {
-      return this.lines.reduce((sum, line) => sum + line.product.price * line.qty, 0)
+      return this.lines.reduce((sum, line) => sum + this.lineTotal(line), 0)
     }
   },
 

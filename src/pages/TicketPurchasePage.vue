@@ -44,7 +44,7 @@
                   <span class="option-row__title">{{ tierLabel(tier) }}</span>
                   <span class="option-row__note">{{ $t('eventDetail.leftSuffix', { count: remaining(tier) }) }} &middot; {{ tier.sale_method === 'lottery' ? $t('eventDetail.lotteryLabel') : $t('eventDetail.directSaleLabel') }}</span>
                 </span>
-                <span class="option-row__price">&yen;{{ formatNumber(tier.price) }}</span>
+                <span class="option-row__price">&yen;{{ formatNumber(withTax(tier.price)) }}</span>
               </label>
             </div>
           </div>
@@ -166,6 +166,7 @@ import { parseISO } from 'date-fns'
 import { useConcertsStore } from '@/store/concerts'
 import { useNotificationStore } from '@/store/notifications'
 import { formatDate, formatNumber } from '@/utils/format'
+import { withTax } from '@/utils/tax'
 import VenueSeatMap from '@/components/VenueSeatMap.vue'
 
 export default {
@@ -229,8 +230,10 @@ export default {
     step2Label () {
       return this.isLotteryTier ? this.$t('ticketPurchase.stepEntry') : this.$t('ticketPurchase.stepPayment')
     },
+    // Tax applied once to the pre-tax line total (price × qty), matching
+    // how cartStore.lineTotal computes a product line's total.
     total () {
-      return this.selectedTier ? this.selectedTier.price * this.qty : 0
+      return this.selectedTier ? withTax(this.selectedTier.price * this.qty) : 0
     },
     dateLabel () {
       return this.concert ? formatDate(parseISO(this.concert.event_datetime), 'EEE, MMM d, yyyy · h:mm a') : ''
@@ -274,6 +277,7 @@ export default {
 
   methods: {
     formatNumber,
+    withTax,
     stepClass (n) {
       return { 'is-active': this.step === n, 'is-done': this.step > n }
     },

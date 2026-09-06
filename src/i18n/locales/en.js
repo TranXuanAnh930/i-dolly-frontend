@@ -173,9 +173,7 @@ export default {
     keepShopping: 'Keep shopping',
     backToEvents: 'Back to events',
     emptyTitle: 'Your cart is empty.',
-    emptyHint: 'There\'s nothing to check out yet.',
-    notificationTitle: 'Order placed',
-    notificationMessage: 'Order #{orderNumber} (¥{amount}) was placed successfully.'
+    emptyHint: 'There\'s nothing to check out yet.'
   },
 
   history: {
@@ -184,7 +182,11 @@ export default {
     sub: 'Every purchase confirmation and lottery result, in one place.',
     entries: '{count} entries',
     emptyTitle: 'Nothing here yet.',
-    emptyHint: 'Purchases and lottery results will show up here as they happen.'
+    emptyHint: 'Purchases and lottery results will show up here as they happen.',
+    orderPlacedTitle: 'Order placed',
+    orderPlacedMessage: 'Order #{orderNumber} (¥{amount}) was placed successfully.',
+    orderCancelledTitle: 'Order cancelled',
+    orderCancelledMessage: 'Order #{orderNumber} (¥{amount}) was cancelled.'
   },
 
   account: {
@@ -388,7 +390,11 @@ export default {
     title: 'Order details',
     orderNumber: 'Order number',
     orderTime: 'Order time',
+    status: 'Status',
+    statusConfirmed: 'Confirmed',
+    statusCancelled: 'Cancelled',
     items: 'Items',
+    unknownProduct: 'Unknown product',
     shippingAddress: 'Shipping address',
     total: 'Total',
     notFound: 'We couldn\'t find that order.'

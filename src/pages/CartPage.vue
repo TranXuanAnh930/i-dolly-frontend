@@ -21,7 +21,7 @@
             <div class="line__info">
               <span class="line__type">{{ line.product.category }}<template v-if="artistFor(line.product)"> &middot; {{ artistFor(line.product).name }}</template></span>
               <span class="line__title">{{ line.product.name }}</span>
-              <span class="line__price">{{ $t('cart.unitPrice', { price: `¥${formatNumber(line.product.price)}` }) }}</span>
+              <span class="line__price">{{ $t('cart.unitPrice', { price: `¥${formatNumber(withTax(line.product.price))}` }) }}</span>
             </div>
 
             <div class="line__qty">
@@ -30,7 +30,7 @@
               <button type="button" class="qty-btn" @click="updateQty(line.productId, line.qty + 1)" :aria-label="$t('common.increaseQuantity')">+</button>
             </div>
 
-            <span class="line__total">&yen;{{ formatNumber(line.product.price * line.qty) }}</span>
+            <span class="line__total">&yen;{{ formatNumber(cart.lineTotal(line)) }}</span>
 
             <button type="button" class="line__remove" @click="removeItem(line.productId)" :aria-label="$t('cart.removeItem')">
               <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3 13 13M13 3 3 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
@@ -72,6 +72,7 @@ import { useCatalogStore } from '@/store/catalog'
 import { useIdolsStore } from '@/store/idols'
 import { resolveMediaUrl } from '@/utils/media'
 import { formatNumber } from '@/utils/format'
+import { withTax } from '@/utils/tax'
 
 export default {
   name: 'CartPage',
@@ -107,6 +108,7 @@ export default {
 
   methods: {
     formatNumber,
+    withTax,
     artistFor (product) {
       return this.catalogStore.artistForAlbum(product)
     },

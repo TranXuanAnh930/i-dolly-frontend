@@ -141,6 +141,7 @@ import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 import { useCartStore } from '@/store/cart'
 import { useCatalogStore } from '@/store/catalog'
 import { useNotificationStore } from '@/store/notifications'
+import { useOrdersStore } from '@/store/orders'
 
 export default {
   name: 'Header',
@@ -176,18 +177,21 @@ export default {
       this.closeMobile()
     },
     // Header stays mounted for the whole session, so this is the one place
-    // that reliably sees every login/logout — loads the real cart the
-    // moment a fan session appears (app boot with an existing session, or
-    // an interactive login), and empties the cart and notification history
-    // the moment it disappears, so logging out always leaves a clean slate
-    // on this device rather than showing the previous fan's data.
+    // that reliably sees every login/logout — loads the real cart and order
+    // history the moment a fan session appears (app boot with an existing
+    // session, or an interactive login), and empties the cart, order
+    // history and notification history the moment it disappears, so
+    // logging out always leaves a clean slate on this device rather than
+    // showing the previous fan's data.
     '$currentUser.id' (id) {
       const cart = useCartStore()
       if (id) {
         cart.fetchCart()
+        useOrdersStore().fetchAll()
       } else {
         cart.clearOnLogout()
         useNotificationStore().clearOnLogout()
+        useOrdersStore().clearOnLogout()
       }
     }
   },
@@ -198,7 +202,10 @@ export default {
     // so the badge needs its own load rather than depending on whichever
     // other page happened to trigger it. fetchAll() is a no-op once loaded.
     useCatalogStore().fetchAll()
-    if (this.$currentUser.id) useCartStore().fetchCart()
+    if (this.$currentUser.id) {
+      useCartStore().fetchCart()
+      useOrdersStore().fetchAll()
+    }
   },
   methods: {
     toggleMobile () {
