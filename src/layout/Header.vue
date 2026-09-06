@@ -318,15 +318,16 @@ export default {
   @include media_mobile {
     display: none;
     position: absolute;
-    top: calc(100% + 16px);
+    top: 100%;
     left: -10px;
     right: -10px;
     grid-template-columns: 1fr 1fr;
-    gap: 4px;
-    background: $color-brand;
-    padding: 8px 10px 18px;
+    gap: 0;
+    background: $color-brand linear-gradient(rgba($color-white, .2), rgba($color-white, .2)) no-repeat 50% / 1px 100%;
+    padding: 0;
+    border-top: 1px solid rgba($color-white, .2);
     box-shadow: 0 20px 30px -12px rgba($color-ink, .35);
-    max-height: calc(100vh - 80px);
+    max-height: calc(100vh - 60px);
     overflow-y: auto;
 
     &.is-open {
@@ -336,6 +337,7 @@ export default {
     li {
       width: 100%;
       min-width: 0;
+      border-bottom: 1px solid rgba($color-white, .2);
     }
 
     :deep(.lang-switch) {
@@ -344,11 +346,12 @@ export default {
       border: none;
       border-radius: 0;
       background: none;
-      padding: 12px 8px;
+      padding: 14px 20px;
       color: $color-white;
       font-family: $font-content;
       font-weight: 700;
       font-size: 14px;
+      line-height: 1;
       text-align: left;
 
       &:hover {
@@ -403,7 +406,7 @@ export default {
   }
 
   @include media_mobile {
-    padding: 12px 8px;
+    padding: 14px 20px;
   }
 }
 

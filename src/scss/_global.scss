@@ -36,6 +36,17 @@ input[type=button], button {
   padding: 0;
 }
 
+// iOS Safari auto-zooms the page on focus when a text input's font-size is
+// under 16px, which breaks the layout until the user manually zooms back
+// out. Floor it at 16px on mobile so focusing a field never triggers that.
+// !important is needed because most inputs set their own smaller font-size
+// via a scoped class selector, which otherwise outranks this plain-element rule.
+@include media_mobile {
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+}
+
 //.page {
 //  height: 100%;
 //  width: 100%;

@@ -1,7 +1,7 @@
 <!-- Compact EN / 日本語 toggle. Shows the language you'd switch TO. -->
 <template>
   <button type="button" class="lang-switch" @click="toggle" :aria-label="`Switch to ${isJa ? 'English' : '日本語'}`">
-    {{ isJa ? 'EN' : '日本語' }}
+    {{ isJa ? 'English' : '日本語' }}
   </button>
 </template>
 
