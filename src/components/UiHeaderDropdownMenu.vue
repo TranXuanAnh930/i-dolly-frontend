@@ -8,7 +8,20 @@
       </button>
 
       <div v-if="open" class="more-menu__panel">
-        <router-link to="/account" class="more-menu__item" @click="close">
+        <router-link v-if="$currentUser.id" to="/history" class="more-menu__item" @click="close">
+          <span class="more-menu__icon">
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <circle cx="10" cy="10.5" r="7" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M10 6.5v4l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span class="more-menu__text">
+            <span class="more-menu__title">{{ $t('menu.history.title') }}</span>
+            <span class="more-menu__desc">{{ $t('menu.history.desc') }}</span>
+          </span>
+        </router-link>
+
+        <router-link v-if="$currentUser.id" to="/account" class="more-menu__item" @click="close">
           <span class="more-menu__icon">
             <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
               <circle cx="10" cy="6.5" r="3.2" stroke="currentColor" stroke-width="1.5"/>

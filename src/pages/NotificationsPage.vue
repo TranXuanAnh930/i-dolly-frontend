@@ -1,17 +1,18 @@
 <template>
-  <div class="history-page">
+  <div class="notifications-page">
     <section class="hero">
       <div class="wrapper hero__inner">
-        <p class="hero__eyebrow">{{ $t('history.eyebrow') }}</p>
-        <h1 class="hero__title">{{ $t('history.title') }}</h1>
-        <p class="hero__sub">{{ $t('history.sub') }}</p>
+        <p class="hero__eyebrow">{{ $t('notifications.eyebrow') }}</p>
+        <h1 class="hero__title">{{ $t('notifications.title') }}</h1>
+        <p class="hero__sub">{{ $t('notifications.sub') }}</p>
       </div>
     </section>
 
     <div class="wrapper content">
       <div class="panel">
         <div class="panel__header">
-          <span class="panel__count">{{ $t('history.entries', { count: items.length }) }}</span>
+          <span class="panel__count">{{ $t('notifications.entries', { count: items.length }) }}</span>
+          <button v-if="unreadCount" type="button" class="mark-read-btn" @click="markAllRead">{{ $t('notifications.markAllRead') }}</button>
         </div>
 
         <div v-if="items.length" class="list">
@@ -19,7 +20,9 @@
             v-for="item in items"
             :key="item.id"
             :to="item.to || '#'"
-            class="item">
+            class="item"
+            :class="{ 'is-unread': !item.read }"
+            @click="notifications.markRead(item.id)">
             <span class="item__icon" :class="`item__icon--${item.type}`">
               <svg v-if="item.type === 'order'" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                 <path d="M5 6.5h10l-.8 8.5a1.5 1.5 0 0 1-1.5 1.4H7.3a1.5 1.5 0 0 1-1.5-1.4L5 6.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
@@ -48,8 +51,8 @@
         </div>
 
         <div v-else class="empty-state">
-          <p class="empty-state__title">{{ $t('history.emptyTitle') }}</p>
-          <p class="empty-state__hint">{{ $t('history.emptyHint') }}</p>
+          <p class="empty-state__title">{{ $t('notifications.empty') }}</p>
+          <p class="empty-state__hint">{{ $t('notifications.emptyHint') }}</p>
         </div>
       </div>
     </div>
@@ -63,15 +66,24 @@ import { useNotificationStore } from '@/store/notifications'
 import { formatDate } from '@/utils/format'
 
 export default {
-  name: 'HistoryPage',
+  name: 'NotificationsPage',
 
   computed: {
+    notifications () {
+      return useNotificationStore()
+    },
     items () {
-      return useNotificationStore().sorted
+      return this.notifications.sorted
+    },
+    unreadCount () {
+      return this.notifications.unreadCount
     }
   },
 
   methods: {
+    markAllRead () {
+      this.notifications.markAllRead()
+    },
     formatTimestamp (timestamp) {
       return formatDate(parseISO(timestamp), 'MMM d, yyyy · h:mm a')
     },
@@ -86,7 +98,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.history-page {
+.notifications-page {
   width: 100%;
   flex: 1;
   display: flex;
@@ -149,6 +161,21 @@ export default {
   color: $color-gray-500;
 }
 
+.mark-read-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 12.5px;
+  color: $color-brand;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
 .list {
   display: flex;
   flex-direction: column;
@@ -168,6 +195,10 @@ export default {
 
   &:hover {
     background: $color-gray-50;
+  }
+
+  &.is-unread {
+    background: $color-brand-tint-2;
   }
 }
 

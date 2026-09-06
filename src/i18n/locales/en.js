@@ -46,13 +46,18 @@ export default {
   },
 
   notifications: {
+    eyebrow: 'Updates',
     title: 'Notifications',
+    sub: 'Order confirmations, lottery results, and other account updates.',
+    entries: '{count} notifications',
     markAllRead: 'Mark all read',
     empty: 'No notifications yet.',
+    emptyHint: 'Order confirmations and lottery results will show up here as they happen.',
     more: 'More'
   },
 
   menu: {
+    history: { title: 'History', desc: 'Orders & lottery results' },
     accountSettings: { title: 'Account Settings', desc: 'Profile & preferences' },
     contact: { title: 'Contact', desc: 'Send us your questions' },
     guidelines: { title: 'Guidelines', desc: 'How lotteries & venues work' },
@@ -178,7 +183,6 @@ export default {
     title: 'History',
     sub: 'Every purchase confirmation and lottery result, in one place.',
     entries: '{count} entries',
-    markAllRead: 'Mark all read',
     emptyTitle: 'Nothing here yet.',
     emptyHint: 'Purchases and lottery results will show up here as they happen.'
   },

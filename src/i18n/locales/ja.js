@@ -46,13 +46,18 @@ export default {
   },
 
   notifications: {
+    eyebrow: 'お知らせ',
     title: '通知',
+    sub: 'ご注文の確認、抽選結果など、アカウントに関するお知らせをまとめて確認。',
+    entries: '{count}件の通知',
     markAllRead: 'すべて既読にする',
     empty: '通知はまだありません。',
+    emptyHint: 'ご注文の確認や抽選結果はここに表示されます。',
     more: 'もっと見る'
   },
 
   menu: {
+    history: { title: '履歴', desc: 'ご注文・抽選結果' },
     accountSettings: { title: 'アカウント設定', desc: 'プロフィールと設定' },
     contact: { title: 'お問い合わせ', desc: 'ご質問はこちらから' },
     guidelines: { title: 'ご利用ガイド', desc: '抽選や会場について' },
@@ -178,7 +183,6 @@ export default {
     title: '履歴',
     sub: '購入完了通知や抽選結果をまとめて確認。',
     entries: '{count}件の履歴',
-    markAllRead: 'すべて既読にする',
     emptyTitle: 'まだ履歴がありません。',
     emptyHint: '購入や抽選結果はここに表示されます。'
   },

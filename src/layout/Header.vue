@@ -15,6 +15,25 @@
 
       <UiOnClickOutside :do="closeMobile">
         <div class="mobile-nav">
+          <div class="mobile-lang">
+            <LanguageSwitcher/>
+          </div>
+
+          <div v-if="!isStaff" class="mobile-cart">
+            <router-link :to="{ name: 'cart' }" class="cart-link" :aria-label="$t('nav.cart')">
+              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <path d="M5 6.5h10l-.8 8.5a1.5 1.5 0 0 1-1.5 1.4H7.3a1.5 1.5 0 0 1-1.5-1.4L5 6.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                <path d="M7 6.5V5a3 3 0 0 1 6 0v1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              <span v-if="cartCount" class="cart-link__badge">{{ cartCount }}</span>
+            </router-link>
+          </div>
+
+          <div class="mobile-auth">
+            <router-link v-if="!$currentUser.id" :to="{ name: 'login' }" class="mobile-auth__link">{{ $t('nav.login') }}</router-link>
+            <span v-else class="mobile-auth__link" @click="logout()">{{ $t('nav.logout') }}</span>
+          </div>
+
           <button
             type="button"
             class="burger"
@@ -57,11 +76,11 @@
                 <router-link :to="{ name: 'store' }" class="menu__link">{{ $t('nav.store') }}</router-link>
               </li>
             </template>
-            <li class="menu-item--desktop">
+            <li v-if="$currentUser.id" class="menu-item--desktop">
               <NotificationDropdown/>
             </li>
-            <li class="menu-item--mobile">
-              <router-link to="/history" class="menu__link">
+            <li v-if="$currentUser.id" class="menu-item--mobile">
+              <router-link to="/notifications" class="menu__link">
                 {{ $t('nav.notifications') }}<span v-if="unreadCount" class="menu__count">{{ unreadCount }}</span>
               </router-link>
             </li>
@@ -75,26 +94,23 @@
                 <span v-if="cartCount" class="cart-link__badge">{{ cartCount }}</span>
               </router-link>
             </li>
-            <li v-if="!isStaff" class="menu-item--mobile">
-              <router-link :to="{ name: 'cart' }" class="menu__link">
-                {{ $t('nav.cart') }}<span v-if="cartCount" class="menu__count">{{ cartCount }}</span>
-              </router-link>
-            </li>
-
-            <li v-if="!$currentUser.id">
+            <li v-if="!$currentUser.id" class="menu-item--desktop">
               <router-link :to="{ name: 'login' }" class="menu__link">{{ $t('nav.login') }}</router-link>
             </li>
-            <li v-if="$currentUser.id">
+            <li v-if="$currentUser.id" class="menu-item--desktop">
               <span class="menu__link menu__link--action" @click="logout()">{{ $t('nav.logout') }}</span>
             </li>
-            <li>
+            <li class="menu-item--desktop">
               <LanguageSwitcher/>
             </li>
 
             <li class="menu-item--desktop">
               <UiHeaderDropdownMenu/>
             </li>
-            <li class="menu-item--mobile">
+            <li v-if="$currentUser.id" class="menu-item--mobile">
+              <router-link to="/history" class="menu__link">{{ $t('history.title') }}</router-link>
+            </li>
+            <li v-if="$currentUser.id" class="menu-item--mobile">
               <router-link to="/account" class="menu__link">{{ $t('menu.accountSettings.title') }}</router-link>
             </li>
             <li class="menu-item--mobile">
@@ -208,6 +224,7 @@ export default {
 }
 
 .header__inner {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -263,6 +280,45 @@ export default {
 .mobile-nav {
   display: flex;
   align-items: center;
+  gap: 12px;
+}
+
+.mobile-lang {
+  display: none;
+
+  @include media_mobile {
+    display: block;
+  }
+}
+
+.mobile-cart {
+  display: none;
+
+  @include media_mobile {
+    display: block;
+  }
+}
+
+.mobile-auth {
+  display: none;
+
+  @include media_mobile {
+    display: block;
+  }
+}
+
+.mobile-auth__link {
+  display: block;
+  color: $color-white;
+  text-decoration: none;
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+
+  &:hover {
+    opacity: .8;
+  }
 }
 
 .burger {
@@ -319,8 +375,8 @@ export default {
     display: none;
     position: absolute;
     top: 100%;
-    left: -10px;
-    right: -10px;
+    left: 0;
+    right: 0;
     grid-template-columns: 1fr 1fr;
     gap: 0;
     background: $color-brand linear-gradient(rgba($color-white, .2), rgba($color-white, .2)) no-repeat 50% / 1px 100%;
@@ -338,25 +394,6 @@ export default {
       width: 100%;
       min-width: 0;
       border-bottom: 1px solid rgba($color-white, .2);
-    }
-
-    :deep(.lang-switch) {
-      display: block;
-      width: 100%;
-      border: none;
-      border-radius: 0;
-      background: none;
-      padding: 14px 20px;
-      color: $color-white;
-      font-family: $font-content;
-      font-weight: 700;
-      font-size: 14px;
-      line-height: 1;
-      text-align: left;
-
-      &:hover {
-        background: none;
-      }
     }
   }
 }

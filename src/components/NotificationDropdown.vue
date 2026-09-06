@@ -19,7 +19,7 @@
           <router-link
             v-for="item in items"
             :key="item.id"
-            :to="item.to || '/history'"
+            :to="item.to || '/notifications'"
             class="notif__item"
             :class="{ 'is-unread': !item.read }"
             @click="onItemClick(item)">
@@ -48,7 +48,7 @@
         </div>
         <p v-else class="notif__empty">{{ $t('notifications.empty') }}</p>
 
-        <router-link to="/history" class="notif__more" @click="close">{{ $t('notifications.more') }} &rarr;</router-link>
+        <router-link to="/notifications" class="notif__more" @click="close">{{ $t('notifications.more') }} &rarr;</router-link>
       </div>
     </div>
   </UiOnClickOutside>

@@ -10,6 +10,7 @@ import productDetailPage from '../pages/ProductDetailPage.vue'
 import cartPage from '../pages/CartPage.vue'
 import checkoutPage from '../pages/CheckoutPage.vue'
 import historyPage from '../pages/HistoryPage.vue'
+import notificationsPage from '../pages/NotificationsPage.vue'
 import orderDetailsPage from '../pages/OrderDetailsPage.vue'
 import ticketDetailsPage from '../pages/TicketDetailsPage.vue'
 import lotteryResultDetailsPage from '../pages/LotteryResultDetailsPage.vue'
@@ -113,14 +114,20 @@ export const routes = [
     path: '/history',
     name: 'history',
     component: historyPage,
-    meta: { title: `${DOMAIN_TITLE} | history` }
+    meta: { isAuth: true, title: `${DOMAIN_TITLE} | history` }
+  },
+  {
+    path: '/notifications',
+    name: 'notifications',
+    component: notificationsPage,
+    meta: { isAuth: true, title: `${DOMAIN_TITLE} | notifications` }
   },
   {
     path: '/history/orders/:orderNumber',
     name: 'order-details',
     component: orderDetailsPage,
     props: true,
-    meta: { title: `${DOMAIN_TITLE} | order` }
+    meta: { isAuth: true, title: `${DOMAIN_TITLE} | order` }
   },
   {
     path: '/history/tickets/:orderNumber',
@@ -140,7 +147,7 @@ export const routes = [
     path: '/account',
     name: 'account',
     component: accountSettingsPage,
-    meta: { title: `${DOMAIN_TITLE} | account settings` }
+    meta: { isAuth: true, title: `${DOMAIN_TITLE} | account settings` }
   },
   {
     path: '/guidelines',
