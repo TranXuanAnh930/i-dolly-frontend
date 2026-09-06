@@ -9,7 +9,10 @@ export default {
     password: 'パスワード',
     confirmPassword: 'パスワード（確認）',
     address: '住所',
+    addressLine2: '建物名・部屋番号（任意）',
     city: '市区町村',
+    state: '都道府県',
+    country: '国',
     postalCode: '郵便番号',
     yourName: 'お名前',
     streetAddress: '番地・建物名',
@@ -181,7 +184,7 @@ export default {
     shippingAddress: '配送先住所',
     saveAddress: '住所を保存',
     addressSaved: '配送先住所を保存しました。',
-    errorAddress: '住所・市区町村・郵便番号を入力してください。'
+    errorAddress: '住所・市区町村・都道府県・国・郵便番号を入力してください。'
   },
 
   guidelines: {

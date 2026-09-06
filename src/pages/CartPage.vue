@@ -8,6 +8,8 @@
     </section>
 
     <div class="wrapper content">
+      <p v-if="cart.error" class="fetch-error">{{ cart.error }}</p>
+
       <div v-if="lines.length" class="layout">
         <div class="lines">
           <div v-for="line in lines" :key="line.productId" class="line">
@@ -97,6 +99,10 @@ export default {
     // catalogStore.artistForAlbum/colorForRelease resolve against the idols
     // store's idols/groups — never loaded on this page otherwise.
     useIdolsStore().fetchAll()
+    // Refreshes a logged-in fan's real cart — a no-op for guests/non-fan
+    // roles (see cartStore.isServerBacked), who already have their local
+    // cart loaded.
+    this.cart.fetchCart()
   },
 
   methods: {
@@ -112,10 +118,10 @@ export default {
       return resolveMediaUrl(album.cover_image_url || product.image_url)
     },
     updateQty (productId, qty) {
-      this.cart.updateQty(productId, qty)
+      this.cart.updateQty(productId, qty).catch(() => {})
     },
     removeItem (productId) {
-      this.cart.removeItem(productId)
+      this.cart.removeItem(productId).catch(() => {})
     }
   }
 }
@@ -154,6 +160,17 @@ export default {
 
 .content {
   padding-bottom: 90px;
+}
+
+.fetch-error {
+  margin-bottom: 14px;
+  background: #fdeaf1;
+  color: $color-error;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-family: $font-content;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .layout {

@@ -32,7 +32,7 @@ export function checkAccessMiddleware (to, from, next) {
   const requiredRoles = to.matched.flatMap(item => item.meta.roles || [])
 
   if (isAuthRoute && !currentUser.id) return next({ name: 'login' })
-  if (requiredRoles.length && !requiredRoles.includes(currentUser.role)) return next({ name: 'index' })
+  if (requiredRoles.length && !requiredRoles.includes(currentUser.role)) return next({ name: 'events' })
   next()
 }
 

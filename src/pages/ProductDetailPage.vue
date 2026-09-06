@@ -165,8 +165,13 @@ export default {
         this.loading = false
       }
     },
-    addToCart () {
-      useCartStore().addItem(this.product.id)
+    async addToCart () {
+      try {
+        await useCartStore().addItem(this.product.id)
+      } catch (error) {
+        useToastStore().add({ type: 'error', message: error.message })
+        return
+      }
       useToastStore().add({ type: 'success', message: this.$t('cart.itemAdded', { name: this.product.name }) })
       this.justAdded = true
       clearTimeout(this.addedTimer)

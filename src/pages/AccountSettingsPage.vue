@@ -66,9 +66,21 @@
             <span class="field__label">{{ $t('common.address') }}</span>
             <input type="text" v-model="address.street" :placeholder="$t('common.streetAddress')" autocomplete="street-address">
           </label>
+          <label class="field field--full">
+            <span class="field__label">{{ $t('common.addressLine2') }}</span>
+            <input type="text" v-model="address.street2" :placeholder="$t('common.addressLine2')" autocomplete="address-line2">
+          </label>
           <label class="field">
             <span class="field__label">{{ $t('common.city') }}</span>
             <input type="text" v-model="address.city" :placeholder="$t('common.city')" autocomplete="address-level2">
+          </label>
+          <label class="field">
+            <span class="field__label">{{ $t('common.state') }}</span>
+            <input type="text" v-model="address.state" :placeholder="$t('common.state')" autocomplete="address-level1">
+          </label>
+          <label class="field">
+            <span class="field__label">{{ $t('common.country') }}</span>
+            <input type="text" v-model="address.country" :placeholder="$t('common.country')" autocomplete="country-name">
           </label>
           <label class="field">
             <span class="field__label">{{ $t('common.postalCode') }}</span>
@@ -78,7 +90,7 @@
 
         <p class="form-error" v-if="addressError" :key="addressError">{{ addressError }}</p>
 
-        <button type="submit" class="save-btn">{{ $t('account.saveAddress') }}</button>
+        <button type="submit" class="save-btn" :disabled="addressSaving">{{ addressSaving ? $t('common.save') + '…' : $t('account.saveAddress') }}</button>
       </form>
     </div>
   </div>
@@ -87,6 +99,11 @@
 <script>
 import { useUserStore } from '@/store/user'
 import { useToastStore } from '@/store/toast'
+import { ShippingAddressesService } from '@/services/shippingAddresses.service'
+
+function emptyAddress () {
+  return { id: null, street: '', street2: '', city: '', state: '', country: '', postalCode: '' }
+}
 
 export default {
   name: 'AccountSettingsPage',
@@ -104,18 +121,16 @@ export default {
       },
       showPasswords: false,
       passwordError: '',
-      address: {
-        street: '',
-        city: '',
-        postalCode: ''
-      },
-      addressError: ''
+      address: emptyAddress(),
+      addressError: '',
+      addressSaving: false
     }
   },
 
   created () {
     if (this.$currentUser.name) this.profile.name = this.$currentUser.name
     if (this.$currentUser.email) this.profile.email = this.$currentUser.email
+    this.fetchAddress()
   },
 
   methods: {
@@ -145,14 +160,65 @@ export default {
       this.password = { current: '', next: '', confirm: '' }
       useToastStore().add({ type: 'success', message: this.$t('account.passwordChanged') })
     },
-    saveAddress () {
-      if (!this.address.street.trim() || !this.address.city.trim() || !this.address.postalCode.trim()) {
+    // Backend only stores one shipping address per user (no "default" flag
+    // or multiple-address support) — this page manages that single row,
+    // creating it the first time and updating it on every save after.
+    async fetchAddress () {
+      try {
+        const response = await ShippingAddressesService.fetchAll()
+        const existing = response.data[0]
+        if (!existing) return
+        this.address = {
+          id: existing.id,
+          street: existing.address_line1,
+          street2: existing.address_line2 || '',
+          city: existing.city,
+          state: existing.state,
+          country: existing.country,
+          postalCode: String(existing.postal_code)
+        }
+      } catch (error) {
+        this.addressError = error.message
+      }
+    },
+    async saveAddress () {
+      if (!this.address.street.trim() || !this.address.city.trim() || !this.address.state.trim() ||
+          !this.address.country.trim() || !this.address.postalCode.trim()) {
+        this.addressError = this.$t('account.errorAddress')
+        return
+      }
+      // postal_code is stored as a plain integer server-side (no
+      // hyphenated/alphanumeric formats yet) — strip everything but digits
+      // rather than reject a "150-0001"-style postal code outright.
+      const postalDigits = this.address.postalCode.replace(/\D/g, '')
+      if (!postalDigits) {
         this.addressError = this.$t('account.errorAddress')
         return
       }
 
       this.addressError = ''
-      useToastStore().add({ type: 'success', message: this.$t('account.addressSaved') })
+      this.addressSaving = true
+      const fields = {
+        address_line1: this.address.street,
+        address_line2: this.address.street2 || null,
+        city: this.address.city,
+        state: this.address.state,
+        country: this.address.country,
+        postal_code: Number(postalDigits)
+      }
+      try {
+        if (this.address.id) {
+          await ShippingAddressesService.update(this.address.id, fields)
+        } else {
+          const response = await ShippingAddressesService.create(fields)
+          this.address.id = response.data.id
+        }
+        useToastStore().add({ type: 'success', message: this.$t('account.addressSaved') })
+      } catch (error) {
+        this.addressError = error.message
+      } finally {
+        this.addressSaving = false
+      }
     }
   }
 }

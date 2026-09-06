@@ -3,7 +3,7 @@
     <UiToastList/>
 
     <div class="wrapper header__inner">
-      <router-link :to="{ name: 'index' }" class="brand">
+      <router-link :to="{ name: 'events' }" class="brand">
         <span class="brand__badge">
           <BowIcon/>
         </span>
@@ -123,6 +123,7 @@ import BowIcon from '@/components/icons/BowIcon.vue'
 import NotificationDropdown from '@/components/NotificationDropdown.vue'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 import { useCartStore } from '@/store/cart'
+import { useCatalogStore } from '@/store/catalog'
 import { useNotificationStore } from '@/store/notifications'
 
 export default {
@@ -157,7 +158,26 @@ export default {
   watch: {
     $route () {
       this.closeMobile()
+    },
+    // Header stays mounted for the whole session, so this is the one place
+    // that reliably sees every login/logout — loads the real cart the
+    // moment a fan session appears (app boot with an existing session, or
+    // an interactive login), and empties it the moment it disappears, so
+    // logging out always leaves a clean, empty cart on this device.
+    '$currentUser.id' (id) {
+      const cart = useCartStore()
+      if (id) cart.fetchCart()
+      else cart.clearOnLogout()
     }
+  },
+  created () {
+    // cartStore.itemCount resolves each line against the catalog (to skip
+    // stale entries whose product no longer exists) — Header is mounted on
+    // every page, including ones that never load the catalog themselves,
+    // so the badge needs its own load rather than depending on whichever
+    // other page happened to trigger it. fetchAll() is a no-op once loaded.
+    useCatalogStore().fetchAll()
+    if (this.$currentUser.id) useCartStore().fetchCart()
   },
   methods: {
     toggleMobile () {

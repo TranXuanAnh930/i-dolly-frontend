@@ -9,7 +9,10 @@ export default {
     password: 'Password',
     confirmPassword: 'Confirm password',
     address: 'Address',
+    addressLine2: 'Apartment, suite, etc. (optional)',
     city: 'City',
+    state: 'State / prefecture',
+    country: 'Country',
     postalCode: 'Postal code',
     yourName: 'Your name',
     streetAddress: 'Street address',
@@ -181,7 +184,7 @@ export default {
     shippingAddress: 'Shipping Address',
     saveAddress: 'Save address',
     addressSaved: 'Shipping address saved.',
-    errorAddress: 'Fill in your address, city, and postal code.'
+    errorAddress: 'Fill in your address, city, state, country, and postal code.'
   },
 
   guidelines: {

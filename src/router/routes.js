@@ -38,13 +38,8 @@ import { DOMAIN_TITLE } from '../env'
 
 export const routes = [
   {
-    path: '/',
-    name: 'index',
-    component: eventsPage,
-    meta: { title: `${DOMAIN_TITLE} | events` }
-  },
-  {
     path: '/events',
+    alias: '/',
     name: 'events',
     component: eventsPage,
     meta: { title: `${DOMAIN_TITLE} | events` }

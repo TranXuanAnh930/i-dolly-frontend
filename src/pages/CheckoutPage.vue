@@ -138,13 +138,16 @@ export default {
 
   created () {
     useCatalogStore().fetchAll()
+    // Refreshes a logged-in fan's real cart — a no-op for guests/non-fan
+    // roles (see cartStore.isServerBacked).
+    this.cart.fetchCart()
     if (this.$currentUser.name) this.form.name = this.$currentUser.name
     if (this.$currentUser.email) this.form.email = this.$currentUser.email
   },
 
   methods: {
     formatNumber,
-    placeOrder () {
+    async placeOrder () {
       if (!this.form.name.trim() || !this.form.email.trim() || !this.form.address.trim()) {
         this.error = this.$t('checkout.errorContact')
         return
@@ -173,7 +176,10 @@ export default {
         to: `/history/orders/${this.orderNumber}`
       })
 
-      this.cart.clear()
+      // Checkout itself is still the placeholder flow (Phase 3) — this
+      // just empties whichever cart backed this order (server or local) so
+      // a real fan's server cart doesn't sit around after a "placed" order.
+      await this.cart.clear()
     }
   }
 }
