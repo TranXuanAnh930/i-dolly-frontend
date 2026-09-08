@@ -191,7 +191,8 @@ export default {
           amount: this.subtotal,
           shipping_address_id: this.shippingAddress.id,
           gateway: 'mock',
-          simulate_succ: this.simulateSucc
+          simulate_succ: this.simulateSucc,
+          idempotency_key: crypto.randomUUID(),
         })
         this.order = response.data
 
