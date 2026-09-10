@@ -341,6 +341,7 @@ export default {
     hometown: '出身地',
     birthday: '誕生日',
     alsoIn: '{name}の他のメンバー',
+    about: '{name}について',
     otherSoloIdols: '他のソロアイドル',
     notFound: 'そのメンバーが見つかりませんでした。'
   },

@@ -341,6 +341,7 @@ export default {
     hometown: 'Hometown',
     birthday: 'Birthday',
     alsoIn: 'Also in {name}',
+    about: 'About {name}',
     otherSoloIdols: 'Other solo idols',
     notFound: 'We couldn\'t find that idol.'
   },

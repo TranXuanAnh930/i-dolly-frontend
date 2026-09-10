@@ -13,37 +13,54 @@
           </div>
 
           <div class="hero__info">
-            <router-link class="hero__unit" v-if="group" :to="`/groups/${group.id}`">{{ group.name }}</router-link>
             <h1 class="hero__name" :style="{ color: color.hex }">{{ member.name }}</h1>
-            <p class="hero__tagline" v-if="group && group.description">{{ group.description }}</p>
+            <p
+              class="hero__description"
+              v-if="description"
+              :style="{ borderLeftColor: color.hex, backgroundColor: `${color.hex}1A` }">{{ description }}</p>
+          </div>
+        </div>
+
+        <div class="stats" v-if="positionsLabel || member.hometown || birthdayLabel">
+          <div class="stat" v-if="positionsLabel">
+            <span class="stat__label">{{ $t('idolDetail.position') }}</span>
+            <span class="stat__value">{{ positionsLabel }}</span>
+          </div>
+          <div class="stat" v-if="member.hometown">
+            <span class="stat__label">{{ $t('idolDetail.hometown') }}</span>
+            <span class="stat__value">{{ member.hometown }}</span>
+          </div>
+          <div class="stat" v-if="birthdayLabel">
+            <span class="stat__label">{{ $t('idolDetail.birthday') }}</span>
+            <span class="stat__value">{{ birthdayLabel }}</span>
           </div>
         </div>
       </div>
     </section>
 
     <div class="wrapper content">
-      <div class="stats" v-if="positionsLabel || group || member.hometown || birthdayLabel">
-        <div class="stat" v-if="positionsLabel">
-          <span class="stat__label">{{ $t('idolDetail.position') }}</span>
-          <span class="stat__value">{{ positionsLabel }}</span>
-        </div>
-        <div class="stat" v-if="group">
-          <span class="stat__label">{{ $t('idolDetail.unit') }}</span>
-          <span class="stat__value">{{ group.name }}</span>
-        </div>
-        <div class="stat" v-if="member.hometown">
-          <span class="stat__label">{{ $t('idolDetail.hometown') }}</span>
-          <span class="stat__value">{{ member.hometown }}</span>
-        </div>
-        <div class="stat" v-if="birthdayLabel">
-          <span class="stat__label">{{ $t('idolDetail.birthday') }}</span>
-          <span class="stat__value">{{ birthdayLabel }}</span>
+      <div v-if="group" class="about-group">
+        <h2 class="about-group__title">{{ aboutTitle }}</h2>
+        <p class="about-group__description" v-if="group.description">{{ group.description }}</p>
+
+        <div v-if="relatedIdols.length" class="bandmates__list">
+          <router-link
+            v-for="peer in relatedIdols"
+            :key="peer.id"
+            :to="`/members/${peer.id}`"
+            class="bandmate-row">
+            <div class="bandmate-row__portrait" :style="{ backgroundColor: colorFor(peer).hex }">
+              <img v-if="photoFor(peer)" :src="photoFor(peer)" :alt="peer.name" class="bandmate-row__photo">
+              <IdolPortrait v-else :name="peer.name" v-bind="fallbackPortraitFor(peer, colorFor(peer).hex)" :accent="colorFor(peer).hex"/>
+            </div>
+            <div class="bandmate-row__info">
+              <span class="bandmate-row__name">{{ peer.name }}</span>
+            </div>
+          </router-link>
         </div>
       </div>
 
-      <p class="description" v-if="description">{{ description }}</p>
-
-      <div v-if="relatedIdols.length" class="bandmates">
+      <div v-else-if="relatedIdols.length" class="bandmates">
         <h2 class="bandmates__title">{{ relatedTitle }}</h2>
         <div class="bandmates__list">
           <router-link
@@ -125,6 +142,9 @@ export default {
       return this.member && this.member.group_id
         ? this.$t('idolDetail.alsoIn', { name: this.group.name })
         : this.$t('idolDetail.otherSoloIdols')
+    },
+    aboutTitle () {
+      return this.group ? this.$t('idolDetail.about', { name: this.group.name }) : null
     }
   },
 
@@ -228,24 +248,12 @@ export default {
   object-position: top center;
 }
 
-.hero__unit {
-  display: inline-block;
-  font-family: $font-content;
-  font-weight: 700;
-  font-size: 13px;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: $color-gray-500;
-  text-decoration: none;
-
-  &:hover {
-    color: $color-brand;
-    text-decoration: underline;
-  }
+.hero__info {
+  flex: 1;
+  min-width: 0;
 }
 
 .hero__name {
-  margin-top: 4px;
   font-family: $font-title;
   font-weight: 900;
   font-style: italic;
@@ -253,11 +261,19 @@ export default {
   line-height: 1.05;
 }
 
-.hero__tagline {
-  margin-top: 10px;
+.hero__description {
+  margin-top: 14px;
+  padding: 14px 18px;
+  border-left: 4px solid;
+  border-radius: 4px 12px 12px 4px;
   font-family: $font-content;
   font-size: 14px;
+  line-height: 1.6;
   color: $color-font-main;
+
+  @include media_mobile {
+    text-align: left;
+  }
 }
 
 .content {
@@ -270,6 +286,7 @@ export default {
 }
 
 .stats {
+  margin-top: 28px;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
   gap: 1px;
@@ -304,15 +321,23 @@ export default {
   color: $color-ink;
 }
 
-.description {
-  background: $color-white;
-  border-radius: 20px;
-  padding: 22px 24px;
+.about-group__title {
+  font-family: $font-title;
+  font-weight: 900;
+  font-size: 22px;
+  color: $color-ink;
+}
+
+.about-group__description {
+  margin-top: 10px;
   font-family: $font-content;
   font-size: 15px;
   line-height: 1.6;
   color: $color-font-main;
-  box-shadow: 0 2px 4px 0 rgba($color-gray-500, .12), 0 0 1px 1px rgba($color-gray-500, .05);
+}
+
+.about-group .bandmates__list {
+  margin-top: 20px;
 }
 
 .bandmates__title {
