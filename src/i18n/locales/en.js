@@ -282,7 +282,34 @@ export default {
     submit: 'Log in',
     noAccount: 'Don\'t have an account?',
     register: 'Register',
-    errorUserNotFound: 'User with same email not found'
+    errorUserNotFound: 'User with same email not found',
+    forgotPassword: 'Forgot password?'
+  },
+
+  forgotPassword: {
+    eyebrow: 'One account, six fandoms',
+    title: 'Reset your password',
+    subtitle: 'Enter your email and we\'ll send you a reset token.',
+    submit: 'Send reset token',
+    sentMessage: 'If {email} is registered, a reset token has been sent — it\'s valid for 15 minutes.',
+    haveToken: 'I have a token',
+    backToLogin: 'Back to login'
+  },
+
+  resetPassword: {
+    eyebrow: 'One account, six fandoms',
+    title: 'Choose a new password',
+    subtitle: 'Paste the token from your email and set a new password.',
+    token: 'Reset token',
+    tokenPlaceholder: 'Paste the token from your email',
+    newPassword: 'New password',
+    submit: 'Reset password',
+    errorTokenRequired: 'Enter the reset token from your email.',
+    errorInvalidToken: 'That token is invalid or has expired. Request a new one.',
+    successMessage: 'Your password has been reset. You can now log in with your new password.',
+    goToLogin: 'Go to login',
+    noToken: 'Don\'t have a token?',
+    requestOne: 'Request one'
   },
 
   register: {
