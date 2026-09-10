@@ -31,7 +31,13 @@ export default {
     description: '説明',
     photo: '写真',
     saving: '保存中…',
-    loading: '読み込み中…'
+    loading: '読み込み中…',
+    deactivate: '無効化',
+    reactivate: '再有効化',
+    confirmDeactivate: '{name}を無効化しますか？後で再有効化できます。',
+    status: 'ステータス',
+    statusActive: '有効',
+    statusInactive: '無効'
   },
 
   nav: {

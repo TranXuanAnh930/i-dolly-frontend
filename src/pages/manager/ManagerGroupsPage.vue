@@ -23,17 +23,24 @@
               <th>{{ $t('common.name') }}</th>
               <th>{{ $t('managerGroups.debutDate') }}</th>
               <th>{{ $t('common.description') }}</th>
+              <th>{{ $t('common.status') }}</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="group in myGroups" :key="group.id">
+            <tr v-for="group in myGroups" :key="group.id" :class="{ 'is-inactive': !group.is_active }">
               <td>{{ group.name }}</td>
               <td>{{ group.debut_date || '—' }}</td>
               <td class="description-cell">{{ group.description || '—' }}</td>
+              <td>
+                <span class="status-badge" :class="{ 'status-badge--inactive': !group.is_active }">
+                  {{ group.is_active ? $t('common.statusActive') : $t('common.statusInactive') }}
+                </span>
+              </td>
               <td class="actions">
                 <router-link :to="{ name: 'manager-groups-edit', params: { id: group.id } }">{{ $t('common.edit') }}</router-link>
-                <button type="button" class="danger" @click="remove(group)">{{ $t('common.delete') }}</button>
+                <button v-if="group.is_active" type="button" class="danger" @click="deactivate(group)">{{ $t('common.deactivate') }}</button>
+                <button v-else type="button" @click="reactivate(group)">{{ $t('common.reactivate') }}</button>
               </td>
             </tr>
           </tbody>
@@ -93,10 +100,22 @@ export default {
         this.error = error.message
       }
     },
-    async remove (group) {
-      if (!window.confirm(this.$t('common.confirmDelete', { name: group.name }))) return
+    // "Delete" is a soft delete server-side (sets is_active=false — see
+    // group_service.delete_group) rather than removing the row, so the
+    // confirm/action pair is named to match: deactivate, with reactivate
+    // as its undo, not a destructive "gone for good" delete.
+    async deactivate (group) {
+      if (!window.confirm(this.$t('common.confirmDeactivate', { name: group.name }))) return
       try {
         await GroupsService.remove(group.id)
+        await this.fetchPage()
+      } catch (error) {
+        this.error = error.message
+      }
+    },
+    async reactivate (group) {
+      try {
+        await GroupsService.activate(group.id)
         await this.fetchPage()
       } catch (error) {
         this.error = error.message
@@ -209,6 +228,10 @@ export default {
     &:last-child {
       border-bottom: none;
     }
+
+    &.is-inactive {
+      opacity: .55;
+    }
   }
 }
 
@@ -217,6 +240,25 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+  background: #e6f7ef;
+  color: #147a52;
+
+  &--inactive {
+    background: $color-gray-100;
+    color: $color-gray-500;
+  }
 }
 
 .actions {
