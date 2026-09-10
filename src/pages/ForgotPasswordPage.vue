@@ -5,11 +5,11 @@
         <BowIcon class="badge__icon"/>
       </div>
 
-      <p class="eyebrow">{{ $t('login.eyebrow') }}</p>
-      <h1 class="title">{{ $t('login.title') }}<span class="title__accent">!</span></h1>
-      <p class="subtitle">{{ $t('login.subtitle') }}</p>
+      <p class="eyebrow">{{ $t('forgotPassword.eyebrow') }}</p>
+      <h1 class="title">{{ $t('forgotPassword.title') }}</h1>
+      <p class="subtitle">{{ $t('forgotPassword.subtitle') }}</p>
 
-      <form class="form" @submit.prevent="makeLogin">
+      <form v-if="!sent" class="form" @submit.prevent="submit">
         <label class="field">
           <span class="field__label">{{ $t('common.email') }}</span>
           <div class="field__control">
@@ -21,81 +21,57 @@
           </div>
         </label>
 
-        <label class="field">
-          <span class="field__label">{{ $t('common.password') }}</span>
-          <div class="field__control">
-            <svg class="field__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-              <rect x="4" y="9" width="12" height="9" rx="2.2" stroke="currentColor" stroke-width="1.6"/>
-              <path d="M6.5 9V6.5a3.5 3.5 0 0 1 7 0V9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-            </svg>
-            <input
-              id="password"
-              :type="showPassword ? 'text' : 'password'"
-              v-model="password"
-              placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"
-              autocomplete="current-password">
-            <button type="button" class="field__toggle" @click="showPassword = !showPassword" :aria-label="showPassword ? $t('common.hidePassword') : $t('common.showPassword')">
-              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                <path d="M1.5 10S4.5 4 10 4s8.5 6 8.5 6-3 6-8.5 6-8.5-6-8.5-6Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-                <circle cx="10" cy="10" r="2.4" stroke="currentColor" stroke-width="1.5"/>
-                <line v-if="!showPassword" x1="3" y1="17" x2="17" y2="3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-              </svg>
-            </button>
-          </div>
-        </label>
-
-        <router-link to="/forgot-password" class="forgot-link">{{ $t('login.forgotPassword') }}</router-link>
-
         <p class="form-error" v-if="error" :key="error">{{ error }}</p>
 
-        <button type="submit" class="submit-btn">{{ $t('login.submit') }}</button>
+        <button type="submit" class="submit-btn" :disabled="sending">{{ sending ? $t('common.saving') : $t('forgotPassword.submit') }}</button>
       </form>
 
+      <div v-else class="sent-note">
+        <p>{{ $t('forgotPassword.sentMessage', { email }) }}</p>
+        <router-link to="/reset-password" class="submit-btn sent-note__cta">{{ $t('forgotPassword.haveToken') }}</router-link>
+      </div>
+
       <p class="register-link">
-        {{ $t('login.noAccount') }} <router-link to="/register">{{ $t('login.register') }}</router-link>
+        <router-link to="/login">{{ $t('forgotPassword.backToLogin') }}</router-link>
       </p>
     </div>
   </div>
 </template>
 
 <script>
-import { AuthService } from '@/services/auth.service'
-import { useUserStore } from '@/store/user'
-import { useToastStore } from '@/store/toast'
+import { UsersService } from '@/services/users.service'
 import BowIcon from '@/components/icons/BowIcon.vue'
 
 export default {
-  name: 'Login',
+  name: 'ForgotPasswordPage',
 
   components: { BowIcon },
 
   data () {
     return {
-      email: 'user@user.com',
-      password: '123456',
-      showPassword: false,
+      email: '',
+      sending: false,
+      sent: false,
       error: ''
     }
   },
 
   methods: {
-    async makeLogin () {
-      try {
-        await AuthService.makeLogin({ username: this.email, password: this.password })
-        this.error = ''
-        await useUserStore().getCurrent()
-        await this.$router.push(this.landingRouteFor(useUserStore().currentUser.role))
-      } catch (error) {
-        useToastStore().add({ type: 'error', message: error.message })
-        this.error = error.status === 404 ? this.$t('login.errorUserNotFound') : error.message
+    async submit () {
+      if (!/^\S+@\S+\.\S+$/.test(this.email)) {
+        this.error = this.$t('register.errorEmail')
+        return
       }
-    },
-    // Managers/admins land straight in their own working area rather than
-    // the public storefront, since that's what they log in to do.
-    landingRouteFor (role) {
-      if (role === 'admin') return { name: 'admin-companies' }
-      if (role === 'manager') return { name: 'manager-groups' }
-      return '/'
+      this.error = ''
+      this.sending = true
+      try {
+        await UsersService.forgotPassword(this.email)
+        this.sent = true
+      } catch (error) {
+        this.error = error.message
+      } finally {
+        this.sending = false
+      }
     }
   }
 }
@@ -167,14 +143,10 @@ export default {
   font-family: $font-title;
   font-weight: 900;
   font-style: italic;
-  font-size: 38px;
+  font-size: 34px;
   color: $color-brand;
   transform: rotate(-1.5deg);
   transform-origin: left center;
-}
-
-.title__accent {
-  color: $color-brand;
 }
 
 .subtitle {
@@ -240,40 +212,6 @@ export default {
   }
 }
 
-.field__toggle {
-  flex: none;
-  border: none;
-  background: none;
-  padding: 0;
-  cursor: pointer;
-  color: $color-gray-300;
-  display: flex;
-
-  svg {
-    width: 18px;
-    height: 18px;
-  }
-
-  &:hover {
-    color: $color-gray-500;
-  }
-}
-
-.forgot-link {
-  align-self: flex-end;
-  margin-top: -6px;
-  font-family: $font-content;
-  font-weight: 700;
-  font-size: 12.5px;
-  color: $color-gray-500;
-  text-decoration: none;
-
-  &:hover {
-    color: $color-brand;
-    text-decoration: underline;
-  }
-}
-
 .form-error {
   background: #fdeaf1;
   color: $color-error;
@@ -304,6 +242,9 @@ export default {
   font-weight: 900;
   font-size: 15px;
   cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  display: block;
   transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
   box-shadow: 0 10px 20px -8px rgba($color-brand, .55);
 
@@ -315,6 +256,26 @@ export default {
 
   &:active {
     transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: .6;
+    cursor: default;
+    transform: none;
+  }
+}
+
+.sent-note {
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  p {
+    font-family: $font-content;
+    font-size: 14px;
+    color: $color-font-main;
+    line-height: 1.5;
   }
 }
 

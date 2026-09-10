@@ -18,4 +18,29 @@ export class UsersService extends BaseService {
       throw new ErrorWrapper(error, message)
     }
   }
+
+  // POST /profile/forgot-password — no auth. Always resolves with the same
+  // generic message server-side, whether or not the email is registered
+  // (see reset_password_process), so this never reveals account existence.
+  static async forgotPassword (email) {
+    try {
+      const response = await this.request().post(`${this.entity}/forgot-password`, { email })
+      return new ResponseWrapper(response, response.data)
+    } catch (error) {
+      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
+      throw new ErrorWrapper(error, message)
+    }
+  }
+
+  // POST /profile/set-password — no auth. `token` is the raw reset token
+  // emailed by forgot-password, valid for 15 minutes.
+  static async setPassword (token, newPassword) {
+    try {
+      const response = await this.request().post(`${this.entity}/set-password`, { token, new_password: newPassword })
+      return new ResponseWrapper(response, response.data)
+    } catch (error) {
+      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
+      throw new ErrorWrapper(error, message)
+    }
+  }
 }

@@ -20,6 +20,8 @@ import aboutPage from '../pages/AboutPage.vue'
 import contactPage from '../pages/ContactPage.vue'
 import loginPage from '../pages/Login.vue'
 import registerPage from '../pages/RegisterPage.vue'
+import forgotPasswordPage from '../pages/ForgotPasswordPage.vue'
+import resetPasswordPage from '../pages/ResetPasswordPage.vue'
 import notFoundPage from '../pages/NotFound.vue'
 
 import managerIdolsPage from '../pages/manager/ManagerIdolsPage.vue'
@@ -178,6 +180,18 @@ export const routes = [
     name: 'register',
     component: registerPage,
     meta: { title: `${DOMAIN_TITLE} | register` }
+  },
+  {
+    path: '/forgot-password',
+    name: 'forgot-password',
+    component: forgotPasswordPage,
+    meta: { title: `${DOMAIN_TITLE} | forgot password` }
+  },
+  {
+    path: '/reset-password',
+    name: 'reset-password',
+    component: resetPasswordPage,
+    meta: { title: `${DOMAIN_TITLE} | reset password` }
   },
   {
     path: '/settings',
