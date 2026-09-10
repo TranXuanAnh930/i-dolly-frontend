@@ -29,16 +29,26 @@
             <span class="stock__dot"></span>
             {{ stockStatus === 'out' ? $t('store.outOfStock') : stockStatus === 'low' ? $t('store.lowStock', { count: product.quantity }) : $t('store.inStock') }}
           </p>
+          <p class="resale-cap" v-if="resaleCap">{{ $t('store.resaleCapLabel', { count: resaleCap }) }}</p>
 
           <div class="purchase-panel">
             <span class="price-block">
               <span class="price">&yen;{{ formattedPrice }}</span>
               <span class="price-tax">{{ $t('store.taxIncluded', { price: formattedTaxedPrice }) }}</span>
             </span>
-            <button type="button" class="add-to-cart-btn" :class="{ 'is-added': justAdded }" :disabled="stockStatus === 'out'" @click="addToCart">
-              {{ justAdded ? $t('store.addedToCart') : $t('store.addToCart') }}
-            </button>
+
+            <div class="purchase-actions">
+              <div class="qty-control" v-if="stockStatus !== 'out' && !capReached">
+                <button type="button" class="qty-btn" @click="qty = Math.max(1, qty - 1)" :aria-label="$t('common.decreaseQuantity')">&minus;</button>
+                <span class="qty-value">{{ qty }}</span>
+                <button type="button" class="qty-btn" @click="increaseQty" :aria-label="$t('common.increaseQuantity')">+</button>
+              </div>
+              <button type="button" class="add-to-cart-btn" :class="{ 'is-added': justAdded }" :disabled="stockStatus === 'out' || capReached" @click="addToCart">
+                {{ justAdded ? $t('store.addedToCart') : capReached ? $t('store.resaleCapReached') : $t('store.addToCart') }}
+              </button>
+            </div>
           </div>
+          <p class="resale-cap resale-cap--reached" v-if="capReached">{{ $t('store.resaleCapReachedHint') }}</p>
         </div>
       </div>
 
@@ -47,6 +57,30 @@
         <div class="recommendations__grid">
           <ReleaseCard v-for="item in recommendations" :key="item.id" :release="item"/>
         </div>
+      </section>
+
+      <section class="block">
+        <h2 class="block__title">{{ $t('productDetail.qa') }}</h2>
+        <div class="section-rule"></div>
+
+        <dl class="qa-card">
+          <div class="qa-pair">
+            <dt>{{ $t('productDetail.qaShippingQ') }}</dt>
+            <dd>{{ $t('productDetail.qaShippingA') }}</dd>
+          </div>
+          <div class="qa-pair">
+            <dt>{{ $t('productDetail.qaReturnQ') }}</dt>
+            <dd>{{ $t('productDetail.qaReturnA') }}</dd>
+          </div>
+          <div class="qa-pair" v-if="resaleCap">
+            <dt>{{ $t('productDetail.qaCapQ') }}</dt>
+            <dd>{{ $t('productDetail.qaCapA') }}</dd>
+          </div>
+          <div class="qa-pair">
+            <dt>{{ $t('productDetail.qaConditionQ') }}</dt>
+            <dd>{{ $t('productDetail.qaConditionA') }}</dd>
+          </div>
+        </dl>
       </section>
     </div>
   </div>
@@ -59,6 +93,7 @@ import { parseISO } from 'date-fns'
 
 import { ProductsService } from '@/services/products.service'
 import { useCartStore } from '@/store/cart'
+import { useOrdersStore } from '@/store/orders'
 import { useToastStore } from '@/store/toast'
 import { paletteColorForId, contrastTextColor } from '@/utils/palette'
 import { resolveMediaUrl } from '@/utils/media'
@@ -83,7 +118,8 @@ export default {
       product: null,
       recommendations: [],
       loading: true,
-      justAdded: false
+      justAdded: false,
+      qty: 1
     }
   },
 
@@ -127,6 +163,52 @@ export default {
     },
     genres () {
       return this.product ? this.product.genres : []
+    },
+    // null when this product isn't resale-capped, otherwise the max units
+    // a fan may ever hold across every order they've placed (see
+    // order_service.checkout / product_service._build_product_cards on the
+    // backend — this mirrors that exact number, not a separate guess).
+    resaleCap () {
+      return this.product ? this.product.resale_cap_quantity : null
+    },
+    // Sum of this product's quantity across every order this fan has ever
+    // placed, regardless of status — matches the backend's own past_qty
+    // query exactly (order_service.checkout doesn't filter by status
+    // either), so this can't be more lenient than what checkout will
+    // actually accept.
+    pastPurchasedQty () {
+      if (!this.product) return 0
+      return useOrdersStore().items.reduce((sum, order) => {
+        const line = order.items.find(item => item.product_id === this.product.id)
+        return sum + (line ? line.quantity : 0)
+      }, 0)
+    },
+    // Already sitting in the cart from a previous visit — counts toward
+    // the cap too, since it'll be part of the same line by the time
+    // checkout runs.
+    cartQtyForProduct () {
+      if (!this.product) return 0
+      const line = useCartStore().lines.find(l => l.productId === this.product.id)
+      return line ? line.qty : 0
+    },
+    // How many more units this fan is still allowed to add, combining the
+    // resale cap (if any) with remaining stock — whichever is tighter.
+    maxAddable () {
+      if (!this.product) return 0
+      const stockLimit = this.product.quantity
+      if (this.resaleCap === null) return stockLimit
+      const capLimit = Math.max(0, this.resaleCap - this.pastPurchasedQty - this.cartQtyForProduct)
+      return Math.min(stockLimit, capLimit)
+    },
+    capReached () {
+      return this.resaleCap !== null && this.maxAddable <= 0
+    },
+    // Which limit is actually stopping the qty stepper right now, so the
+    // error toast on + names the real reason instead of a generic message.
+    capIsBindingLimit () {
+      if (!this.product || this.resaleCap === null) return false
+      const capLimit = Math.max(0, this.resaleCap - this.pastPurchasedQty - this.cartQtyForProduct)
+      return capLimit <= this.product.quantity
     }
   },
 
@@ -138,9 +220,19 @@ export default {
     id: {
       immediate: true,
       handler () {
+        this.qty = 1
         this.fetchPage()
       }
     }
+  },
+
+  created () {
+    // A no-op for guests/non-fan roles (see ordersStore.fetchAll) — the
+    // resale cap only ever needs to look at a real fan's own order
+    // history, which is already loaded by the time this page mounts on
+    // any normal navigation (Header's own fetch); this just covers a
+    // direct/refresh landing straight on this page.
+    useOrdersStore().fetchAll()
   },
 
   beforeUnmount () {
@@ -148,6 +240,18 @@ export default {
   },
 
   methods: {
+    // Silently clamping the stepper at maxAddable leaves the user guessing
+    // why + stopped responding — surface why instead of just refusing.
+    increaseQty () {
+      if (this.qty >= this.maxAddable) {
+        const message = this.capIsBindingLimit
+          ? this.$t('store.resaleCapLimitReached', { count: this.resaleCap })
+          : this.$t('store.lowStock', { count: this.product.quantity })
+        useToastStore().add({ type: 'error', message })
+        return
+      }
+      this.qty += 1
+    },
     async fetchPage () {
       this.loading = true
       try {
@@ -161,8 +265,17 @@ export default {
       }
     },
     async addToCart () {
+      // Defense in depth — the qty stepper already can't be pushed past
+      // maxAddable, but re-check here too in case product/order data
+      // changed underneath the user (another tab, a slow-loading order
+      // history) between mount and this click, so the backend's own
+      // ResaleCapExceededError is never the first they hear of it.
+      if (this.capReached || this.qty > this.maxAddable) {
+        useToastStore().add({ type: 'error', message: this.$t('store.resaleCapReached') })
+        return
+      }
       try {
-        await useCartStore().addItem(this.product.id)
+        await useCartStore().addItem(this.product.id, this.qty)
       } catch (error) {
         useToastStore().add({ type: 'error', message: error.message })
         return
@@ -344,6 +457,19 @@ export default {
   flex: none;
 }
 
+.resale-cap {
+  margin-top: 6px;
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 12.5px;
+  color: $color-gray-500;
+
+  &--reached {
+    margin-top: 10px;
+    color: $color-error;
+  }
+}
+
 .purchase-panel {
   margin-top: 22px;
   padding-top: 20px;
@@ -352,6 +478,50 @@ export default {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  flex-wrap: wrap;
+}
+
+.purchase-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.qty-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.qty-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1.5px solid $color-line;
+  background: $color-white;
+  color: $color-ink;
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    border-color: $color-brand;
+    color: $color-brand;
+  }
+}
+
+.qty-value {
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 15px;
+  min-width: 16px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 
 .price-block {
@@ -423,6 +593,50 @@ export default {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 20px;
+}
+
+.block {
+  margin-top: 48px;
+}
+
+.block__title {
+  font-family: $font-title;
+  font-weight: 900;
+  font-size: 24px;
+  color: $color-ink;
+}
+
+.section-rule {
+  margin-top: 8px;
+  height: 3px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, $color-brand, #f2b705, #1f8fd6, #b6379c, #1fa876);
+}
+
+.qa-card {
+  margin-top: 16px;
+  background: $color-white;
+  border-radius: 16px;
+  padding: 18px 20px;
+  box-shadow: 0 2px 4px 0 rgba($color-gray-500, .12), 0 0 1px 1px rgba($color-gray-500, .05);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.qa-pair dt {
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 13.5px;
+  color: $color-ink;
+}
+
+.qa-pair dd {
+  margin-top: 4px;
+  font-family: $font-content;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: $color-font-main;
 }
 
 </style>

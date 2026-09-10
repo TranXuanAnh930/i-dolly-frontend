@@ -126,7 +126,11 @@ export default {
     outOfStock: 'Out of stock',
     taxIncluded: '(tax incl. ¥{price})',
     trackCountOne: '{count} track',
-    trackCountOther: '{count} tracks'
+    trackCountOther: '{count} tracks',
+    resaleCapLabel: 'Limit {count} per customer',
+    resaleCapReached: 'Purchase limit reached',
+    resaleCapReachedHint: 'You\'ve already bought the maximum allowed of this item.',
+    resaleCapLimitReached: 'You can\'t add more — limit {count} per customer.'
   },
 
   cart: {
@@ -386,7 +390,16 @@ export default {
   productDetail: {
     backToStore: 'Store',
     notFound: 'We couldn\'t find that item.',
-    recommendations: 'You might also like'
+    recommendations: 'You might also like',
+    qa: 'Q&A',
+    qaShippingQ: 'When will my order ship?',
+    qaShippingA: 'Orders ship within a few business days of purchase. This is a mock checkout, so no real shipment ever goes out.',
+    qaReturnQ: 'Can I return or exchange this item?',
+    qaReturnA: 'Unopened items can be returned within 14 days of delivery. Reach out from your order in History and we\'ll take it from there.',
+    qaCapQ: 'Why is there a purchase limit on this item?',
+    qaCapA: 'High-demand releases are capped per customer to keep them available for more fans instead of being bought up for resale.',
+    qaConditionQ: 'Is this item new and official?',
+    qaConditionA: 'Every item ships brand new, sealed, and sourced directly from the label — no used or third-party stock.'
   },
 
   orderDetails: {
