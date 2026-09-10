@@ -25,7 +25,7 @@
             <span class="field__label">{{ $t('managerIdols.group') }}</span>
             <select v-model="form.group_id">
               <option value="">{{ $t('common.none') }}</option>
-              <option v-for="group in myGroups" :key="group.id" :value="group.id">{{ group.name }}</option>
+              <option v-for="group in myGroups" :key="group.id" :value="group.id">{{ group.name }}{{ !group.is_active ? ` (${$t('common.statusInactive')})` : '' }}</option>
             </select>
           </label>
           <label class="field">
@@ -124,8 +124,15 @@ export default {
       if (this.isEditing) return this.idol ? this.idol.company_id : ''
       return this.isAdmin ? this.selectedCompanyId : this.$currentUser.company_id
     },
+    // Deactivated groups are hidden from selection (the backend rejects a
+    // NEW assignment into one), except the idol's own current group so an
+    // existing membership stays visible/selectable even if it later became
+    // inactive — see idol_service.update_idol's group_inactive carve-out.
     myGroups () {
-      return this.groups.filter(group => group.company_id === this.companyId)
+      return this.groups.filter(group =>
+        group.company_id === this.companyId &&
+        (group.is_active || (this.idol && group.id === this.idol.group_id))
+      )
     }
   },
 

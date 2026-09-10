@@ -24,20 +24,27 @@
               <th>{{ $t('common.name') }}</th>
               <th>{{ $t('managerIdols.group') }}</th>
               <th>{{ $t('idolDetail.hometown') }}</th>
+              <th>{{ $t('common.status') }}</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="idol in myIdols" :key="idol.id">
+            <tr v-for="idol in myIdols" :key="idol.id" :class="{ 'is-inactive': !idol.is_active }">
               <td class="thumb-cell">
                 <img v-if="resolveMediaUrl(idol.profile_image_url)" :src="resolveMediaUrl(idol.profile_image_url)" :alt="idol.name" class="thumb">
               </td>
               <td>{{ idol.name }}</td>
               <td>{{ groupName(idol.group_id) }}</td>
               <td>{{ idol.hometown || '—' }}</td>
+              <td>
+                <span class="status-badge" :class="{ 'status-badge--inactive': !idol.is_active }">
+                  {{ idol.is_active ? $t('common.statusActive') : $t('common.statusInactive') }}
+                </span>
+              </td>
               <td class="actions">
                 <router-link :to="{ name: 'manager-idols-edit', params: { id: idol.id } }">{{ $t('common.edit') }}</router-link>
-                <button type="button" class="danger" @click="remove(idol)">{{ $t('common.delete') }}</button>
+                <button v-if="idol.is_active" type="button" class="danger" @click="deactivate(idol)">{{ $t('common.deactivate') }}</button>
+                <button v-else type="button" @click="reactivate(idol)">{{ $t('common.reactivate') }}</button>
               </td>
             </tr>
           </tbody>
@@ -109,10 +116,22 @@ export default {
       const group = this.groups.find(g => g.id === groupId)
       return group ? group.name : '—'
     },
-    async remove (idol) {
-      if (!window.confirm(this.$t('common.confirmDelete', { name: idol.name }))) return
+    // "Delete" is a soft delete server-side (sets is_active=false — see
+    // idol_service.delete_idol) rather than removing the row, so the
+    // confirm/action pair is named to match: deactivate, with reactivate
+    // as its undo, not a destructive "gone for good" delete.
+    async deactivate (idol) {
+      if (!window.confirm(this.$t('common.confirmDeactivate', { name: idol.name }))) return
       try {
         await IdolsService.remove(idol.id)
+        await this.fetchPage()
+      } catch (error) {
+        this.error = error.message
+      }
+    },
+    async reactivate (idol) {
+      try {
+        await IdolsService.activate(idol.id)
         await this.fetchPage()
       } catch (error) {
         this.error = error.message
@@ -225,11 +244,34 @@ export default {
     &:last-child {
       border-bottom: none;
     }
+
+    &.is-inactive {
+      opacity: .55;
+    }
   }
 }
 
 .thumb-cell {
   width: 40px;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+  background: #e6f7ef;
+  color: #147a52;
+
+  &--inactive {
+    background: $color-gray-100;
+    color: $color-gray-500;
+  }
 }
 
 .thumb {

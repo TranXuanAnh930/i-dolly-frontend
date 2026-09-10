@@ -31,7 +31,13 @@ export default {
     description: 'Description',
     photo: 'Photo',
     saving: 'Saving…',
-    loading: 'Loading…'
+    loading: 'Loading…',
+    deactivate: 'Deactivate',
+    reactivate: 'Reactivate',
+    confirmDeactivate: 'Deactivate {name}? You can reactivate it later.',
+    status: 'Status',
+    statusActive: 'Active',
+    statusInactive: 'Inactive'
   },
 
   nav: {
@@ -339,6 +345,7 @@ export default {
     hometown: 'Hometown',
     birthday: 'Birthday',
     alsoIn: 'Also in {name}',
+    about: 'About {name}',
     otherSoloIdols: 'Other solo idols',
     notFound: 'We couldn\'t find that idol.'
   },
