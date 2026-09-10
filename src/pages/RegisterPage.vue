@@ -68,7 +68,7 @@
 
         <p class="form-error" v-if="error" :key="error">{{ error }}</p>
 
-        <button type="submit" class="submit-btn">{{ $t('register.submit') }}</button>
+        <button type="submit" class="submit-btn" :disabled="submitting">{{ submitting ? $t('common.saving') : $t('register.submit') }}</button>
       </form>
 
       <p class="register-link">
@@ -79,6 +79,7 @@
 </template>
 
 <script>
+import { AuthService } from '@/services/auth.service'
 import { useToastStore } from '@/store/toast'
 import BowIcon from '@/components/icons/BowIcon.vue'
 
@@ -94,6 +95,7 @@ export default {
       password: '',
       confirmPassword: '',
       showPassword: false,
+      submitting: false,
       error: ''
     }
   },
@@ -118,11 +120,16 @@ export default {
       }
 
       this.error = ''
-
-      // This boilerplate only has a real endpoint for login — account
-      // creation is mocked so the flow can be demoed end to end.
-      useToastStore().add({ type: 'success', message: this.$t('register.successMessage', { name: this.name }) })
-      await this.$router.push({ path: '/login' })
+      this.submitting = true
+      try {
+        await AuthService.register({ name: this.name.trim(), email: this.email.trim(), password: this.password })
+        useToastStore().add({ type: 'success', message: this.$t('register.successMessage', { name: this.name }) })
+        await this.$router.push({ path: '/login' })
+      } catch (error) {
+        this.error = error.message
+      } finally {
+        this.submitting = false
+      }
     }
   }
 }
