@@ -126,7 +126,11 @@ export default {
     outOfStock: '在庫切れ',
     taxIncluded: '（税込 ¥{price}）',
     trackCountOne: '{count}曲',
-    trackCountOther: '{count}曲'
+    trackCountOther: '{count}曲',
+    resaleCapLabel: 'お一人様{count}点まで',
+    resaleCapReached: '購入上限に達しています',
+    resaleCapReachedHint: 'この商品はすでに購入上限までお買い上げいただいています。',
+    resaleCapLimitReached: 'これ以上追加できません — お一人様{count}点までです。'
   },
 
   cart: {
@@ -386,7 +390,16 @@ export default {
   productDetail: {
     backToStore: 'ストア',
     notFound: 'その商品が見つかりませんでした。',
-    recommendations: 'あわせてチェックしたいアイテム'
+    recommendations: 'あわせてチェックしたいアイテム',
+    qa: 'Q&A',
+    qaShippingQ: '注文した商品はいつ発送されますか？',
+    qaShippingA: 'ご注文から数営業日以内に発送いたします。これはモックのチェックアウトのため、実際の発送は行われません。',
+    qaReturnQ: '返品・交換はできますか？',
+    qaReturnA: '未開封の商品はお届けから14日以内であれば返品可能です。履歴のご注文からお問い合わせください。',
+    qaCapQ: 'なぜこの商品には購入制限があるのですか？',
+    qaCapA: '人気の高いリリースは、転売目的の買い占めを防ぎ、より多くのファンに行き渡るようお一人様あたりの購入数を制限しています。',
+    qaConditionQ: 'この商品は新品・正規品ですか？',
+    qaConditionA: 'すべての商品は新品・未開封で、レーベルから直接仕入れています。中古品やサードパーティ品は取り扱っておりません。'
   },
 
   orderDetails: {

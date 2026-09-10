@@ -9,7 +9,7 @@ import { BaseService } from './base.service'
 // getAllPublic/create/update/remove.
 export class CartService extends BaseService {
   static get entity () {
-    return 'Cart'
+    return 'cart'
   }
 
   // Adding an already-in-cart product increments its quantity server-side
