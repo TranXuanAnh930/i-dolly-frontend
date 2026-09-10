@@ -47,4 +47,17 @@ export class GroupsService extends BaseService {
       throw this.errorWrapper(error, message)
     }
   }
+
+  // PATCH /groups/activate/{id} — manager/admin only. `remove()` (DELETE)
+  // is a soft delete server-side (sets is_active=false, keeps the row and
+  // every FK pointing at it intact) — this is its undo.
+  static async activate (id) {
+    try {
+      const response = await this.request({ auth: true }).patch(`${this.entity}/activate/${id}`)
+      return this.responseWrapper(response, response.data)
+    } catch (error) {
+      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
+      throw this.errorWrapper(error, message)
+    }
+  }
 }
