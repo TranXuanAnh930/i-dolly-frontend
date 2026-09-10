@@ -5,24 +5,24 @@
         <BowIcon class="badge__icon"/>
       </div>
 
-      <p class="eyebrow">{{ $t('login.eyebrow') }}</p>
-      <h1 class="title">{{ $t('login.title') }}<span class="title__accent">!</span></h1>
-      <p class="subtitle">{{ $t('login.subtitle') }}</p>
+      <p class="eyebrow">{{ $t('resetPassword.eyebrow') }}</p>
+      <h1 class="title">{{ $t('resetPassword.title') }}</h1>
+      <p class="subtitle">{{ $t('resetPassword.subtitle') }}</p>
 
-      <form class="form" @submit.prevent="makeLogin">
+      <form v-if="!done" class="form" @submit.prevent="submit">
         <label class="field">
-          <span class="field__label">{{ $t('common.email') }}</span>
+          <span class="field__label">{{ $t('resetPassword.token') }}</span>
           <div class="field__control">
             <svg class="field__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-              <rect x="2" y="4" width="16" height="12" rx="2.5" stroke="currentColor" stroke-width="1.6"/>
-              <path d="M3 5.5 10 11 17 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <rect x="3" y="8" width="14" height="9" rx="2" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M6 8V6a4 4 0 0 1 8 0v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
             </svg>
-            <input id="email" type="text" v-model="email" placeholder="you@example.com" autocomplete="username">
+            <input id="token" type="text" v-model="token" :placeholder="$t('resetPassword.tokenPlaceholder')" autocomplete="one-time-code">
           </div>
         </label>
 
         <label class="field">
-          <span class="field__label">{{ $t('common.password') }}</span>
+          <span class="field__label">{{ $t('resetPassword.newPassword') }}</span>
           <div class="field__control">
             <svg class="field__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
               <rect x="4" y="9" width="12" height="9" rx="2.2" stroke="currentColor" stroke-width="1.6"/>
@@ -32,8 +32,8 @@
               id="password"
               :type="showPassword ? 'text' : 'password'"
               v-model="password"
-              placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"
-              autocomplete="current-password">
+              :placeholder="$t('register.passwordPlaceholder')"
+              autocomplete="new-password">
             <button type="button" class="field__toggle" @click="showPassword = !showPassword" :aria-label="showPassword ? $t('common.hidePassword') : $t('common.showPassword')">
               <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
                 <path d="M1.5 10S4.5 4 10 4s8.5 6 8.5 6-3 6-8.5 6-8.5-6-8.5-6Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
@@ -44,58 +44,79 @@
           </div>
         </label>
 
-        <router-link to="/forgot-password" class="forgot-link">{{ $t('login.forgotPassword') }}</router-link>
+        <label class="field">
+          <span class="field__label">{{ $t('common.confirmPassword') }}</span>
+          <div class="field__control">
+            <svg class="field__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <rect x="4" y="9" width="12" height="9" rx="2.2" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M6.5 9V6.5a3.5 3.5 0 0 1 7 0V9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+            <input id="confirm" :type="showPassword ? 'text' : 'password'" v-model="confirmPassword" :placeholder="$t('register.confirmPasswordPlaceholder')" autocomplete="new-password">
+          </div>
+        </label>
 
         <p class="form-error" v-if="error" :key="error">{{ error }}</p>
 
-        <button type="submit" class="submit-btn">{{ $t('login.submit') }}</button>
+        <button type="submit" class="submit-btn" :disabled="saving">{{ saving ? $t('common.saving') : $t('resetPassword.submit') }}</button>
       </form>
 
-      <p class="register-link">
-        {{ $t('login.noAccount') }} <router-link to="/register">{{ $t('login.register') }}</router-link>
+      <div v-else class="sent-note">
+        <p>{{ $t('resetPassword.successMessage') }}</p>
+        <router-link to="/login" class="submit-btn sent-note__cta">{{ $t('resetPassword.goToLogin') }}</router-link>
+      </div>
+
+      <p class="register-link" v-if="!done">
+        {{ $t('resetPassword.noToken') }} <router-link to="/forgot-password">{{ $t('resetPassword.requestOne') }}</router-link>
       </p>
     </div>
   </div>
 </template>
 
 <script>
-import { AuthService } from '@/services/auth.service'
-import { useUserStore } from '@/store/user'
-import { useToastStore } from '@/store/toast'
+import { UsersService } from '@/services/users.service'
 import BowIcon from '@/components/icons/BowIcon.vue'
 
 export default {
-  name: 'Login',
+  name: 'ResetPasswordPage',
 
   components: { BowIcon },
 
   data () {
     return {
-      email: 'user@user.com',
-      password: '123456',
+      token: '',
+      password: '',
+      confirmPassword: '',
       showPassword: false,
+      saving: false,
+      done: false,
       error: ''
     }
   },
 
   methods: {
-    async makeLogin () {
-      try {
-        await AuthService.makeLogin({ username: this.email, password: this.password })
-        this.error = ''
-        await useUserStore().getCurrent()
-        await this.$router.push(this.landingRouteFor(useUserStore().currentUser.role))
-      } catch (error) {
-        useToastStore().add({ type: 'error', message: error.message })
-        this.error = error.status === 404 ? this.$t('login.errorUserNotFound') : error.message
+    async submit () {
+      if (!this.token.trim()) {
+        this.error = this.$t('resetPassword.errorTokenRequired')
+        return
       }
-    },
-    // Managers/admins land straight in their own working area rather than
-    // the public storefront, since that's what they log in to do.
-    landingRouteFor (role) {
-      if (role === 'admin') return { name: 'admin-companies' }
-      if (role === 'manager') return { name: 'manager-groups' }
-      return '/'
+      if (this.password.length < 6) {
+        this.error = this.$t('register.errorPasswordLength')
+        return
+      }
+      if (this.password !== this.confirmPassword) {
+        this.error = this.$t('register.errorPasswordMatch')
+        return
+      }
+      this.error = ''
+      this.saving = true
+      try {
+        await UsersService.setPassword(this.token.trim(), this.password)
+        this.done = true
+      } catch (error) {
+        this.error = error.status === 401 ? this.$t('resetPassword.errorInvalidToken') : error.message
+      } finally {
+        this.saving = false
+      }
     }
   }
 }
@@ -167,14 +188,10 @@ export default {
   font-family: $font-title;
   font-weight: 900;
   font-style: italic;
-  font-size: 38px;
+  font-size: 34px;
   color: $color-brand;
   transform: rotate(-1.5deg);
   transform-origin: left center;
-}
-
-.title__accent {
-  color: $color-brand;
 }
 
 .subtitle {
@@ -185,10 +202,10 @@ export default {
 }
 
 .form {
-  margin-top: 28px;
+  margin-top: 24px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .field {
@@ -259,21 +276,6 @@ export default {
   }
 }
 
-.forgot-link {
-  align-self: flex-end;
-  margin-top: -6px;
-  font-family: $font-content;
-  font-weight: 700;
-  font-size: 12.5px;
-  color: $color-gray-500;
-  text-decoration: none;
-
-  &:hover {
-    color: $color-brand;
-    text-decoration: underline;
-  }
-}
-
 .form-error {
   background: #fdeaf1;
   color: $color-error;
@@ -304,6 +306,9 @@ export default {
   font-weight: 900;
   font-size: 15px;
   cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  display: block;
   transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
   box-shadow: 0 10px 20px -8px rgba($color-brand, .55);
 
@@ -315,6 +320,26 @@ export default {
 
   &:active {
     transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: .6;
+    cursor: default;
+    transform: none;
+  }
+}
+
+.sent-note {
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  p {
+    font-family: $font-content;
+    font-size: 14px;
+    color: $color-font-main;
+    line-height: 1.5;
   }
 }
 

@@ -278,7 +278,34 @@ export default {
     submit: 'ログイン',
     noAccount: 'アカウントをお持ちでない方は',
     register: '新規登録',
-    errorUserNotFound: '同じメールアドレスのユーザーが見つかりません'
+    errorUserNotFound: '同じメールアドレスのユーザーが見つかりません',
+    forgotPassword: 'パスワードをお忘れですか？'
+  },
+
+  forgotPassword: {
+    eyebrow: 'アカウント1つで6ユニット分',
+    title: 'パスワードをリセット',
+    subtitle: 'メールアドレスを入力すると、リセット用トークンをお送りします。',
+    submit: 'リセットトークンを送信',
+    sentMessage: '{email} が登録されている場合、リセットトークンを送信しました。有効期限は15分間です。',
+    haveToken: 'トークンをお持ちの方はこちら',
+    backToLogin: 'ログインに戻る'
+  },
+
+  resetPassword: {
+    eyebrow: 'アカウント1つで6ユニット分',
+    title: '新しいパスワードを設定',
+    subtitle: 'メールに届いたトークンを入力し、新しいパスワードを設定してください。',
+    token: 'リセットトークン',
+    tokenPlaceholder: 'メールに記載のトークンを貼り付け',
+    newPassword: '新しいパスワード',
+    submit: 'パスワードをリセット',
+    errorTokenRequired: 'メールに記載のリセットトークンを入力してください。',
+    errorInvalidToken: 'トークンが無効か期限切れです。もう一度リクエストしてください。',
+    successMessage: 'パスワードをリセットしました。新しいパスワードでログインできます。',
+    goToLogin: 'ログインへ',
+    noToken: 'トークンをお持ちでない方は',
+    requestOne: 'リクエストする'
   },
 
   register: {
