@@ -370,7 +370,8 @@ export default {
           ticket_type_id: this.selectedTier.id,
           amount: this.total,
           gateway: 'mock',
-          simulate_succ: this.simulateSucc
+          simulate_succ: this.simulateSucc,
+          idempotency_key: crypto.randomUUID(),
         })
         const ticket = response.data
         useTicketsStore().add(ticket)
