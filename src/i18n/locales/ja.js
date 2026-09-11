@@ -51,7 +51,8 @@ export default {
     login: 'ログイン',
     logout: 'ログアウト',
     cart: 'カート',
-    notifications: '通知'
+    notifications: '通知',
+    loggedOut: 'ログアウトしました。'
   },
 
   notifications: {
@@ -286,7 +287,8 @@ export default {
     noAccount: 'アカウントをお持ちでない方は',
     register: '新規登録',
     errorUserNotFound: '同じメールアドレスのユーザーが見つかりません',
-    forgotPassword: 'パスワードをお忘れですか？'
+    forgotPassword: 'パスワードをお忘れですか？',
+    successMessage: 'おかえりなさい、{name}さん！'
   },
 
   forgotPassword: {
@@ -310,6 +312,7 @@ export default {
     errorTokenRequired: 'メールに記載のリセットトークンを入力してください。',
     errorInvalidToken: 'トークンが無効か期限切れです。もう一度リクエストしてください。',
     successMessage: 'パスワードをリセットしました。新しいパスワードでログインできます。',
+    successToast: 'パスワードを更新しました — 新しいパスワードでログインできます。',
     goToLogin: 'ログインへ',
     noToken: 'トークンをお持ちでない方は',
     requestOne: 'リクエストする'

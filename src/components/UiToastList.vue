@@ -20,13 +20,6 @@ export default {
     UiToast
   },
 
-  watch: {
-    $route: {
-      handler: 'clearToastList',
-      deep: 'true'
-    }
-  },
-
   computed: {
     toastsList () {
       return useToastStore().toastsList
@@ -36,11 +29,6 @@ export default {
   methods: {
     onRemove (id) {
       useToastStore().remove(id)
-    },
-    clearToastList () {
-      if (this.toastsList.length) {
-        useToastStore().clear()
-      }
     }
   }
 }
@@ -48,19 +36,22 @@ export default {
 
 <style lang="scss" scoped>
 .ui-toast-list.component {
-  bottom: 20px;
+  top: 20px;
   right: 20px;
   width: 340px;
   max-width: calc(100vw - 24px);
   position: fixed;
   z-index: 9999;
   display: flex;
-  flex-direction: column;
+  // Newest toast is pushed last onto the store's list — reversed so it
+  // renders nearest the top-right anchor (where it visually "enters"),
+  // with older ones cascading downward below it.
+  flex-direction: column-reverse;
   gap: 10px;
   pointer-events: none;
 
   @include media_mobile {
-    bottom: 12px;
+    top: 12px;
     right: 12px;
     left: 12px;
     width: auto;
@@ -75,7 +66,7 @@ export default {
 .toast-enter-from,
 .toast-leave-to {
   opacity: 0;
-  transform: translate(24px, 8px) scale(.96);
+  transform: translate(24px, -8px) scale(.96);
 }
 
 .toast-leave-active {

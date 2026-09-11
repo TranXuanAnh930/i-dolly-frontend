@@ -84,6 +84,7 @@ export default {
         await AuthService.makeLogin({ username: this.email, password: this.password })
         this.error = ''
         await useUserStore().getCurrent()
+        useToastStore().add({ type: 'success', message: this.$t('login.successMessage', { name: useUserStore().currentUser.name }) })
         await this.$router.push(this.landingRouteFor(useUserStore().currentUser.role))
       } catch (error) {
         useToastStore().add({ type: 'error', message: error.message })

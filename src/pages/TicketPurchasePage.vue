@@ -185,6 +185,7 @@ import { parseISO } from 'date-fns'
 import { useConcertsStore } from '@/store/concerts'
 import { useNotificationStore } from '@/store/notifications'
 import { useTicketsStore } from '@/store/tickets'
+import { useToastStore } from '@/store/toast'
 import { TicketService } from '@/services/ticket.service'
 import { formatDate, formatNumber } from '@/utils/format'
 import { withTax } from '@/utils/tax'
@@ -333,6 +334,8 @@ export default {
       this.outcome = 'lottery'
       this.step = 3
 
+      useToastStore().add({ type: 'success', message: this.$t('ticketPurchase.appliedTitle') })
+
       useNotificationStore().add({
         type: 'lottery-entry',
         titleKey: 'ticketPurchase.notifLotteryTitle',
@@ -379,6 +382,11 @@ export default {
         this.orderNumber = ticket.id.slice(0, 8)
         this.outcome = ticket.status === 'paid' ? 'purchase' : 'declined'
         this.step = 3
+
+        useToastStore().add({
+          type: this.outcome === 'purchase' ? 'success' : 'error',
+          message: this.$t(this.outcome === 'purchase' ? 'ticketPurchase.wentTitle' : 'ticketPurchase.declinedTitle')
+        })
 
         // The tier's sold_quantity just changed server-side (on a
         // successful purchase) — force a refetch so remaining() reflects it

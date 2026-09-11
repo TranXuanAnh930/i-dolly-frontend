@@ -146,6 +146,7 @@ import { useCatalogStore } from '@/store/catalog'
 import { useNotificationStore } from '@/store/notifications'
 import { useOrdersStore } from '@/store/orders'
 import { useTicketsStore } from '@/store/tickets'
+import { useToastStore } from '@/store/toast'
 
 export default {
   name: 'Header',
@@ -227,6 +228,7 @@ export default {
     async logout () {
       // session is cleared and redirect happens in makeLogout regardless
       // of whether the API call succeeds, so a failed request can be ignored here
+      useToastStore().add({ type: 'default', message: this.$t('nav.loggedOut') })
       await AuthService.makeLogout().catch(() => {})
     }
   }

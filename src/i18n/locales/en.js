@@ -51,7 +51,8 @@ export default {
     login: 'Login',
     logout: 'Logout',
     cart: 'Cart',
-    notifications: 'Notifications'
+    notifications: 'Notifications',
+    loggedOut: 'You\'ve been logged out.'
   },
 
   notifications: {
@@ -286,7 +287,8 @@ export default {
     noAccount: 'Don\'t have an account?',
     register: 'Register',
     errorUserNotFound: 'User with same email not found',
-    forgotPassword: 'Forgot password?'
+    forgotPassword: 'Forgot password?',
+    successMessage: 'Welcome back, {name}!'
   },
 
   forgotPassword: {
@@ -310,6 +312,7 @@ export default {
     errorTokenRequired: 'Enter the reset token from your email.',
     errorInvalidToken: 'That token is invalid or has expired. Request a new one.',
     successMessage: 'Your password has been reset. You can now log in with your new password.',
+    successToast: 'Password updated — you can log in with it now.',
     goToLogin: 'Go to login',
     noToken: 'Don\'t have a token?',
     requestOne: 'Request one'
