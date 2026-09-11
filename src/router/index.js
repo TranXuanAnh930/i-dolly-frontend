@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-import { initCurrentUserStateMiddleware, checkAccessMiddleware, setPageTitleMiddleware } from './middlewares'
+import { initCurrentUserStateMiddleware, redirectSettingsRootMiddleware, checkAccessMiddleware, setPageTitleMiddleware } from './middlewares'
 import { routes } from './routes'
 
 const router = createRouter({
@@ -10,6 +10,7 @@ const router = createRouter({
 })
 
 router.beforeEach(initCurrentUserStateMiddleware)
+router.beforeEach(redirectSettingsRootMiddleware)
 router.beforeEach(checkAccessMiddleware)
 router.beforeEach(setPageTitleMiddleware)
 

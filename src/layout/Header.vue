@@ -47,16 +47,19 @@
           <ul class="menu" :class="{ 'is-open': mobileOpen }">
             <template v-if="isStaff">
               <li>
-                <router-link :to="{ name: 'manager-idols' }" class="menu__link">{{ $t('managerIdols.title') }}</router-link>
+                <router-link :to="{ name: `${settingsPrefix}-idols` }" class="menu__link">{{ $t('managerIdols.title') }}</router-link>
               </li>
               <li>
-                <router-link :to="{ name: 'manager-groups' }" class="menu__link">{{ $t('managerGroups.title') }}</router-link>
+                <router-link :to="{ name: `${settingsPrefix}-groups` }" class="menu__link">{{ $t('managerGroups.title') }}</router-link>
               </li>
               <li>
-                <router-link :to="{ name: 'manager-events' }" class="menu__link">{{ $t('managerEvents.title') }}</router-link>
+                <router-link :to="{ name: `${settingsPrefix}-events` }" class="menu__link">{{ $t('managerEvents.title') }}</router-link>
               </li>
               <li>
-                <router-link :to="{ name: 'manager-products' }" class="menu__link">{{ $t('managerProducts.title') }}</router-link>
+                <router-link :to="{ name: `${settingsPrefix}-products` }" class="menu__link">{{ $t('managerProducts.title') }}</router-link>
+              </li>
+              <li v-if="!isAdmin">
+                <router-link :to="{ name: 'manager-orders' }" class="menu__link">{{ $t('managerOrders.title') }}</router-link>
               </li>
               <li v-if="isAdmin">
                 <router-link :to="{ name: 'admin-companies' }" class="menu__link">{{ $t('adminCompanies.title') }}</router-link>
@@ -171,6 +174,9 @@ export default {
     },
     isAdmin () {
       return this.$currentUser.role === 'admin'
+    },
+    settingsPrefix () {
+      return this.isAdmin ? 'admin' : 'manager'
     }
   },
   watch: {

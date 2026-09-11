@@ -2,7 +2,7 @@
   <div class="wrapper crud-page">
     <div class="page-head">
       <h2 class="page-head__title">{{ $t('managerProducts.title') }}</h2>
-      <router-link :to="{ name: 'manager-products-new' }" class="add-btn">{{ $t('managerProducts.addProduct') }}</router-link>
+      <router-link :to="{ name: 'admin-products-new' }" class="add-btn">{{ $t('managerProducts.addProduct') }}</router-link>
     </div>
 
     <div class="table-card" v-if="products.length">
@@ -27,8 +27,8 @@
             <td>&yen;{{ product.price.toLocaleString('en-US') }}</td>
             <td>{{ product.quantity }}</td>
             <td class="actions">
-              <router-link :to="{ name: 'manager-products-edit', params: { id: product.id } }">{{ $t('common.edit') }}</router-link>
-              <router-link :to="{ name: 'manager-products-sales', params: { id: product.id }, query: { name: product.name } }">{{ $t('managerProducts.viewSales') }}</router-link>
+              <router-link :to="{ name: 'admin-products-edit', params: { id: product.id } }">{{ $t('common.edit') }}</router-link>
+              <button type="button" class="danger" @click="remove(product)">{{ $t('common.delete') }}</button>
             </td>
           </tr>
         </tbody>
@@ -45,23 +45,12 @@ import { ProductsService } from '@/services/products.service'
 import { resolveMediaUrl } from '@/utils/media'
 
 export default {
-  name: 'ManagerProductsPage',
+  name: 'AdminProductsPage',
 
   data () {
     return {
       products: [],
       error: ''
-    }
-  },
-
-  computed: {
-    // Products carry no direct company_id — the backend resolves one via
-    // album_details/lightstick_details when it can, and treats plain merch
-    // with neither as manageable by anyone. A manager is scoped to their
-    // own company (plus that ownerless merch) — see AdminProductsPage for
-    // the unscoped admin equivalent.
-    companyId () {
-      return this.$currentUser.company_id
     }
   },
 
@@ -73,8 +62,22 @@ export default {
     resolveMediaUrl,
     async fetchPage () {
       try {
-        const response = await ProductsService.getManagerProductsPagePublic(this.companyId)
+        // Products carry no direct company_id — the backend resolves one
+        // via album_details/lightstick_details when it can, and treats
+        // plain merch with neither as manageable by anyone. An admin isn't
+        // scoped, unlike a manager (see ManagerProductsPage), so no
+        // company filter is passed here.
+        const response = await ProductsService.getManagerProductsPagePublic(null)
         this.products = response.data.products
+      } catch (error) {
+        this.error = error.message
+      }
+    },
+    async remove (product) {
+      if (!window.confirm(this.$t('common.confirmDelete', { name: product.name }))) return
+      try {
+        await ProductsService.remove(product.id)
+        await this.fetchPage()
       } catch (error) {
         this.error = error.message
       }
@@ -195,6 +198,11 @@ export default {
     &:hover {
       border-color: $color-brand;
       color: $color-brand;
+    }
+
+    &.danger:hover {
+      border-color: $color-error;
+      color: $color-error;
     }
   }
 }

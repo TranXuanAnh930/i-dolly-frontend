@@ -98,4 +98,20 @@ export class ProductsService extends BaseService {
       throw this.errorWrapper(error, message)
     }
   }
+
+  // GET /products/{id}/sales — manager/admin only. Paginated
+  // (page/limit), newest-first sales history for one product, `{page,
+  // limit, count, data}` envelope. 403s if a manager doesn't own this
+  // product (via its idol's/group's company_id) — this replaces the old
+  // hard "Delete" action on the manager products page, which would have
+  // CASCADE-deleted this exact history.
+  static async getSalesHistory (id, { page = 1, limit = 10 } = {}) {
+    try {
+      const response = await this.request({ auth: true }).get(`${this.entity}/${id}/sales`, { params: { page, limit } })
+      return this.responseWrapper(response, response.data)
+    } catch (error) {
+      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
+      throw this.errorWrapper(error, message)
+    }
+  }
 }

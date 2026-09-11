@@ -1,9 +1,19 @@
 <template>
   <div class="wrapper crud-page">
-    <router-link :to="{ name: 'manager-products' }" class="back-link">&larr; {{ $t('managerProductForm.backToProducts') }}</router-link>
+    <router-link :to="{ name: 'admin-groups' }" class="back-link">&larr; {{ $t('managerGroupForm.backToGroups') }}</router-link>
 
-    <div class="form-wrap">
-      <h3 class="form-card__title">{{ isEditing ? $t('managerProductForm.editTitle') : $t('managerProductForm.addTitle') }}</h3>
+    <label class="company-picker" v-if="!isEditing">
+      <span>{{ $t('common.company') }}</span>
+      <select v-model="selectedCompanyId">
+        <option value="">{{ $t('common.selectCompanyPlaceholder') }}</option>
+        <option v-for="company in companiesStore.companies" :key="company.id" :value="company.id">{{ company.name }}</option>
+      </select>
+    </label>
+
+    <p class="empty-note" v-if="!isEditing && !companyId">{{ $t('managerGroupForm.selectCompanyPrompt') }}</p>
+
+    <div class="form-wrap" v-else>
+      <h3 class="form-card__title">{{ isEditing ? $t('managerGroupForm.editTitle') : $t('managerGroupForm.addTitle') }}</h3>
 
       <form class="form-card" @submit.prevent="save">
         <div class="field-grid">
@@ -12,36 +22,20 @@
             <input v-model="form.name" required>
           </label>
           <label class="field">
-            <span class="field__label">{{ $t('managerProducts.category') }}</span>
-            <select v-model="form.category_id" required>
-              <option value="" disabled>{{ $t('managerProductForm.selectCategoryPlaceholder') }}</option>
-              <option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option>
-            </select>
-          </label>
-          <label class="field">
-            <span class="field__label">{{ $t('managerProducts.price') }}</span>
-            <input type="number" min="0.01" step="0.01" v-model.number="form.price" required :disabled="isEditing">
-            <span class="field__hint" v-if="isEditing">{{ $t('managerProductForm.priceLocked') }}</span>
-          </label>
-          <label class="field">
-            <span class="field__label">{{ $t('managerProducts.quantity') }}</span>
-            <input type="number" min="0" v-model.number="form.quantity" required>
-          </label>
-          <label class="field">
-            <span class="field__label">{{ $t('common.photo') }}</span>
-            <input type="file" accept="image/*" @change="onImageChange">
+            <span class="field__label">{{ $t('managerGroups.debutDate') }}</span>
+            <input type="date" v-model="form.debut_date">
           </label>
         </div>
 
         <label class="field">
           <span class="field__label">{{ $t('common.description') }}</span>
-          <textarea v-model="form.description" rows="4" required></textarea>
+          <textarea v-model="form.description" rows="4"></textarea>
         </label>
 
         <p class="form-error" v-if="error">{{ error }}</p>
 
         <div class="form-actions">
-          <router-link :to="{ name: 'manager-products' }" class="cancel-btn">{{ $t('common.cancel') }}</router-link>
+          <router-link :to="{ name: 'admin-groups' }" class="cancel-btn">{{ $t('common.cancel') }}</router-link>
           <button type="submit" class="save-btn" :disabled="saving">{{ saving ? $t('common.saving') : $t('common.save') }}</button>
         </div>
       </form>
@@ -50,14 +44,15 @@
 </template>
 
 <script>
-import { ProductsService } from '@/services/products.service'
+import { GroupsService } from '@/services/groups.service'
+import { useCompaniesStore } from '@/store/companies'
 
 function emptyForm () {
-  return { name: '', category_id: '', price: '', quantity: '', description: '' }
+  return { name: '', debut_date: '', description: '' }
 }
 
 export default {
-  name: 'ManagerProductFormPage',
+  name: 'AdminGroupFormPage',
 
   props: {
     id: { type: String, default: null }
@@ -65,44 +60,42 @@ export default {
 
   data () {
     return {
-      products: [],
-      categories: [],
+      groups: [],
+      selectedCompanyId: this.$route.query.company_id || '',
       form: emptyForm(),
-      imageFile: null,
       error: '',
       saving: false
     }
   },
 
   computed: {
+    companiesStore () {
+      return useCompaniesStore()
+    },
     isEditing () {
       return !!this.id
     },
-    product () {
-      return this.isEditing ? this.products.find(p => p.id === this.id) : null
+    group () {
+      return this.isEditing ? this.groups.find(g => g.id === this.id) : null
     },
-    // Same scoping as ManagerProductsPage — a manager only ever edits their
-    // own company's products (plus ownerless merch) — see
-    // AdminProductFormPage for the unscoped admin equivalent.
+    // On edit the group's own (immutable) company applies; on create an
+    // admin picks one — see ManagerGroupFormPage for the manager
+    // equivalent, always scoped to their own company.
     companyId () {
-      return this.$currentUser.company_id
+      if (this.isEditing) return this.group ? this.group.company_id : ''
+      return this.selectedCompanyId
     }
   },
 
   watch: {
-    product: {
+    group: {
       immediate: true,
-      handler (product) {
-        if (!product) return
-        // ProductRead exposes the category *name*, not its id — the write
-        // endpoints need category_id, so map back via the categories list.
-        const category = this.categories.find(c => c.name === product.category)
+      handler (group) {
+        if (!group) return
         this.form = {
-          name: product.name,
-          category_id: category ? category.id : '',
-          price: product.price,
-          quantity: product.quantity,
-          description: product.description
+          name: group.name,
+          debut_date: group.debut_date || '',
+          description: group.description || ''
         }
       }
     }
@@ -110,43 +103,37 @@ export default {
 
   created () {
     this.fetchPage()
+    this.companiesStore.fetchAll()
   },
 
   methods: {
     async fetchPage () {
       try {
-        const response = await ProductsService.getManagerProductFormPagePublic(this.companyId)
-        this.products = response.data.products
-        this.categories = response.data.categories
+        const response = await GroupsService.getManagerGroupsPagePublic()
+        this.groups = response.data.groups
       } catch (error) {
         this.error = error.message
       }
     },
-    onImageChange (event) {
-      this.imageFile = event.target.files[0] || null
-    },
     async save () {
-      if (!this.form.name.trim() || !this.form.category_id || !this.form.description.trim()) {
-        this.error = this.$t('managerProductForm.errorRequired')
+      if (!this.form.name.trim()) {
+        this.error = this.$t('common.errorNameRequired')
         return
       }
       this.saving = true
       this.error = ''
       const fields = {
         name: this.form.name,
-        category_id: this.form.category_id,
-        price: this.form.price,
-        quantity: this.form.quantity,
-        description: this.form.description
+        debut_date: this.form.debut_date || null,
+        description: this.form.description || null
       }
       try {
         if (this.isEditing) {
-          await ProductsService.update(this.id, fields)
-          if (this.imageFile) await ProductsService.uploadImage(this.id, this.imageFile)
+          await GroupsService.update(this.id, fields)
         } else {
-          await ProductsService.create({ ...fields, image: this.imageFile })
+          await GroupsService.create({ ...fields, company_id: this.companyId })
         }
-        this.$router.push({ name: 'manager-products' })
+        this.$router.push({ name: 'admin-groups' })
       } catch (error) {
         this.error = error.message
       } finally {
@@ -176,6 +163,37 @@ export default {
   &:hover {
     color: $color-brand;
   }
+}
+
+.company-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 280px;
+
+  span {
+    font-family: $font-content;
+    font-weight: 700;
+    font-size: 12px;
+    color: $color-gray-500;
+  }
+
+  select {
+    border: 1.5px solid $color-line;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-family: $font-content;
+    font-size: 14px;
+    color: $color-ink;
+    background: $color-white;
+  }
+}
+
+.empty-note {
+  font-family: $font-content;
+  font-size: 14px;
+  color: $color-gray-500;
+  padding: 20px 0;
 }
 
 .form-wrap {
@@ -228,7 +246,6 @@ export default {
 }
 
 .field input,
-.field select,
 .field textarea {
   border: 1.5px solid $color-line;
   border-radius: 10px;
@@ -243,22 +260,10 @@ export default {
     border-color: $color-brand;
     box-shadow: 0 0 0 4px $color-brand-tint;
   }
-
-  &:disabled {
-    background: $color-gray-100;
-    color: $color-gray-500;
-    cursor: not-allowed;
-  }
 }
 
 .field textarea {
   resize: vertical;
-}
-
-.field__hint {
-  font-family: $font-content;
-  font-size: 12px;
-  color: $color-gray-500;
 }
 
 .form-error {

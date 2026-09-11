@@ -37,7 +37,10 @@ export default {
     confirmDeactivate: 'Deactivate {name}? You can reactivate it later.',
     status: 'Status',
     statusActive: 'Active',
-    statusInactive: 'Inactive'
+    statusInactive: 'Inactive',
+    previous: 'Previous',
+    next: 'Next',
+    pageLabel: 'Page {page}'
   },
 
   nav: {
@@ -535,7 +538,8 @@ export default {
     status: 'Status',
     selectCompanyPrompt: 'Select a company above to manage its events.',
     noResults: 'No events yet for this company.',
-    confirmDelete: 'Delete "{title}"? This can\'t be undone.'
+    cancelEvent: 'Cancel event',
+    confirmCancel: 'Cancel "{title}"? Ticket holders won\'t be notified automatically — you can change its status back from Edit.'
   },
 
   managerEventForm: {
@@ -547,7 +551,8 @@ export default {
     capacity: 'Capacity',
     eventDateTime: 'Event date & time',
     doorsOpen: 'Doors open',
-    errorRequired: 'Title, venue and event date are required.'
+    errorRequired: 'Title, venue and event date are required.',
+    dateLockedHint: 'This event is already on sale — cancel it first (set status to Cancelled and save), then edit the date/doors-open time/capacity in a separate edit.'
   },
 
   managerProducts: {
@@ -556,7 +561,8 @@ export default {
     category: 'Category',
     price: 'Price',
     quantity: 'Quantity',
-    noResults: 'No products yet.'
+    noResults: 'No products yet.',
+    viewSales: 'Sales'
   },
 
   managerProductForm: {
@@ -564,7 +570,32 @@ export default {
     addTitle: 'Add product',
     editTitle: 'Edit product',
     selectCategoryPlaceholder: 'Select a category…',
-    errorRequired: 'Name, category and description are required.'
+    errorRequired: 'Name, category and description are required.',
+    priceLocked: 'Price can only be set when a product is created — ask an admin to change it.'
+  },
+
+  managerProductSales: {
+    backToProducts: 'Back to products',
+    title: 'Sales — {name}',
+    date: 'Date',
+    order: 'Order',
+    quantity: 'Quantity',
+    unitPrice: 'Unit price',
+    total: 'Total',
+    noResults: 'No sales yet for this product.'
+  },
+
+  managerOrders: {
+    title: 'Orders',
+    date: 'Date',
+    buyer: 'Buyer',
+    items: 'Items',
+    total: 'Total',
+    status: 'Status',
+    noResults: 'No orders yet for this company.',
+    statusPending: 'Pending',
+    statusConfirmed: 'Confirmed',
+    statusCancelled: 'Cancelled'
   },
 
   adminCompanies: {

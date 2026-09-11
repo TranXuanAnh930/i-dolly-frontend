@@ -2,17 +2,7 @@
   <div class="wrapper crud-page">
     <router-link :to="{ name: 'manager-groups' }" class="back-link">&larr; {{ $t('managerGroupForm.backToGroups') }}</router-link>
 
-    <label class="company-picker" v-if="isAdmin && !isEditing">
-      <span>{{ $t('common.company') }}</span>
-      <select v-model="selectedCompanyId">
-        <option value="">{{ $t('common.selectCompanyPlaceholder') }}</option>
-        <option v-for="company in companiesStore.companies" :key="company.id" :value="company.id">{{ company.name }}</option>
-      </select>
-    </label>
-
-    <p class="empty-note" v-if="!isEditing && !companyId">{{ $t('managerGroupForm.selectCompanyPrompt') }}</p>
-
-    <div class="form-wrap" v-else>
+    <div class="form-wrap">
       <h3 class="form-card__title">{{ isEditing ? $t('managerGroupForm.editTitle') : $t('managerGroupForm.addTitle') }}</h3>
 
       <form class="form-card" @submit.prevent="save">
@@ -45,7 +35,6 @@
 
 <script>
 import { GroupsService } from '@/services/groups.service'
-import { useCompaniesStore } from '@/store/companies'
 
 function emptyForm () {
   return { name: '', debut_date: '', description: '' }
@@ -61,7 +50,6 @@ export default {
   data () {
     return {
       groups: [],
-      selectedCompanyId: this.$route.query.company_id || '',
       form: emptyForm(),
       error: '',
       saving: false
@@ -69,21 +57,18 @@ export default {
   },
 
   computed: {
-    companiesStore () {
-      return useCompaniesStore()
-    },
-    isAdmin () {
-      return this.$currentUser.role === 'admin'
-    },
     isEditing () {
       return !!this.id
     },
     group () {
       return this.isEditing ? this.groups.find(g => g.id === this.id) : null
     },
+    // A manager is always scoped to their own company; on edit the group's
+    // own (immutable) company applies — see AdminGroupFormPage for the
+    // admin equivalent, which picks a company via a dropdown on create.
     companyId () {
       if (this.isEditing) return this.group ? this.group.company_id : ''
-      return this.isAdmin ? this.selectedCompanyId : this.$currentUser.company_id
+      return this.$currentUser.company_id
     }
   },
 
@@ -103,7 +88,6 @@ export default {
 
   created () {
     this.fetchPage()
-    if (this.isAdmin) this.companiesStore.fetchAll()
   },
 
   methods: {
@@ -163,37 +147,6 @@ export default {
   &:hover {
     color: $color-brand;
   }
-}
-
-.company-picker {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-width: 280px;
-
-  span {
-    font-family: $font-content;
-    font-weight: 700;
-    font-size: 12px;
-    color: $color-gray-500;
-  }
-
-  select {
-    border: 1.5px solid $color-line;
-    border-radius: 10px;
-    padding: 10px 12px;
-    font-family: $font-content;
-    font-size: 14px;
-    color: $color-ink;
-    background: $color-white;
-  }
-}
-
-.empty-note {
-  font-family: $font-content;
-  font-size: 14px;
-  color: $color-gray-500;
-  padding: 20px 0;
 }
 
 .form-wrap {
