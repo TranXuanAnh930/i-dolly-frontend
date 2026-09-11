@@ -51,7 +51,8 @@ export default {
     login: 'Login',
     logout: 'Logout',
     cart: 'Cart',
-    notifications: 'Notifications'
+    notifications: 'Notifications',
+    loggedOut: 'You\'ve been logged out.'
   },
 
   notifications: {
@@ -286,7 +287,8 @@ export default {
     noAccount: 'Don\'t have an account?',
     register: 'Register',
     errorUserNotFound: 'User with same email not found',
-    forgotPassword: 'Forgot password?'
+    forgotPassword: 'Forgot password?',
+    successMessage: 'Welcome back, {name}!'
   },
 
   forgotPassword: {
@@ -310,6 +312,7 @@ export default {
     errorTokenRequired: 'Enter the reset token from your email.',
     errorInvalidToken: 'That token is invalid or has expired. Request a new one.',
     successMessage: 'Your password has been reset. You can now log in with your new password.',
+    successToast: 'Password updated — you can log in with it now.',
     goToLogin: 'Go to login',
     noToken: 'Don\'t have a token?',
     requestOne: 'Request one'
@@ -524,7 +527,8 @@ export default {
     dateOfBirth: 'Date of birth',
     color: 'Color',
     shortIntro: 'Short intro',
-    longDescription: 'Long description'
+    longDescription: 'Long description',
+    updateSuccess: 'Idol updated successfully.'
   },
 
   managerGroups: {
@@ -539,7 +543,8 @@ export default {
     backToGroups: 'Back to groups',
     selectCompanyPrompt: 'Select a company above to add a group.',
     addTitle: 'Add group',
-    editTitle: 'Edit group'
+    editTitle: 'Edit group',
+    updateSuccess: 'Group updated successfully.'
   },
 
   managerEvents: {
@@ -565,7 +570,8 @@ export default {
     eventDateTime: 'Event date & time',
     doorsOpen: 'Doors open',
     errorRequired: 'Title, venue and event date are required.',
-    dateLockedHint: 'This event is already on sale — cancel it first (set status to Cancelled and save), then edit the date/doors-open time/capacity in a separate edit.'
+    dateLockedHint: 'This event is already on sale — cancel it first (set status to Cancelled and save), then edit the date/doors-open time/capacity in a separate edit.',
+    updateSuccess: 'Event updated successfully.'
   },
 
   managerProducts: {
@@ -584,7 +590,8 @@ export default {
     editTitle: 'Edit product',
     selectCategoryPlaceholder: 'Select a category…',
     errorRequired: 'Name, category and description are required.',
-    priceLocked: 'Price can only be set when a product is created — ask an admin to change it.'
+    priceLocked: 'Price can only be set when a product is created — ask an admin to change it.',
+    updateSuccess: 'Product updated successfully.'
   },
 
   managerProductSales: {
@@ -622,7 +629,8 @@ export default {
   adminCompanyForm: {
     backToCompanies: 'Back to companies',
     addTitle: 'Add company',
-    editTitle: 'Edit company'
+    editTitle: 'Edit company',
+    updateSuccess: 'Company updated successfully.'
   },
 
   adminManagerAccountForm: {

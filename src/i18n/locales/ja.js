@@ -51,7 +51,8 @@ export default {
     login: 'ログイン',
     logout: 'ログアウト',
     cart: 'カート',
-    notifications: '通知'
+    notifications: '通知',
+    loggedOut: 'ログアウトしました。'
   },
 
   notifications: {
@@ -286,7 +287,8 @@ export default {
     noAccount: 'アカウントをお持ちでない方は',
     register: '新規登録',
     errorUserNotFound: '同じメールアドレスのユーザーが見つかりません',
-    forgotPassword: 'パスワードをお忘れですか？'
+    forgotPassword: 'パスワードをお忘れですか？',
+    successMessage: 'おかえりなさい、{name}さん！'
   },
 
   forgotPassword: {
@@ -310,6 +312,7 @@ export default {
     errorTokenRequired: 'メールに記載のリセットトークンを入力してください。',
     errorInvalidToken: 'トークンが無効か期限切れです。もう一度リクエストしてください。',
     successMessage: 'パスワードをリセットしました。新しいパスワードでログインできます。',
+    successToast: 'パスワードを更新しました — 新しいパスワードでログインできます。',
     goToLogin: 'ログインへ',
     noToken: 'トークンをお持ちでない方は',
     requestOne: 'リクエストする'
@@ -524,7 +527,8 @@ export default {
     dateOfBirth: '生年月日',
     color: 'カラー',
     shortIntro: '簡単な紹介',
-    longDescription: '詳しい紹介'
+    longDescription: '詳しい紹介',
+    updateSuccess: 'アイドル情報を更新しました。'
   },
 
   managerGroups: {
@@ -539,7 +543,8 @@ export default {
     backToGroups: 'ユニット一覧へ戻る',
     selectCompanyPrompt: '上で会社を選択するとユニットを追加できます。',
     addTitle: 'ユニットを追加',
-    editTitle: 'ユニットを編集'
+    editTitle: 'ユニットを編集',
+    updateSuccess: 'ユニット情報を更新しました。'
   },
 
   managerEvents: {
@@ -565,7 +570,8 @@ export default {
     eventDateTime: '開催日時',
     doorsOpen: '開場時間',
     errorRequired: 'タイトル・会場・開催日は必須です。',
-    dateLockedHint: 'このイベントは既に発売中です — 先にステータスを「中止」にして保存し、その後あらためて編集画面から日時・収容人数を変更してください。'
+    dateLockedHint: 'このイベントは既に発売中です — 先にステータスを「中止」にして保存し、その後あらためて編集画面から日時・収容人数を変更してください。',
+    updateSuccess: 'イベント情報を更新しました。'
   },
 
   managerProducts: {
@@ -584,7 +590,8 @@ export default {
     editTitle: '商品を編集',
     selectCategoryPlaceholder: 'カテゴリーを選択…',
     errorRequired: '名前・カテゴリー・説明は必須です。',
-    priceLocked: '価格は商品作成時のみ設定できます — 変更が必要な場合は管理者に依頼してください。'
+    priceLocked: '価格は商品作成時のみ設定できます — 変更が必要な場合は管理者に依頼してください。',
+    updateSuccess: '商品情報を更新しました。'
   },
 
   managerProductSales: {
@@ -622,7 +629,8 @@ export default {
   adminCompanyForm: {
     backToCompanies: '会社一覧へ戻る',
     addTitle: '会社を追加',
-    editTitle: '会社を編集'
+    editTitle: '会社を編集',
+    updateSuccess: '会社情報を更新しました。'
   },
 
   adminManagerAccountForm: {

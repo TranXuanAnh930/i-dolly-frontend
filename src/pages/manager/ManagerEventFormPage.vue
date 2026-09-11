@@ -58,6 +58,7 @@
 
 <script>
 import { ConcertsService } from '@/services/concerts.service'
+import { useToastStore } from '@/store/toast'
 
 const STATUS_OPTIONS = ['scheduled', 'on_sale', 'sold_out', 'completed', 'cancelled']
 
@@ -191,12 +192,14 @@ export default {
       try {
         if (this.isEditing) {
           await ConcertsService.update(this.id, { ...fields, status: this.form.status })
+          useToastStore().add({ type: 'success', message: this.$t('managerEventForm.updateSuccess') })
         } else {
           await ConcertsService.create({ ...fields, company_id: this.companyId })
         }
         this.$router.push({ name: 'manager-events' })
       } catch (error) {
         this.error = error.message
+        if (this.isEditing) useToastStore().add({ type: 'error', message: error.message })
       } finally {
         this.saving = false
       }

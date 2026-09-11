@@ -35,6 +35,7 @@
 
 <script>
 import { GroupsService } from '@/services/groups.service'
+import { useToastStore } from '@/store/toast'
 
 function emptyForm () {
   return { name: '', debut_date: '', description: '' }
@@ -114,12 +115,14 @@ export default {
       try {
         if (this.isEditing) {
           await GroupsService.update(this.id, fields)
+          useToastStore().add({ type: 'success', message: this.$t('managerGroupForm.updateSuccess') })
         } else {
           await GroupsService.create({ ...fields, company_id: this.companyId })
         }
         this.$router.push({ name: 'manager-groups' })
       } catch (error) {
         this.error = error.message
+        if (this.isEditing) useToastStore().add({ type: 'error', message: error.message })
       } finally {
         this.saving = false
       }
