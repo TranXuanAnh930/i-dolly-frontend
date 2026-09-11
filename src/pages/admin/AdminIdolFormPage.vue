@@ -1,8 +1,18 @@
 <template>
   <div class="wrapper crud-page">
-    <router-link :to="{ name: 'manager-idols' }" class="back-link">&larr; {{ $t('managerIdolForm.backToIdols') }}</router-link>
+    <router-link :to="{ name: 'admin-idols' }" class="back-link">&larr; {{ $t('managerIdolForm.backToIdols') }}</router-link>
 
-    <div class="form-wrap">
+    <label class="company-picker" v-if="!isEditing">
+      <span>{{ $t('common.company') }}</span>
+      <select v-model="selectedCompanyId">
+        <option value="">{{ $t('common.selectCompanyPlaceholder') }}</option>
+        <option v-for="company in companiesStore.companies" :key="company.id" :value="company.id">{{ company.name }}</option>
+      </select>
+    </label>
+
+    <p class="empty-note" v-if="!isEditing && !companyId">{{ $t('managerIdolForm.selectCompanyPrompt') }}</p>
+
+    <div class="form-wrap" v-else>
       <h3 class="form-card__title">{{ isEditing ? $t('managerIdolForm.editTitle') : $t('managerIdolForm.addTitle') }}</h3>
 
       <form class="form-card" @submit.prevent="save">
@@ -51,7 +61,7 @@
         <p class="form-error" v-if="error">{{ error }}</p>
 
         <div class="form-actions">
-          <router-link :to="{ name: 'manager-idols' }" class="cancel-btn">{{ $t('common.cancel') }}</router-link>
+          <router-link :to="{ name: 'admin-idols' }" class="cancel-btn">{{ $t('common.cancel') }}</router-link>
           <button type="submit" class="save-btn" :disabled="saving">{{ saving ? $t('common.saving') : $t('common.save') }}</button>
         </div>
       </form>
@@ -60,6 +70,7 @@
 </template>
 
 <script>
+import { useCompaniesStore } from '@/store/companies'
 import { IdolsService } from '@/services/idols.service'
 
 function emptyForm () {
@@ -75,7 +86,7 @@ function emptyForm () {
 }
 
 export default {
-  name: 'ManagerIdolFormPage',
+  name: 'AdminIdolFormPage',
 
   props: {
     id: { type: String, default: null }
@@ -86,6 +97,7 @@ export default {
       idols: [],
       groups: [],
       colors: [],
+      selectedCompanyId: this.$route.query.company_id || '',
       form: emptyForm(),
       imageFile: null,
       error: '',
@@ -94,18 +106,21 @@ export default {
   },
 
   computed: {
+    companiesStore () {
+      return useCompaniesStore()
+    },
     isEditing () {
       return !!this.id
     },
     idol () {
       return this.isEditing ? this.idols.find(i => i.id === this.id) : null
     },
-    // A manager is always scoped to their own company; on edit the idol's
-    // own (immutable) company applies — see AdminIdolFormPage for the
-    // admin equivalent, which picks a company via a dropdown on create.
+    // On edit the idol's own (immutable) company applies; on create an
+    // admin picks one — see ManagerIdolFormPage for the manager equivalent,
+    // always scoped to their own company.
     companyId () {
       if (this.isEditing) return this.idol ? this.idol.company_id : ''
-      return this.$currentUser.company_id
+      return this.selectedCompanyId
     },
     // Deactivated groups are hidden from selection (the backend rejects a
     // NEW assignment into one), except the idol's own current group so an
@@ -139,6 +154,7 @@ export default {
 
   created () {
     this.fetchPage()
+    this.companiesStore.fetchAll()
   },
 
   methods: {
@@ -178,7 +194,7 @@ export default {
         } else {
           await IdolsService.create({ ...fields, company_id: this.companyId, image: this.imageFile })
         }
-        this.$router.push({ name: 'manager-idols' })
+        this.$router.push({ name: 'admin-idols' })
       } catch (error) {
         this.error = error.message
       } finally {
@@ -208,6 +224,37 @@ export default {
   &:hover {
     color: $color-brand;
   }
+}
+
+.company-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 280px;
+
+  span {
+    font-family: $font-content;
+    font-weight: 700;
+    font-size: 12px;
+    color: $color-gray-500;
+  }
+
+  select {
+    border: 1.5px solid $color-line;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-family: $font-content;
+    font-size: 14px;
+    color: $color-ink;
+    background: $color-white;
+  }
+}
+
+.empty-note {
+  font-family: $font-content;
+  font-size: 14px;
+  color: $color-gray-500;
+  padding: 20px 0;
 }
 
 .form-wrap {

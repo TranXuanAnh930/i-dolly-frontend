@@ -2,40 +2,52 @@
   <div class="wrapper crud-page">
     <div class="page-head">
       <h2 class="page-head__title">{{ $t('managerGroups.title') }}</h2>
-      <router-link :to="{ name: 'manager-groups-new' }" class="add-btn">{{ $t('managerGroups.addGroup') }}</router-link>
+      <router-link v-if="companyId" :to="{ name: 'admin-groups-new', query: { company_id: companyId } }" class="add-btn">{{ $t('managerGroups.addGroup') }}</router-link>
     </div>
 
-    <div class="table-card" v-if="myGroups.length">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>{{ $t('common.name') }}</th>
-            <th>{{ $t('managerGroups.debutDate') }}</th>
-            <th>{{ $t('common.description') }}</th>
-            <th>{{ $t('common.status') }}</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="group in myGroups" :key="group.id" :class="{ 'is-inactive': !group.is_active }">
-            <td>{{ group.name }}</td>
-            <td>{{ group.debut_date || '—' }}</td>
-            <td class="description-cell">{{ group.description || '—' }}</td>
-            <td>
-              <span class="status-badge" :class="{ 'status-badge--inactive': !group.is_active }">
-                {{ group.is_active ? $t('common.statusActive') : $t('common.statusInactive') }}
-              </span>
-            </td>
-            <td class="actions">
-              <router-link :to="{ name: 'manager-groups-edit', params: { id: group.id } }">{{ $t('common.edit') }}</router-link>
-              <button v-if="group.is_active" type="button" class="danger" @click="deactivate(group)">{{ $t('common.deactivate') }}</button>
-              <button v-else type="button" @click="reactivate(group)">{{ $t('common.reactivate') }}</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <p class="empty-note" v-else>{{ $t('managerGroups.noResults') }}</p>
+    <label class="company-picker">
+      <span>{{ $t('common.company') }}</span>
+      <select v-model="selectedCompanyId">
+        <option value="">{{ $t('common.selectCompanyPlaceholder') }}</option>
+        <option v-for="company in companiesStore.companies" :key="company.id" :value="company.id">{{ company.name }}</option>
+      </select>
+    </label>
+
+    <p class="empty-note" v-if="!companyId">{{ $t('managerGroups.selectCompanyPrompt') }}</p>
+
+    <template v-else>
+      <div class="table-card" v-if="myGroups.length">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>{{ $t('common.name') }}</th>
+              <th>{{ $t('managerGroups.debutDate') }}</th>
+              <th>{{ $t('common.description') }}</th>
+              <th>{{ $t('common.status') }}</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="group in myGroups" :key="group.id" :class="{ 'is-inactive': !group.is_active }">
+              <td>{{ group.name }}</td>
+              <td>{{ group.debut_date || '—' }}</td>
+              <td class="description-cell">{{ group.description || '—' }}</td>
+              <td>
+                <span class="status-badge" :class="{ 'status-badge--inactive': !group.is_active }">
+                  {{ group.is_active ? $t('common.statusActive') : $t('common.statusInactive') }}
+                </span>
+              </td>
+              <td class="actions">
+                <router-link :to="{ name: 'admin-groups-edit', params: { id: group.id } }">{{ $t('common.edit') }}</router-link>
+                <button v-if="group.is_active" type="button" class="danger" @click="deactivate(group)">{{ $t('common.deactivate') }}</button>
+                <button v-else type="button" @click="reactivate(group)">{{ $t('common.reactivate') }}</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="empty-note" v-else>{{ $t('managerGroups.noResults') }}</p>
+    </template>
 
     <p class="form-error" v-if="error">{{ error }}</p>
   </div>
@@ -43,22 +55,28 @@
 
 <script>
 import { GroupsService } from '@/services/groups.service'
+import { useCompaniesStore } from '@/store/companies'
 
 export default {
-  name: 'ManagerGroupsPage',
+  name: 'AdminGroupsPage',
 
   data () {
     return {
       groups: [],
+      selectedCompanyId: '',
       error: ''
     }
   },
 
   computed: {
-    // A manager only ever manages their own company — see AdminGroupsPage
-    // for the admin equivalent, which picks a company via a dropdown.
+    companiesStore () {
+      return useCompaniesStore()
+    },
+    // Unlike a manager (always scoped to their own company — see
+    // ManagerGroupsPage), an admin isn't tied to any single company and
+    // picks one to manage here.
     companyId () {
-      return this.$currentUser.company_id
+      return this.selectedCompanyId
     },
     myGroups () {
       return this.groups.filter(group => group.company_id === this.companyId)
@@ -67,6 +85,7 @@ export default {
 
   created () {
     this.fetchPage()
+    this.companiesStore.fetchAll()
   },
 
   methods: {
@@ -138,6 +157,30 @@ export default {
 
   &:hover {
     background: $color-brand-deep;
+  }
+}
+
+.company-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 280px;
+
+  span {
+    font-family: $font-content;
+    font-weight: 700;
+    font-size: 12px;
+    color: $color-gray-500;
+  }
+
+  select {
+    border: 1.5px solid $color-line;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-family: $font-content;
+    font-size: 14px;
+    color: $color-ink;
+    background: $color-white;
   }
 }
 

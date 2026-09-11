@@ -37,7 +37,10 @@ export default {
     confirmDeactivate: '{name}を無効化しますか？後で再有効化できます。',
     status: 'ステータス',
     statusActive: '有効',
-    statusInactive: '無効'
+    statusInactive: '無効',
+    previous: '前へ',
+    next: '次へ',
+    pageLabel: '{page}ページ目'
   },
 
   nav: {
@@ -548,7 +551,8 @@ export default {
     status: 'ステータス',
     selectCompanyPrompt: '上で会社を選択するとイベントを管理できます。',
     noResults: 'この会社のイベントはまだありません。',
-    confirmDelete: '「{title}」を削除しますか？この操作は取り消せません。'
+    cancelEvent: 'イベントを中止',
+    confirmCancel: '「{title}」を中止しますか？チケット購入者には自動で通知されません — ステータスは編集画面からいつでも戻せます。'
   },
 
   managerEventForm: {
@@ -560,7 +564,8 @@ export default {
     capacity: '収容人数',
     eventDateTime: '開催日時',
     doorsOpen: '開場時間',
-    errorRequired: 'タイトル・会場・開催日は必須です。'
+    errorRequired: 'タイトル・会場・開催日は必須です。',
+    dateLockedHint: 'このイベントは既に発売中です — 先にステータスを「中止」にして保存し、その後あらためて編集画面から日時・収容人数を変更してください。'
   },
 
   managerProducts: {
@@ -569,7 +574,8 @@ export default {
     category: 'カテゴリー',
     price: '価格',
     quantity: '数量',
-    noResults: '商品はまだありません。'
+    noResults: '商品はまだありません。',
+    viewSales: '販売履歴'
   },
 
   managerProductForm: {
@@ -577,7 +583,32 @@ export default {
     addTitle: '商品を追加',
     editTitle: '商品を編集',
     selectCategoryPlaceholder: 'カテゴリーを選択…',
-    errorRequired: '名前・カテゴリー・説明は必須です。'
+    errorRequired: '名前・カテゴリー・説明は必須です。',
+    priceLocked: '価格は商品作成時のみ設定できます — 変更が必要な場合は管理者に依頼してください。'
+  },
+
+  managerProductSales: {
+    backToProducts: '商品一覧へ戻る',
+    title: '販売履歴 — {name}',
+    date: '日時',
+    order: '注文',
+    quantity: '数量',
+    unitPrice: '単価',
+    total: '合計',
+    noResults: 'この商品の販売履歴はまだありません。'
+  },
+
+  managerOrders: {
+    title: '注文',
+    date: '日時',
+    buyer: '購入者',
+    items: '商品',
+    total: '合計',
+    status: 'ステータス',
+    noResults: 'この会社の注文はまだありません。',
+    statusPending: '保留中',
+    statusConfirmed: '確定',
+    statusCancelled: 'キャンセル済み'
   },
 
   adminCompanies: {

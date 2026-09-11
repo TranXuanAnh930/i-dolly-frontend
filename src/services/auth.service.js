@@ -17,6 +17,22 @@ export class AuthService {
    ******************************
    */
 
+  // POST /account/register — no auth. Returns the created UserOut; the
+  // caller still has to log in separately afterward (register doesn't
+  // return tokens). A duplicate email comes back as a plain-string 400
+  // detail ("E-mail already registered"); bad input is a 422 with an array
+  // of per-field validation errors — flatten that to a readable message.
+  static async register ({ name, email, password }) {
+    try {
+      const response = await axios.post(`${API_URL}/account/register`, { name, email, password })
+      return new ResponseWrapper(response, response.data)
+    } catch (error) {
+      const detail = error.response && error.response.data ? error.response.data.detail : undefined
+      const message = Array.isArray(detail) ? detail.map(d => d.msg).join(' ') : detail
+      throw new ErrorWrapper(error, message)
+    }
+  }
+
   static async makeLogin ({ username, password }) {
     try {
       const payload = new URLSearchParams()

@@ -47,6 +47,25 @@ input[type=button], button {
   }
 }
 
+// Windows Chrome/Edge draws a thin rectangular focus box around a
+// <select>'s displayed value that ignores border-radius and isn't the CSS
+// `outline` (so a component's own `outline: none` doesn't remove it) —
+// visible as a squared-off ring cutting across an otherwise pill-shaped
+// select once it's been focused. Removing the native appearance site-wide
+// and drawing a plain chevron instead fixes it everywhere in one place.
+// !important for the same reason as the mobile font-size fix above: every
+// component styles its own select via a scoped class selector, which
+// otherwise outranks this plain-element rule.
+select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M5 7.5 10 12.5 15 7.5' stroke='%2363525d' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 12px center !important;
+  background-size: 14px !important;
+  padding-right: 34px !important;
+}
+
 //.page {
 //  height: 100%;
 //  width: 100%;

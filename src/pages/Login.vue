@@ -71,8 +71,8 @@ export default {
 
   data () {
     return {
-      email: 'user@user.com',
-      password: '123456',
+      email: '',
+      password: '',
       showPassword: false,
       error: ''
     }
