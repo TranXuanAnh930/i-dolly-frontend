@@ -1,8 +1,18 @@
 <template>
   <div class="wrapper crud-page">
-    <router-link :to="{ name: 'manager-events' }" class="back-link">&larr; {{ $t('managerEventForm.backToEvents') }}</router-link>
+    <router-link :to="{ name: 'admin-events' }" class="back-link">&larr; {{ $t('managerEventForm.backToEvents') }}</router-link>
 
-    <div class="form-wrap">
+    <label class="company-picker" v-if="!isEditing">
+      <span>{{ $t('common.company') }}</span>
+      <select v-model="selectedCompanyId">
+        <option value="">{{ $t('common.selectCompanyPlaceholder') }}</option>
+        <option v-for="company in companiesStore.companies" :key="company.id" :value="company.id">{{ company.name }}</option>
+      </select>
+    </label>
+
+    <p class="empty-note" v-if="!isEditing && !companyId">{{ $t('managerEventForm.selectCompanyPrompt') }}</p>
+
+    <div class="form-wrap" v-else>
       <h3 class="form-card__title">{{ isEditing ? $t('managerEventForm.editTitle') : $t('managerEventForm.addTitle') }}</h3>
 
       <form class="form-card" @submit.prevent="save">
@@ -20,7 +30,7 @@
           </label>
           <label class="field">
             <span class="field__label">{{ $t('managerEventForm.capacity') }}</span>
-            <input type="number" min="1" v-model.number="form.capacity" required :disabled="isEventLocked">
+            <input type="number" min="1" v-model.number="form.capacity" required>
           </label>
           <label class="field" v-if="isEditing">
             <span class="field__label">{{ $t('managerEvents.status') }}</span>
@@ -30,15 +40,13 @@
           </label>
           <label class="field">
             <span class="field__label">{{ $t('managerEventForm.eventDateTime') }}</span>
-            <input type="datetime-local" v-model="form.event_datetime" required :disabled="isEventLocked">
+            <input type="datetime-local" v-model="form.event_datetime" required>
           </label>
           <label class="field">
             <span class="field__label">{{ $t('managerEventForm.doorsOpen') }}</span>
-            <input type="datetime-local" v-model="form.doors_open_at" :disabled="isEventLocked">
+            <input type="datetime-local" v-model="form.doors_open_at">
           </label>
         </div>
-
-        <p class="field__hint" v-if="isEventLocked">{{ $t('managerEventForm.dateLockedHint') }}</p>
 
         <label class="field">
           <span class="field__label">{{ $t('common.description') }}</span>
@@ -48,7 +56,7 @@
         <p class="form-error" v-if="error">{{ error }}</p>
 
         <div class="form-actions">
-          <router-link :to="{ name: 'manager-events' }" class="cancel-btn">{{ $t('common.cancel') }}</router-link>
+          <router-link :to="{ name: 'admin-events' }" class="cancel-btn">{{ $t('common.cancel') }}</router-link>
           <button type="submit" class="save-btn" :disabled="saving">{{ saving ? $t('common.saving') : $t('common.save') }}</button>
         </div>
       </form>
@@ -58,15 +66,9 @@
 
 <script>
 import { ConcertsService } from '@/services/concerts.service'
+import { useCompaniesStore } from '@/store/companies'
 
 const STATUS_OPTIONS = ['scheduled', 'on_sale', 'sold_out', 'completed', 'cancelled']
-
-// Mirrors concert_service.py's _EVENT_OPEN_STATUSES — once a concert has
-// gone on sale (or further), fans may already hold tickets/lottery entries
-// against its date/capacity, so the backend 403s a manager's date/doors-
-// open/capacity change. "cancelled" is excluded on purpose: cancelling
-// unlocks the concert again.
-const EVENT_OPEN_STATUSES = ['on_sale', 'sold_out', 'completed']
 
 function toDatetimeLocal (iso) {
   if (!iso) return ''
@@ -84,7 +86,7 @@ function emptyForm () {
 }
 
 export default {
-  name: 'ManagerEventFormPage',
+  name: 'AdminEventFormPage',
 
   props: {
     id: { type: String, default: null }
@@ -94,6 +96,7 @@ export default {
     return {
       concerts: [],
       venues: [],
+      selectedCompanyId: this.$route.query.company_id || '',
       form: emptyForm(),
       error: '',
       saving: false,
@@ -102,28 +105,21 @@ export default {
   },
 
   computed: {
+    companiesStore () {
+      return useCompaniesStore()
+    },
     isEditing () {
       return !!this.id
     },
     concert () {
       return this.isEditing ? this.concerts.find(c => c.id === this.id) : null
     },
-    // A manager is always scoped to their own company; on edit the
-    // concert's own (immutable) company applies — see AdminEventFormPage
-    // for the admin equivalent, which picks a company via a dropdown on
-    // create.
+    // On edit the concert's own (immutable) company applies; on create an
+    // admin picks one — see ManagerEventFormPage for the manager
+    // equivalent, always scoped to their own company.
     companyId () {
       if (this.isEditing) return this.concert ? this.concert.company_id : ''
-      return this.$currentUser.company_id
-    },
-    // Based on the concert's status as originally loaded, not the
-    // in-progress `form.status` selection — picking "Cancelled" in the
-    // dropdown below doesn't unlock these fields in the same submit, since
-    // the backend checks the status the row still has *before* this save
-    // (matching update_concert). Cancel and save first, then re-open Edit
-    // to change the date/doors-open time/capacity.
-    isEventLocked () {
-      return this.isEditing && !!this.concert && EVENT_OPEN_STATUSES.includes(this.concert.status)
+      return this.selectedCompanyId
     }
   },
 
@@ -147,6 +143,7 @@ export default {
 
   created () {
     this.fetchPage()
+    this.companiesStore.fetchAll()
   },
 
   methods: {
@@ -170,23 +167,13 @@ export default {
       }
       this.saving = true
       this.error = ''
-      // When locked, echo back the concert's own event_datetime/
-      // doors_open_at untouched rather than round-tripping through the
-      // <input type="datetime-local"> fields — that input truncates to
-      // minute precision, but the stored value carries seconds/
-      // microseconds (e.g. "...T10:34:47.849240Z"), so even an unedited
-      // save would re-derive a *different* value and trip the backend's
-      // "did the date actually change" check on every single save of an
-      // on-sale event, not just ones that touch the date. capacity has no
-      // such precision issue (a plain disabled number input keeps its
-      // loaded value as-is), so it's sent straight from form.capacity.
       const fields = {
         title: this.form.title,
         venue_id: this.form.venue_id,
         description: this.form.description || null,
         capacity: this.form.capacity,
-        event_datetime: this.isEventLocked ? this.concert.event_datetime : fromDatetimeLocal(this.form.event_datetime),
-        doors_open_at: this.isEventLocked ? this.concert.doors_open_at : fromDatetimeLocal(this.form.doors_open_at)
+        event_datetime: fromDatetimeLocal(this.form.event_datetime),
+        doors_open_at: fromDatetimeLocal(this.form.doors_open_at)
       }
       try {
         if (this.isEditing) {
@@ -194,7 +181,7 @@ export default {
         } else {
           await ConcertsService.create({ ...fields, company_id: this.companyId })
         }
-        this.$router.push({ name: 'manager-events' })
+        this.$router.push({ name: 'admin-events' })
       } catch (error) {
         this.error = error.message
       } finally {
@@ -224,6 +211,37 @@ export default {
   &:hover {
     color: $color-brand;
   }
+}
+
+.company-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 280px;
+
+  span {
+    font-family: $font-content;
+    font-weight: 700;
+    font-size: 12px;
+    color: $color-gray-500;
+  }
+
+  select {
+    border: 1.5px solid $color-line;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-family: $font-content;
+    font-size: 14px;
+    color: $color-ink;
+    background: $color-white;
+  }
+}
+
+.empty-note {
+  font-family: $font-content;
+  font-size: 14px;
+  color: $color-gray-500;
+  padding: 20px 0;
 }
 
 .form-wrap {
@@ -291,23 +309,10 @@ export default {
     border-color: $color-brand;
     box-shadow: 0 0 0 4px $color-brand-tint;
   }
-
-  &:disabled {
-    background: $color-gray-100;
-    color: $color-gray-500;
-    cursor: not-allowed;
-  }
 }
 
 .field textarea {
   resize: vertical;
-}
-
-.field__hint {
-  margin-top: -6px;
-  font-family: $font-content;
-  font-size: 12px;
-  color: $color-gray-500;
 }
 
 .form-error {

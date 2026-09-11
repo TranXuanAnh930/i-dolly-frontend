@@ -2,39 +2,51 @@
   <div class="wrapper crud-page">
     <div class="page-head">
       <h2 class="page-head__title">{{ $t('managerEvents.title') }}</h2>
-      <router-link :to="{ name: 'manager-events-new' }" class="add-btn">{{ $t('managerEvents.addEvent') }}</router-link>
+      <router-link v-if="companyId" :to="{ name: 'admin-events-new', query: { company_id: companyId } }" class="add-btn">{{ $t('managerEvents.addEvent') }}</router-link>
     </div>
 
-    <div class="table-card" v-if="myEvents.length">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>{{ $t('managerEvents.titleLabel') }}</th>
-            <th>{{ $t('managerEvents.venue') }}</th>
-            <th>{{ $t('managerEvents.date') }}</th>
-            <th>{{ $t('managerEvents.status') }}</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="concert in myEvents" :key="concert.id" :class="{ 'is-cancelled': concert.status === 'cancelled' }">
-            <td>{{ concert.title }}</td>
-            <td>{{ venueName(concert.venue_id) }}</td>
-            <td>{{ formatDate(concert.event_datetime) }}</td>
-            <td>
-              <span class="status-badge" :class="{ 'status-badge--cancelled': concert.status === 'cancelled' }">
-                {{ statusLabel(concert.status) }}
-              </span>
-            </td>
-            <td class="actions">
-              <router-link :to="{ name: 'manager-events-edit', params: { id: concert.id } }">{{ $t('common.edit') }}</router-link>
-              <button v-if="concert.status !== 'cancelled'" type="button" class="danger" @click="cancelEvent(concert)">{{ $t('managerEvents.cancelEvent') }}</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <p class="empty-note" v-else>{{ $t('managerEvents.noResults') }}</p>
+    <label class="company-picker">
+      <span>{{ $t('common.company') }}</span>
+      <select v-model="selectedCompanyId">
+        <option value="">{{ $t('common.selectCompanyPlaceholder') }}</option>
+        <option v-for="company in companiesStore.companies" :key="company.id" :value="company.id">{{ company.name }}</option>
+      </select>
+    </label>
+
+    <p class="empty-note" v-if="!companyId">{{ $t('managerEvents.selectCompanyPrompt') }}</p>
+
+    <template v-else>
+      <div class="table-card" v-if="myEvents.length">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>{{ $t('managerEvents.titleLabel') }}</th>
+              <th>{{ $t('managerEvents.venue') }}</th>
+              <th>{{ $t('managerEvents.date') }}</th>
+              <th>{{ $t('managerEvents.status') }}</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="concert in myEvents" :key="concert.id" :class="{ 'is-cancelled': concert.status === 'cancelled' }">
+              <td>{{ concert.title }}</td>
+              <td>{{ venueName(concert.venue_id) }}</td>
+              <td>{{ formatDate(concert.event_datetime) }}</td>
+              <td>
+                <span class="status-badge" :class="{ 'status-badge--cancelled': concert.status === 'cancelled' }">
+                  {{ statusLabel(concert.status) }}
+                </span>
+              </td>
+              <td class="actions">
+                <router-link :to="{ name: 'admin-events-edit', params: { id: concert.id } }">{{ $t('common.edit') }}</router-link>
+                <button v-if="concert.status !== 'cancelled'" type="button" class="danger" @click="cancelEvent(concert)">{{ $t('managerEvents.cancelEvent') }}</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="empty-note" v-else>{{ $t('managerEvents.noResults') }}</p>
+    </template>
 
     <p class="form-error" v-if="error">{{ error }}</p>
   </div>
@@ -44,23 +56,29 @@
 import { format, parseISO } from 'date-fns'
 
 import { ConcertsService } from '@/services/concerts.service'
+import { useCompaniesStore } from '@/store/companies'
 
 export default {
-  name: 'ManagerEventsPage',
+  name: 'AdminEventsPage',
 
   data () {
     return {
       concerts: [],
       venues: [],
+      selectedCompanyId: '',
       error: ''
     }
   },
 
   computed: {
-    // A manager only ever manages their own company — see AdminEventsPage
-    // for the admin equivalent, which picks a company via a dropdown.
+    companiesStore () {
+      return useCompaniesStore()
+    },
+    // Unlike a manager (always scoped to their own company — see
+    // ManagerEventsPage), an admin isn't tied to any single company and
+    // picks one to manage here.
     companyId () {
-      return this.$currentUser.company_id
+      return this.selectedCompanyId
     },
     myEvents () {
       return this.concerts.filter(concert => concert.company_id === this.companyId)
@@ -69,6 +87,7 @@ export default {
 
   created () {
     this.fetchPage()
+    this.companiesStore.fetchAll()
   },
 
   methods: {
@@ -95,7 +114,7 @@ export default {
     // "Delete" cancels server-side (sets status="cancelled" — see
     // concert_service.delete_concert) rather than removing the row, so the
     // confirm/action pair is named to match: cancelling, not a destructive
-    // "gone for good" delete. A manager can move the status off "cancelled"
+    // "gone for good" delete. An admin can move the status off "cancelled"
     // again from Edit.
     async cancelEvent (concert) {
       if (!window.confirm(this.$t('managerEvents.confirmCancel', { title: concert.title }))) return
@@ -145,6 +164,30 @@ export default {
 
   &:hover {
     background: $color-brand-deep;
+  }
+}
+
+.company-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 280px;
+
+  span {
+    font-family: $font-content;
+    font-weight: 700;
+    font-size: 12px;
+    color: $color-gray-500;
+  }
+
+  select {
+    border: 1.5px solid $color-line;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-family: $font-content;
+    font-size: 14px;
+    color: $color-ink;
+    background: $color-white;
   }
 }
 

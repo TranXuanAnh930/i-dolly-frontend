@@ -38,4 +38,23 @@ export class OrderService extends BaseService {
       throw this.errorWrapper(error, message)
     }
   }
+
+  // GET /order/manager-orders-page — manager/admin only. Paginated
+  // (page/limit query params), newest-first, `{page, limit, count, data}`
+  // envelope like /products/pagination. Unlike the other manager-*-page
+  // bundles (idols/groups/products), this one requires auth since orders
+  // carry real customer purchase history — company_id is only honored
+  // server-side for an admin (a manager is always scoped to their own
+  // company_id regardless of what's passed).
+  static async getManagerOrdersPage ({ companyId, page = 1, limit = 10 } = {}) {
+    try {
+      const params = { page, limit }
+      if (companyId) params.company_id = companyId
+      const response = await this.request({ auth: true }).get(`${this.entity}/manager-orders-page`, { params })
+      return this.responseWrapper(response, response.data)
+    } catch (error) {
+      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
+      throw this.errorWrapper(error, message)
+    }
+  }
 }

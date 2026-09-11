@@ -1,9 +1,9 @@
 <template>
   <div class="wrapper crud-page">
-    <router-link :to="{ name: 'manager-idols' }" class="back-link">&larr; {{ $t('managerIdolForm.backToIdols') }}</router-link>
+    <router-link :to="{ name: 'admin-products' }" class="back-link">&larr; {{ $t('managerProductForm.backToProducts') }}</router-link>
 
     <div class="form-wrap">
-      <h3 class="form-card__title">{{ isEditing ? $t('managerIdolForm.editTitle') : $t('managerIdolForm.addTitle') }}</h3>
+      <h3 class="form-card__title">{{ isEditing ? $t('managerProductForm.editTitle') : $t('managerProductForm.addTitle') }}</h3>
 
       <form class="form-card" @submit.prevent="save">
         <div class="field-grid">
@@ -12,26 +12,19 @@
             <input v-model="form.name" required>
           </label>
           <label class="field">
-            <span class="field__label">{{ $t('managerIdols.group') }}</span>
-            <select v-model="form.group_id">
-              <option value="">{{ $t('common.none') }}</option>
-              <option v-for="group in myGroups" :key="group.id" :value="group.id">{{ group.name }}{{ !group.is_active ? ` (${$t('common.statusInactive')})` : '' }}</option>
+            <span class="field__label">{{ $t('managerProducts.category') }}</span>
+            <select v-model="form.category_id" required>
+              <option value="" disabled>{{ $t('managerProductForm.selectCategoryPlaceholder') }}</option>
+              <option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option>
             </select>
           </label>
           <label class="field">
-            <span class="field__label">{{ $t('managerIdolForm.dateOfBirth') }}</span>
-            <input type="date" v-model="form.date_of_birth">
+            <span class="field__label">{{ $t('managerProducts.price') }}</span>
+            <input type="number" min="0.01" step="0.01" v-model.number="form.price" required>
           </label>
           <label class="field">
-            <span class="field__label">{{ $t('idolDetail.hometown') }}</span>
-            <input v-model="form.hometown">
-          </label>
-          <label class="field">
-            <span class="field__label">{{ $t('managerIdolForm.color') }}</span>
-            <select v-model="form.color_id">
-              <option value="">{{ $t('common.none') }}</option>
-              <option v-for="color in colors" :key="color.id" :value="color.id">{{ color.name }}</option>
-            </select>
+            <span class="field__label">{{ $t('managerProducts.quantity') }}</span>
+            <input type="number" min="0" v-model.number="form.quantity" required>
           </label>
           <label class="field">
             <span class="field__label">{{ $t('common.photo') }}</span>
@@ -40,18 +33,14 @@
         </div>
 
         <label class="field">
-          <span class="field__label">{{ $t('managerIdolForm.shortIntro') }}</span>
-          <input v-model="form.short_intro" maxlength="500">
-        </label>
-        <label class="field">
-          <span class="field__label">{{ $t('managerIdolForm.longDescription') }}</span>
-          <textarea v-model="form.long_description" rows="4"></textarea>
+          <span class="field__label">{{ $t('common.description') }}</span>
+          <textarea v-model="form.description" rows="4" required></textarea>
         </label>
 
         <p class="form-error" v-if="error">{{ error }}</p>
 
         <div class="form-actions">
-          <router-link :to="{ name: 'manager-idols' }" class="cancel-btn">{{ $t('common.cancel') }}</router-link>
+          <router-link :to="{ name: 'admin-products' }" class="cancel-btn">{{ $t('common.cancel') }}</router-link>
           <button type="submit" class="save-btn" :disabled="saving">{{ saving ? $t('common.saving') : $t('common.save') }}</button>
         </div>
       </form>
@@ -60,22 +49,14 @@
 </template>
 
 <script>
-import { IdolsService } from '@/services/idols.service'
+import { ProductsService } from '@/services/products.service'
 
 function emptyForm () {
-  return {
-    name: '',
-    group_id: '',
-    date_of_birth: '',
-    hometown: '',
-    color_id: '',
-    short_intro: '',
-    long_description: ''
-  }
+  return { name: '', category_id: '', price: '', quantity: '', description: '' }
 }
 
 export default {
-  name: 'ManagerIdolFormPage',
+  name: 'AdminProductFormPage',
 
   props: {
     id: { type: String, default: null }
@@ -83,9 +64,8 @@ export default {
 
   data () {
     return {
-      idols: [],
-      groups: [],
-      colors: [],
+      products: [],
+      categories: [],
       form: emptyForm(),
       imageFile: null,
       error: '',
@@ -97,41 +77,25 @@ export default {
     isEditing () {
       return !!this.id
     },
-    idol () {
-      return this.isEditing ? this.idols.find(i => i.id === this.id) : null
-    },
-    // A manager is always scoped to their own company; on edit the idol's
-    // own (immutable) company applies — see AdminIdolFormPage for the
-    // admin equivalent, which picks a company via a dropdown on create.
-    companyId () {
-      if (this.isEditing) return this.idol ? this.idol.company_id : ''
-      return this.$currentUser.company_id
-    },
-    // Deactivated groups are hidden from selection (the backend rejects a
-    // NEW assignment into one), except the idol's own current group so an
-    // existing membership stays visible/selectable even if it later became
-    // inactive — see idol_service.update_idol's group_inactive carve-out.
-    myGroups () {
-      return this.groups.filter(group =>
-        group.company_id === this.companyId &&
-        (group.is_active || (this.idol && group.id === this.idol.group_id))
-      )
+    product () {
+      return this.isEditing ? this.products.find(p => p.id === this.id) : null
     }
   },
 
   watch: {
-    idol: {
+    product: {
       immediate: true,
-      handler (idol) {
-        if (!idol) return
+      handler (product) {
+        if (!product) return
+        // ProductRead exposes the category *name*, not its id — the write
+        // endpoints need category_id, so map back via the categories list.
+        const category = this.categories.find(c => c.name === product.category)
         this.form = {
-          name: idol.name,
-          group_id: idol.group_id || '',
-          date_of_birth: idol.date_of_birth || '',
-          hometown: idol.hometown || '',
-          color_id: idol.color_id || '',
-          short_intro: idol.short_intro || '',
-          long_description: idol.long_description || ''
+          name: product.name,
+          category_id: category ? category.id : '',
+          price: product.price,
+          quantity: product.quantity,
+          description: product.description
         }
       }
     }
@@ -144,10 +108,11 @@ export default {
   methods: {
     async fetchPage () {
       try {
-        const response = await IdolsService.getManagerIdolFormPagePublic()
-        this.idols = response.data.idols
-        this.groups = response.data.groups
-        this.colors = response.data.colors
+        // An admin isn't scoped to a company, unlike a manager (see
+        // ManagerProductFormPage) — no company filter is passed here.
+        const response = await ProductsService.getManagerProductFormPagePublic(null)
+        this.products = response.data.products
+        this.categories = response.data.categories
       } catch (error) {
         this.error = error.message
       }
@@ -156,29 +121,27 @@ export default {
       this.imageFile = event.target.files[0] || null
     },
     async save () {
-      if (!this.form.name.trim()) {
-        this.error = this.$t('common.errorNameRequired')
+      if (!this.form.name.trim() || !this.form.category_id || !this.form.description.trim()) {
+        this.error = this.$t('managerProductForm.errorRequired')
         return
       }
       this.saving = true
       this.error = ''
       const fields = {
         name: this.form.name,
-        group_id: this.form.group_id || null,
-        date_of_birth: this.form.date_of_birth || null,
-        hometown: this.form.hometown || null,
-        color_id: this.form.color_id || null,
-        short_intro: this.form.short_intro || null,
-        long_description: this.form.long_description || null
+        category_id: this.form.category_id,
+        price: this.form.price,
+        quantity: this.form.quantity,
+        description: this.form.description
       }
       try {
         if (this.isEditing) {
-          await IdolsService.update(this.id, fields)
-          if (this.imageFile) await IdolsService.uploadImage(this.id, this.imageFile)
+          await ProductsService.update(this.id, fields)
+          if (this.imageFile) await ProductsService.uploadImage(this.id, this.imageFile)
         } else {
-          await IdolsService.create({ ...fields, company_id: this.companyId, image: this.imageFile })
+          await ProductsService.create({ ...fields, image: this.imageFile })
         }
-        this.$router.push({ name: 'manager-idols' })
+        this.$router.push({ name: 'admin-products' })
       } catch (error) {
         this.error = error.message
       } finally {

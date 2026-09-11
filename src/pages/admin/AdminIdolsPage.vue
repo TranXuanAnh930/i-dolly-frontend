@@ -2,44 +2,56 @@
   <div class="wrapper crud-page">
     <div class="page-head">
       <h2 class="page-head__title">{{ $t('managerIdols.title') }}</h2>
-      <router-link :to="{ name: 'manager-idols-new' }" class="add-btn">{{ $t('managerIdols.addIdol') }}</router-link>
+      <router-link v-if="companyId" :to="{ name: 'admin-idols-new', query: { company_id: companyId } }" class="add-btn">{{ $t('managerIdols.addIdol') }}</router-link>
     </div>
 
-    <div class="table-card" v-if="myIdols.length">
-      <table class="table">
-        <thead>
-          <tr>
-            <th></th>
-            <th>{{ $t('common.name') }}</th>
-            <th>{{ $t('managerIdols.group') }}</th>
-            <th>{{ $t('idolDetail.hometown') }}</th>
-            <th>{{ $t('common.status') }}</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="idol in myIdols" :key="idol.id" :class="{ 'is-inactive': !idol.is_active }">
-            <td class="thumb-cell">
-              <img v-if="resolveMediaUrl(idol.profile_image_url)" :src="resolveMediaUrl(idol.profile_image_url)" :alt="idol.name" class="thumb">
-            </td>
-            <td>{{ idol.name }}</td>
-            <td>{{ groupName(idol.group_id) }}</td>
-            <td>{{ idol.hometown || '—' }}</td>
-            <td>
-              <span class="status-badge" :class="{ 'status-badge--inactive': !idol.is_active }">
-                {{ idol.is_active ? $t('common.statusActive') : $t('common.statusInactive') }}
-              </span>
-            </td>
-            <td class="actions">
-              <router-link :to="{ name: 'manager-idols-edit', params: { id: idol.id } }">{{ $t('common.edit') }}</router-link>
-              <button v-if="idol.is_active" type="button" class="danger" @click="deactivate(idol)">{{ $t('common.deactivate') }}</button>
-              <button v-else type="button" @click="reactivate(idol)">{{ $t('common.reactivate') }}</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <p class="empty-note" v-else>{{ $t('managerIdols.noResults') }}</p>
+    <label class="company-picker">
+      <span>{{ $t('common.company') }}</span>
+      <select v-model="selectedCompanyId">
+        <option value="">{{ $t('common.selectCompanyPlaceholder') }}</option>
+        <option v-for="company in companiesStore.companies" :key="company.id" :value="company.id">{{ company.name }}</option>
+      </select>
+    </label>
+
+    <p class="empty-note" v-if="!companyId">{{ $t('managerIdols.selectCompanyPrompt') }}</p>
+
+    <template v-else>
+      <div class="table-card" v-if="myIdols.length">
+        <table class="table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>{{ $t('common.name') }}</th>
+              <th>{{ $t('managerIdols.group') }}</th>
+              <th>{{ $t('idolDetail.hometown') }}</th>
+              <th>{{ $t('common.status') }}</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="idol in myIdols" :key="idol.id" :class="{ 'is-inactive': !idol.is_active }">
+              <td class="thumb-cell">
+                <img v-if="resolveMediaUrl(idol.profile_image_url)" :src="resolveMediaUrl(idol.profile_image_url)" :alt="idol.name" class="thumb">
+              </td>
+              <td>{{ idol.name }}</td>
+              <td>{{ groupName(idol.group_id) }}</td>
+              <td>{{ idol.hometown || '—' }}</td>
+              <td>
+                <span class="status-badge" :class="{ 'status-badge--inactive': !idol.is_active }">
+                  {{ idol.is_active ? $t('common.statusActive') : $t('common.statusInactive') }}
+                </span>
+              </td>
+              <td class="actions">
+                <router-link :to="{ name: 'admin-idols-edit', params: { id: idol.id } }">{{ $t('common.edit') }}</router-link>
+                <button v-if="idol.is_active" type="button" class="danger" @click="deactivate(idol)">{{ $t('common.deactivate') }}</button>
+                <button v-else type="button" @click="reactivate(idol)">{{ $t('common.reactivate') }}</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="empty-note" v-else>{{ $t('managerIdols.noResults') }}</p>
+    </template>
 
     <p class="form-error" v-if="error">{{ error }}</p>
   </div>
@@ -47,24 +59,30 @@
 
 <script>
 import { IdolsService } from '@/services/idols.service'
+import { useCompaniesStore } from '@/store/companies'
 import { resolveMediaUrl } from '@/utils/media'
 
 export default {
-  name: 'ManagerIdolsPage',
+  name: 'AdminIdolsPage',
 
   data () {
     return {
       idols: [],
       groups: [],
+      selectedCompanyId: '',
       error: ''
     }
   },
 
   computed: {
-    // A manager only ever manages their own company — see AdminIdolsPage
-    // for the admin equivalent, which picks a company via a dropdown.
+    companiesStore () {
+      return useCompaniesStore()
+    },
+    // Unlike a manager (always scoped to their own company — see
+    // ManagerIdolsPage), an admin isn't tied to any single company and
+    // picks one to manage here.
     companyId () {
-      return this.$currentUser.company_id
+      return this.selectedCompanyId
     },
     myIdols () {
       return this.idols.filter(idol => idol.company_id === this.companyId)
@@ -73,6 +91,7 @@ export default {
 
   created () {
     this.fetchPage()
+    this.companiesStore.fetchAll()
   },
 
   methods: {
@@ -153,6 +172,30 @@ export default {
   }
 }
 
+.company-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 280px;
+
+  span {
+    font-family: $font-content;
+    font-weight: 700;
+    font-size: 12px;
+    color: $color-gray-500;
+  }
+
+  select {
+    border: 1.5px solid $color-line;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-family: $font-content;
+    font-size: 14px;
+    color: $color-ink;
+    background: $color-white;
+  }
+}
+
 .empty-note {
   font-family: $font-content;
   font-size: 14px;
@@ -176,7 +219,6 @@ export default {
   th, td {
     padding: 12px 16px;
     text-align: left;
-    white-space: nowrap;
   }
 
   th {
@@ -186,6 +228,7 @@ export default {
     text-transform: uppercase;
     letter-spacing: .03em;
     border-bottom: 1px solid $color-line;
+    white-space: nowrap;
   }
 
   tbody tr {
