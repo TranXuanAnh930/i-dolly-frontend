@@ -527,7 +527,8 @@ export default {
     dateOfBirth: 'Date of birth',
     color: 'Color',
     shortIntro: 'Short intro',
-    longDescription: 'Long description'
+    longDescription: 'Long description',
+    updateSuccess: 'Idol updated successfully.'
   },
 
   managerGroups: {
@@ -542,7 +543,8 @@ export default {
     backToGroups: 'Back to groups',
     selectCompanyPrompt: 'Select a company above to add a group.',
     addTitle: 'Add group',
-    editTitle: 'Edit group'
+    editTitle: 'Edit group',
+    updateSuccess: 'Group updated successfully.'
   },
 
   managerEvents: {
@@ -568,7 +570,8 @@ export default {
     eventDateTime: 'Event date & time',
     doorsOpen: 'Doors open',
     errorRequired: 'Title, venue and event date are required.',
-    dateLockedHint: 'This event is already on sale — cancel it first (set status to Cancelled and save), then edit the date/doors-open time/capacity in a separate edit.'
+    dateLockedHint: 'This event is already on sale — cancel it first (set status to Cancelled and save), then edit the date/doors-open time/capacity in a separate edit.',
+    updateSuccess: 'Event updated successfully.'
   },
 
   managerProducts: {
@@ -587,7 +590,8 @@ export default {
     editTitle: 'Edit product',
     selectCategoryPlaceholder: 'Select a category…',
     errorRequired: 'Name, category and description are required.',
-    priceLocked: 'Price can only be set when a product is created — ask an admin to change it.'
+    priceLocked: 'Price can only be set when a product is created — ask an admin to change it.',
+    updateSuccess: 'Product updated successfully.'
   },
 
   managerProductSales: {
@@ -625,7 +629,8 @@ export default {
   adminCompanyForm: {
     backToCompanies: 'Back to companies',
     addTitle: 'Add company',
-    editTitle: 'Edit company'
+    editTitle: 'Edit company',
+    updateSuccess: 'Company updated successfully.'
   },
 
   adminManagerAccountForm: {
