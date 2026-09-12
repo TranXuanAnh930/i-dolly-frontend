@@ -147,6 +147,7 @@ import { useNotificationStore } from '@/store/notifications'
 import { useOrdersStore } from '@/store/orders'
 import { useTicketsStore } from '@/store/tickets'
 import { useToastStore } from '@/store/toast'
+import { useLotteryEntriesStore } from '@/store/lotteryEntries'
 
 export default {
   name: 'Header',
@@ -197,11 +198,13 @@ export default {
         cart.fetchCart()
         useOrdersStore().fetchAll()
         useTicketsStore().fetchAll()
+        useLotteryEntriesStore().fetchAll()
       } else {
         cart.clearOnLogout()
         useNotificationStore().clearOnLogout()
         useOrdersStore().clearOnLogout()
         useTicketsStore().clearOnLogout()
+        useLotteryEntriesStore().clearOnLogout()
       }
     }
   },
@@ -216,6 +219,7 @@ export default {
       useCartStore().fetchCart()
       useOrdersStore().fetchAll()
       useTicketsStore().fetchAll()
+      useLotteryEntriesStore().fetchAll()
     }
   },
   methods: {

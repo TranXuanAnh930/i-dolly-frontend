@@ -27,8 +27,8 @@
         </div>
       </div>
 
-      <div v-else-if="lines.length" class="layout">
-        <form class="form-panel" @submit.prevent="placeOrder">
+      <div v-else-if="lines.length && step === 1" class="layout">
+        <form class="form-panel" @submit.prevent="reviewOrder">
           <h2 class="panel-title">{{ $t('checkout.shippingAddress') }}</h2>
 
           <div v-if="addressLoading" class="address-box address-box--muted">
@@ -76,9 +76,50 @@
           <p class="form-error" v-if="error" :key="error">{{ error }}</p>
 
           <button type="submit" class="place-order-btn" :disabled="!canPlaceOrder">
-            {{ placing ? $t('checkout.placingOrder') : `${$t('checkout.placeOrder')} →` }}
+            {{ $t('checkout.reviewOrder') }} →
           </button>
         </form>
+
+        <div class="summary">
+          <h2 class="summary__title">{{ $t('checkout.orderSummary') }}</h2>
+          <div class="summary__lines">
+            <div v-for="line in lines" :key="line.productId" class="summary__line">
+              <span>{{ line.product.name }} &times;{{ line.qty }}</span>
+              <span>&yen;{{ formatNumber(cart.lineTotal(line)) }}</span>
+            </div>
+          </div>
+          <div class="summary__row summary__row--total">
+            <span>{{ $t('checkout.total') }}</span>
+            <span>&yen;{{ formatNumber(subtotal) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div v-else-if="lines.length && step === 2" class="layout">
+        <div class="form-panel">
+          <h2 class="panel-title">{{ $t('checkout.confirmTitle') }}</h2>
+          <p class="panel-hint">{{ $t('checkout.confirmHint') }}</p>
+
+          <div class="info-table">
+            <div class="info-row">
+              <span class="info-row__label">{{ $t('checkout.shippingAddress') }}</span>
+              <span class="info-row__value">{{ shippingAddress.address_line1 }}<template v-if="shippingAddress.address_line2">, {{ shippingAddress.address_line2 }}</template>, {{ shippingAddress.city }}, {{ shippingAddress.state }} {{ shippingAddress.postal_code }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-row__label">{{ $t('checkout.cardNumber') }}</span>
+              <span class="info-row__value">&bull;&bull;&bull;&bull; {{ card.number.slice(-4) }}</span>
+            </div>
+          </div>
+
+          <p class="form-error" v-if="error" :key="error">{{ error }}</p>
+
+          <div class="form-actions">
+            <button type="button" class="back-btn" :disabled="placing" @click="step = 1">&larr; {{ $t('checkout.back') }}</button>
+            <button type="button" class="place-order-btn" :disabled="placing" @click="placeOrder">
+              {{ placing ? $t('checkout.placingOrder') : `${$t('checkout.placeOrder')} →` }}
+            </button>
+          </div>
+        </div>
 
         <div class="summary">
           <h2 class="summary__title">{{ $t('checkout.orderSummary') }}</h2>
@@ -118,6 +159,7 @@ export default {
 
   data () {
     return {
+      step: 1,
       shippingAddress: null,
       addressLoading: true,
       card: {
@@ -172,7 +214,10 @@ export default {
         this.addressLoading = false
       }
     },
-    async placeOrder () {
+    // Validates the address/payment fields and moves to the confirm step —
+    // the actual charge only fires from there (placeOrder), so a fan always
+    // sees a review screen before anything is submitted.
+    reviewOrder () {
       if (!this.canPlaceOrder) return
 
       // Card fields aren't sent anywhere — the mock gateway only reads
@@ -183,6 +228,10 @@ export default {
         return
       }
 
+      this.error = ''
+      this.step = 2
+    },
+    async placeOrder () {
       this.error = ''
       this.placing = true
 
@@ -332,6 +381,72 @@ export default {
   &:hover {
     text-decoration: underline;
   }
+}
+
+.info-table {
+  border: 1.5px solid $color-line;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid $color-line;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.info-row__label {
+  flex: none;
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 13px;
+  color: $color-gray-500;
+}
+
+.info-row__value {
+  text-align: right;
+  font-family: $font-content;
+  font-size: 14px;
+  color: $color-ink;
+}
+
+.form-actions {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.back-btn {
+  border: none;
+  background: none;
+  padding: 8px 4px;
+  cursor: pointer;
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 13px;
+  color: $color-gray-500;
+
+  &:hover {
+    color: $color-brand;
+  }
+
+  &:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+  }
+}
+
+.form-actions .place-order-btn {
+  margin-top: 0;
+  margin-left: auto;
+  padding: 14px 26px;
 }
 
 .field-grid {

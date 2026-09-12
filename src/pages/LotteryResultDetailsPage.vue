@@ -1,41 +1,53 @@
 <template>
   <div v-if="entry" class="lottery-details-page">
-    <section class="hero">
+    <section class="hero" :class="{ 'hero--won': entry.status === 'won' }">
       <div class="wrapper hero__inner">
         <router-link to="/history" class="back-link">&larr; {{ $t('lotteryDetails.backToHistory') }}</router-link>
-        <p class="hero__eyebrow">{{ $t('lotteryDetails.title') }}</p>
-        <h1 class="hero__title">{{ entry.detail.orderNumber }}</h1>
-        <p class="hero__meta">{{ formatTimestamp(entry.timestamp) }}</p>
+        <template v-if="entry.status === 'won'">
+          <p class="hero__eyebrow hero__eyebrow--won">{{ $t('lotteryDetails.wonEyebrow') }}</p>
+          <h1 class="hero__title hero__title--won">{{ $t('lotteryDetails.wonTitle') }} &#127881;</h1>
+        </template>
+        <template v-else>
+          <p class="hero__eyebrow">{{ $t('lotteryDetails.title') }}</p>
+          <h1 class="hero__title">{{ tierAndConcertLabel }}</h1>
+        </template>
+        <p class="hero__meta">{{ formatTimestamp(entry.created_at) }}</p>
       </div>
     </section>
 
     <div class="wrapper content">
-      <span class="status-badge" :class="`status-badge--${entry.type}`">{{ statusLabel }}</span>
+      <span class="status-badge" :class="`status-badge--${entry.status}`">{{ statusLabel }}</span>
 
-      <div class="info-table">
+      <p class="won-note" v-if="entry.status === 'won'">{{ $t('lotteryDetails.wonNote', { title: concertTitle }) }}</p>
+
+      <div class="info-table" v-if="context">
         <div class="info-row">
           <span class="info-row__label">{{ $t('lotteryDetails.event') }}</span>
           <span class="info-row__value">
-            <router-link v-if="entry.detail.concertId" :to="`/events/${entry.detail.concertId}`" class="info-row__link">{{ entry.detail.concertTitle }}</router-link>
-            <template v-else>{{ entry.detail.concertTitle }}</template>
+            <router-link v-if="context.concert" :to="`/events/${context.concert.id}`" class="info-row__link">{{ context.concert.title }}</router-link>
+            <template v-else>&mdash;</template>
           </span>
         </div>
-        <div class="info-row" v-if="entry.detail.tier">
+        <div class="info-row">
           <span class="info-row__label">{{ $t('lotteryDetails.tier') }}</span>
-          <span class="info-row__value">{{ entry.detail.tier }}</span>
+          <span class="info-row__value">{{ tierLabel }}</span>
         </div>
-        <div class="info-row" v-if="entry.detail.qty">
-          <span class="info-row__label">{{ $t('lotteryDetails.quantity') }}</span>
-          <span class="info-row__value">{{ entry.detail.qty }}</span>
+        <div class="info-row" v-if="entry.drawn_at">
+          <span class="info-row__label">{{ $t('lotteryDetails.drawnAt') }}</span>
+          <span class="info-row__value">{{ formatTimestamp(entry.drawn_at) }}</span>
         </div>
       </div>
+      <p class="loading-note" v-else-if="loadingContext">{{ $t('common.loading') }}</p>
 
-      <router-link v-if="entry.detail.concertId" :to="`/events/${entry.detail.concertId}`" class="cta-btn">{{ $t('lotteryDetails.viewEvent') }}</router-link>
+      <div class="cta-row">
+        <router-link v-if="entry.status === 'won' && winningTicket" :to="`/history/lottery/${entry.id}/pay`" class="cta-btn cta-btn--pay">{{ $t('lotteryDetails.payNow') }}</router-link>
+        <router-link v-if="context &amp;&amp; context.concert" :to="`/events/${context.concert.id}`" class="cta-btn">{{ $t('lotteryDetails.viewEvent') }}</router-link>
+      </div>
     </div>
   </div>
 
   <div v-else class="not-found">
-    <p class="not-found__title">{{ $t('lotteryDetails.notFound') }}</p>
+    <p class="not-found__title">{{ loading ? $t('common.loading') : $t('lotteryDetails.notFound') }}</p>
     <router-link to="/history" class="not-found__link">&larr; {{ $t('lotteryDetails.backToHistory') }}</router-link>
   </div>
 </template>
@@ -43,38 +55,77 @@
 <script>
 import { parseISO } from 'date-fns'
 
-import { useNotificationStore } from '@/store/notifications'
+import { useLotteryEntriesStore } from '@/store/lotteryEntries'
+import { useTicketsStore } from '@/store/tickets'
 import { formatDate } from '@/utils/format'
-
-const LOTTERY_TYPES = ['lottery-entry', 'lottery-won', 'lottery-lost']
 
 export default {
   name: 'LotteryResultDetailsPage',
 
   props: {
-    orderNumber: { type: String, required: true }
+    id: { type: String, required: true }
+  },
+
+  data () {
+    return {
+      loading: true,
+      loadingContext: false,
+      context: null
+    }
   },
 
   computed: {
+    lotteryEntriesStore () {
+      return useLotteryEntriesStore()
+    },
     entry () {
-      const item = useNotificationStore().byOrderNumber(this.orderNumber)
-      return item && LOTTERY_TYPES.includes(item.type) ? item : null
+      return this.lotteryEntriesStore.byId(this.id)
+    },
+    winningTicket () {
+      return this.entry ? useTicketsStore().byLotteryEntryId(this.entry.id) : null
     },
     statusLabel () {
       if (!this.entry) return ''
-      if (this.entry.type === 'lottery-won') return this.$t('lotteryDetails.statusWon')
-      if (this.entry.type === 'lottery-lost') return this.$t('lotteryDetails.statusLost')
+      if (this.entry.status === 'won') return this.$t('lotteryDetails.statusWon')
+      if (this.entry.status === 'lost') return this.$t('lotteryDetails.statusLost')
+      if (this.entry.status === 'expired') return this.$t('lotteryDetails.statusExpired')
       return this.$t('lotteryDetails.statusPending')
+    },
+    tierLabel () {
+      if (!this.context) return ''
+      return this.context.ticketType.tier.charAt(0).toUpperCase() + this.context.ticketType.tier.slice(1)
+    },
+    concertTitle () {
+      return this.context && this.context.concert ? this.context.concert.title : ''
+    },
+    tierAndConcertLabel () {
+      if (!this.context) return this.$t('lotteryDetails.title')
+      return `${this.tierLabel} · ${this.concertTitle}`
     }
   },
 
   watch: {
     entry: {
       immediate: true,
-      handler (entry) {
-        if (entry) document.title = `${entry.detail.orderNumber} | I-Dolly`
+      async handler (entry) {
+        if (!entry) return
+        document.title = `${this.$t('lotteryDetails.title')} | I-Dolly`
+        this.loadingContext = true
+        try {
+          this.context = await this.lotteryEntriesStore.resolveContext(entry)
+        } finally {
+          this.loadingContext = false
+        }
       }
     }
+  },
+
+  async created () {
+    await Promise.all([
+      this.lotteryEntriesStore.fetchAll(),
+      useTicketsStore().fetchAll()
+    ])
+    this.loading = false
   },
 
   methods: {
@@ -96,6 +147,10 @@ export default {
 .hero {
   position: relative;
   padding: 24px 0 36px;
+
+  &--won {
+    background: linear-gradient(135deg, rgba($color-brand, .08), rgba(#f2b705, .12));
+  }
 }
 
 .back-link {
@@ -119,6 +174,10 @@ export default {
   letter-spacing: .08em;
   text-transform: uppercase;
   color: $color-gray-400;
+
+  &--won {
+    color: #147a52;
+  }
 }
 
 .hero__title {
@@ -128,6 +187,10 @@ export default {
   font-style: italic;
   font-size: clamp(28px, 5vw, 40px);
   color: $color-brand;
+
+  &--won {
+    color: #147a52;
+  }
 }
 
 .hero__meta {
@@ -154,20 +217,36 @@ export default {
   font-size: 12px;
   letter-spacing: .02em;
 
-  &--lottery-entry {
+  &--pending {
     background: #e9f2fb;
     color: #2a6fa8;
   }
 
-  &--lottery-won {
+  &--won {
     background: #e6f7ef;
     color: #147a52;
   }
 
-  &--lottery-lost {
+  &--lost,
+  &--expired {
     background: $color-gray-50;
     color: $color-gray-500;
   }
+}
+
+.won-note {
+  margin: -8px 0 16px;
+  font-family: $font-content;
+  font-size: 14px;
+  line-height: 1.6;
+  color: $color-font-main;
+  max-width: 46ch;
+}
+
+.loading-note {
+  font-family: $font-content;
+  font-size: 13px;
+  color: $color-gray-400;
 }
 
 .info-table {
@@ -218,25 +297,42 @@ export default {
   }
 }
 
-.cta-btn {
+.cta-row {
   margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.cta-btn {
   display: inline-block;
   border: none;
   border-radius: 999px;
   padding: 13px 28px;
-  background: $color-brand;
-  color: $color-white;
+  background: $color-white;
+  color: $color-brand;
+  border: 1.5px solid $color-brand;
   text-decoration: none;
   font-family: $font-content;
   font-weight: 900;
   font-size: 14.5px;
   cursor: pointer;
   transition: transform .12s ease, background .12s ease;
-  box-shadow: 0 10px 20px -8px rgba($color-brand, .5);
 
   &:hover {
-    background: $color-brand-deep;
+    background: $color-brand-tint;
     transform: translateY(-2px);
+  }
+
+  &--pay {
+    background: $color-brand;
+    color: $color-white;
+    border-color: transparent;
+    box-shadow: 0 10px 20px -8px rgba($color-brand, .5);
+
+    &:hover {
+      background: $color-brand-deep;
+    }
   }
 }
 

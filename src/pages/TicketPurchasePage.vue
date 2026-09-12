@@ -14,11 +14,16 @@
           <li class="step-line" :class="{ 'is-done': step > 1 }"></li>
           <li class="step" :class="stepClass(2)">
             <span class="step__dot">{{ step > 2 ? '&check;' : '2' }}</span>
-            <span class="step__label">{{ step2Label }}</span>
+            <span class="step__label">{{ $t('ticketPurchase.stepPayment') }}</span>
           </li>
           <li class="step-line" :class="{ 'is-done': step > 2 }"></li>
           <li class="step" :class="stepClass(3)">
-            <span class="step__dot">3</span>
+            <span class="step__dot">{{ step > 3 ? '&check;' : '3' }}</span>
+            <span class="step__label">{{ $t('ticketPurchase.stepConfirm') }}</span>
+          </li>
+          <li class="step-line" :class="{ 'is-done': step > 3 }"></li>
+          <li class="step" :class="stepClass(4)">
+            <span class="step__dot">4</span>
             <span class="step__label">{{ $t('ticketPurchase.stepDone') }}</span>
           </li>
         </ol>
@@ -49,18 +54,6 @@
             </div>
           </div>
 
-          <!-- Direct-sale tickets are capped at one per concert per fan
-               server-side (trg_tickets_one_per_concert) — only lottery
-               entries (still a client-side mock) offer a quantity. -->
-          <div class="field-block" v-if="isLotteryTier">
-            <span class="field-block__label">{{ $t('ticketPurchase.quantity') }}</span>
-            <div class="qty-control">
-              <button type="button" class="qty-btn" @click="qty = Math.max(1, qty - 1)" :aria-label="$t('common.decreaseQuantity')">&minus;</button>
-              <span class="qty-value">{{ qty }}</span>
-              <button type="button" class="qty-btn" @click="qty = Math.min(6, qty + 1)" :aria-label="$t('common.increaseQuantity')">+</button>
-            </div>
-          </div>
-
           <h3 class="subhead">{{ $t('ticketPurchase.seatMap') }}</h3>
           <VenueSeatMap class="seat-map"/>
         </div>
@@ -70,7 +63,7 @@
           <p class="summary__event">{{ concert.title }}</p>
           <p class="summary__meta">{{ dateLabel }}<template v-if="doorsLabel"> &middot; {{ $t('events.doorsAt', { time: doorsLabel }) }}</template></p>
           <div class="summary__row">
-            <span>{{ tierLabel(selectedTier) }} &times;{{ qty }}</span>
+            <span>{{ tierLabel(selectedTier) }}</span>
             <span>&yen;{{ formatNumber(total) }}</span>
           </div>
           <div class="summary__row summary__row--total">
@@ -83,7 +76,7 @@
 
       <!-- Step 2: payment -->
       <div v-else-if="step === 2" class="layout">
-        <form class="panel" @submit.prevent="placeOrder">
+        <form class="panel" @submit.prevent="reviewOrder">
           <h2 class="panel-title">{{ $t('ticketPurchase.contactPayment') }}</h2>
 
           <div class="field-grid">
@@ -128,7 +121,7 @@
 
           <div class="form-actions">
             <button type="button" class="back-btn" @click="step = 1">&larr; {{ $t('ticketPurchase.back') }}</button>
-            <button type="submit" class="place-order-btn" :disabled="placing">{{ placing ? $t('checkout.placingOrder') : `${$t('ticketPurchase.placeOrder')} →` }}</button>
+            <button type="submit" class="place-order-btn">{{ $t('ticketPurchase.reviewOrder') }} →</button>
           </div>
         </form>
 
@@ -137,7 +130,7 @@
           <p class="summary__event">{{ concert.title }}</p>
           <p class="summary__meta">{{ dateLabel }}<template v-if="doorsLabel"> &middot; {{ $t('events.doorsAt', { time: doorsLabel }) }}</template></p>
           <div class="summary__row">
-            <span>{{ tierLabel(selectedTier) }} &times;{{ qty }}</span>
+            <span>{{ tierLabel(selectedTier) }}</span>
             <span>&yen;{{ formatNumber(total) }}</span>
           </div>
           <div class="summary__row summary__row--total">
@@ -147,17 +140,57 @@
         </div>
       </div>
 
-      <!-- Step 3: finish -->
+      <!-- Step 3: confirm -->
+      <div v-else-if="step === 3" class="layout">
+        <div class="panel">
+          <h2 class="panel-title">{{ $t('ticketPurchase.confirmTitle') }}</h2>
+          <p class="panel-hint">{{ $t('ticketPurchase.confirmHint') }}</p>
+
+          <div class="info-table">
+            <div class="info-row">
+              <span class="info-row__label">{{ $t('ticketPurchase.fullName') }}</span>
+              <span class="info-row__value">{{ form.name }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-row__label">{{ $t('common.email') }}</span>
+              <span class="info-row__value">{{ form.email }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-row__label">{{ $t('ticketPurchase.cardNumber') }}</span>
+              <span class="info-row__value">&bull;&bull;&bull;&bull; {{ form.cardNumber.slice(-4) }}</span>
+            </div>
+          </div>
+
+          <p class="form-error" v-if="error" :key="error">{{ error }}</p>
+
+          <div class="form-actions">
+            <button type="button" class="back-btn" :disabled="placing" @click="step = 2">&larr; {{ $t('ticketPurchase.back') }}</button>
+            <button type="button" class="place-order-btn" :disabled="placing" @click="placeOrder">{{ placing ? $t('checkout.placingOrder') : `${$t('ticketPurchase.placeOrder')} →` }}</button>
+          </div>
+        </div>
+
+        <div class="summary">
+          <h2 class="summary__title">{{ $t('ticketPurchase.orderSummary') }}</h2>
+          <p class="summary__event">{{ concert.title }}</p>
+          <p class="summary__meta">{{ dateLabel }}<template v-if="doorsLabel"> &middot; {{ $t('events.doorsAt', { time: doorsLabel }) }}</template></p>
+          <div class="summary__row">
+            <span>{{ tierLabel(selectedTier) }}</span>
+            <span>&yen;{{ formatNumber(total) }}</span>
+          </div>
+          <div class="summary__row summary__row--total">
+            <span>{{ $t('ticketPurchase.total') }}</span>
+            <span>&yen;{{ formatNumber(total) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: finish -->
       <div v-else class="confirmation" :class="{ 'confirmation--declined': outcome === 'declined' }">
         <div class="confirmation__badge" :class="{ 'confirmation__badge--declined': outcome === 'declined' }">
           <template v-if="outcome === 'declined'">&times;</template>
           <template v-else>&check;</template>
         </div>
-        <template v-if="outcome === 'lottery'">
-          <h2 class="confirmation__title">{{ $t('ticketPurchase.appliedTitle') }}</h2>
-          <p class="confirmation__note">{{ $t('ticketPurchase.appliedNote', { orderNumber, tier: tierLabel(selectedTier), title: concert.title }) }}</p>
-        </template>
-        <template v-else-if="outcome === 'declined'">
+        <template v-if="outcome === 'declined'">
           <h2 class="confirmation__title confirmation__title--declined">{{ $t('ticketPurchase.declinedTitle') }}</h2>
           <p class="confirmation__note">{{ $t('ticketPurchase.declinedNote') }}</p>
         </template>
@@ -183,7 +216,6 @@
 import { parseISO } from 'date-fns'
 
 import { useConcertsStore } from '@/store/concerts'
-import { useNotificationStore } from '@/store/notifications'
 import { useTicketsStore } from '@/store/tickets'
 import { useToastStore } from '@/store/toast'
 import { TicketService } from '@/services/ticket.service'
@@ -204,7 +236,6 @@ export default {
     return {
       step: 1,
       selectedTierId: null,
-      qty: 1,
       form: {
         name: '',
         email: '',
@@ -251,13 +282,8 @@ export default {
     isLotteryTier () {
       return !!this.selectedTier && this.selectedTier.sale_method === 'lottery'
     },
-    step2Label () {
-      return this.isLotteryTier ? this.$t('ticketPurchase.stepEntry') : this.$t('ticketPurchase.stepPayment')
-    },
-    // Tax applied once to the pre-tax line total (price × qty), matching
-    // how cartStore.lineTotal computes a product line's total.
     total () {
-      return this.selectedTier ? withTax(this.selectedTier.price * this.qty) : 0
+      return this.selectedTier ? withTax(this.selectedTier.price) : 0
     },
     dateLabel () {
       return this.concert ? formatDate(parseISO(this.concert.event_datetime), 'EEE, MMM d, yyyy · h:mm a') : ''
@@ -291,15 +317,6 @@ export default {
           this.selectedTierId = tiers.length ? tiers[0].id : null
         }
       }
-    },
-    // A direct-sale ticket can only ever be bought one at a time
-    // (trg_tickets_one_per_concert) — the quantity stepper only applies to
-    // the still-mocked lottery path.
-    isLotteryTier: {
-      immediate: true,
-      handler (isLottery) {
-        if (!isLottery) this.qty = 1
-      }
     }
   },
 
@@ -320,42 +337,22 @@ export default {
     remaining (tier) {
       return Math.max(0, tier.total_quantity - tier.sold_quantity)
     },
-    // Lottery tiers skip checkout entirely — applying is a single click,
-    // no payment involved, straight to the "you applied" confirmation.
+    // Lottery entry is its own multi-step ranked-preference flow now (see
+    // LotteryEntryPage.vue) — this page only ever handles direct-sale
+    // checkout from here on. The chosen tier rides along as a query param
+    // so that page can lock it in as the required 1st preference instead
+    // of asking the fan to pick a tier a second time.
     proceed () {
       if (this.isLotteryTier) {
-        this.applyForLottery()
+        this.$router.push({ name: 'event-lottery-entry', params: { id: this.concert.id }, query: { tier: this.selectedTierId } })
       } else {
         this.step = 2
       }
     },
-    applyForLottery () {
-      this.orderNumber = `LOT-${Math.floor(100000 + Math.random() * 900000)}`
-      this.outcome = 'lottery'
-      this.step = 3
-
-      useToastStore().add({ type: 'success', message: this.$t('ticketPurchase.appliedTitle') })
-
-      useNotificationStore().add({
-        type: 'lottery-entry',
-        titleKey: 'ticketPurchase.notifLotteryTitle',
-        messageKey: 'ticketPurchase.notifLotteryMessage',
-        messageParams: { orderNumber: this.orderNumber, tier: this.tierLabel(this.selectedTier), title: this.concert.title },
-        detail: {
-          orderNumber: this.orderNumber,
-          concertId: this.concert.id,
-          concertTitle: this.concert.title,
-          tier: this.tierLabel(this.selectedTier),
-          qty: this.qty,
-          total: this.total
-        },
-        to: `/history/lottery/${this.orderNumber}`
-      })
-    },
-    // Real direct-sale checkout — see ticket.service.js / POST
-    // /tickets/checkout. Card fields aren't sent anywhere (same mock as
-    // CheckoutPage.vue) — only simulateSucc reaches the backend.
-    async placeOrder () {
+    // Validates the contact/payment fields and moves to the confirm step —
+    // the actual charge only fires from there (placeOrder), so a fan always
+    // sees a review screen before anything is submitted.
+    reviewOrder () {
       if (!this.form.name.trim() || !this.form.email.trim()) {
         this.error = this.$t('ticketPurchase.errorContactEmail')
         return
@@ -364,7 +361,13 @@ export default {
         this.error = this.$t('ticketPurchase.errorPayment')
         return
       }
-
+      this.error = ''
+      this.step = 3
+    },
+    // Real direct-sale checkout — see ticket.service.js / POST
+    // /tickets/checkout. Card fields aren't sent anywhere (same mock as
+    // CheckoutPage.vue) — only simulateSucc reaches the backend.
+    async placeOrder () {
       this.error = ''
       this.placing = true
 
@@ -381,7 +384,7 @@ export default {
 
         this.orderNumber = ticket.id.slice(0, 8)
         this.outcome = ticket.status === 'paid' ? 'purchase' : 'declined'
-        this.step = 3
+        this.step = 4
 
         useToastStore().add({
           type: this.outcome === 'purchase' ? 'success' : 'error',
@@ -557,6 +560,44 @@ export default {
   margin-top: 12px;
 }
 
+.panel-hint {
+  margin-top: -8px;
+  font-family: $font-content;
+  font-size: 13px;
+  color: $color-gray-500;
+}
+
+.info-table {
+  border: 1.5px solid $color-line;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid $color-line;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.info-row__label {
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 13px;
+  color: $color-gray-500;
+}
+
+.info-row__value {
+  font-family: $font-content;
+  font-size: 14px;
+  color: $color-ink;
+}
+
 .field-block {
   margin-top: 18px;
   display: flex;
@@ -641,42 +682,6 @@ export default {
   font-size: 15px;
   color: $color-ink;
   font-variant-numeric: tabular-nums;
-}
-
-.qty-control {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.qty-btn {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 1.5px solid $color-line;
-  background: $color-white;
-  color: $color-ink;
-  font-family: $font-content;
-  font-weight: 700;
-  font-size: 16px;
-  line-height: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  &:hover {
-    border-color: $color-brand;
-    color: $color-brand;
-  }
-}
-
-.qty-value {
-  font-family: $font-content;
-  font-weight: 700;
-  font-size: 15px;
-  min-width: 16px;
-  text-align: center;
 }
 
 .subhead {
