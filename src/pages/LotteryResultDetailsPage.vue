@@ -41,6 +41,7 @@
 
       <div class="cta-row">
         <router-link v-if="entry.status === 'won' && winningTicket" :to="`/history/lottery/${entry.id}/pay`" class="cta-btn cta-btn--pay">{{ $t('lotteryDetails.payNow') }}</router-link>
+        <router-link v-if="entry.status === 'pending' && context &amp;&amp; context.concert" :to="`/events/${context.concert.id}/lottery`" class="cta-btn">{{ $t('lotteryDetails.editPreferences') }}</router-link>
         <router-link v-if="context &amp;&amp; context.concert" :to="`/events/${context.concert.id}`" class="cta-btn">{{ $t('lotteryDetails.viewEvent') }}</router-link>
       </div>
     </div>

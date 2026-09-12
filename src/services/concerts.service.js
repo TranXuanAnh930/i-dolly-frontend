@@ -50,4 +50,20 @@ export class ConcertsService extends BaseService {
       throw this.errorWrapper(error, message)
     }
   }
+
+  // PUT /concerts/lottery-draw/{id} — manager/admin only. Enqueues the
+  // backend's async lottery-draw job for every open campaign on this
+  // concert; the response is just a "queued" acknowledgement, not the
+  // actual results — winners/losers show up once the worker finishes by
+  // re-fetching the campaign(s) (status flips open → drawn) or the
+  // affected fans' own lottery entries, not from this call's response.
+  static async drawLottery (id) {
+    try {
+      const response = await this.request({ auth: true }).put(`${this.entity}/lottery-draw/${id}`)
+      return this.responseWrapper(response, response.data)
+    } catch (error) {
+      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
+      throw this.errorWrapper(error, message)
+    }
+  }
 }

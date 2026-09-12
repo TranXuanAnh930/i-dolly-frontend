@@ -4,7 +4,7 @@
       <div class="wrapper hero__inner">
         <router-link :to="`/events/${id}`" class="back-link">&larr; {{ concert.title }}</router-link>
         <p class="hero__eyebrow">{{ $t('ticketPurchase.lotteryEntry') }}</p>
-        <h1 class="hero__title" :style="{ color: color.hex }">{{ $t('lotteryEntry.title') }}</h1>
+        <h1 class="hero__title" :style="{ color: color.hex }">{{ isEditing ? $t('lotteryEntry.editModeTitle') : $t('lotteryEntry.title') }}</h1>
 
         <ol class="steps">
           <li class="step" :class="stepClass(1)">
@@ -39,7 +39,7 @@
         <div class="tier-list">
           <div v-for="entry in lotteryTiers" :key="entry.tier.id" class="tier-row">
             <span class="tier-row__name">{{ tierLabel(entry.tier) }}</span>
-            <span class="tier-row__meta">{{ $t('eventDetail.leftSuffix', { count: remaining(entry.tier) }) }}</span>
+            <span class="tier-row__meta">{{ $t('eventDetail.leftSuffix', { count: entry.tier.total_quantity }) }}</span>
             <span class="tier-row__price">&yen;{{ formatNumber(withTax(entry.tier.price)) }}</span>
           </div>
         </div>
@@ -47,56 +47,46 @@
         <button type="button" class="continue-btn" @click="step = 2">{{ $t('lotteryEntry.startEntry') }} →</button>
       </div>
 
-      <!-- Step 2: rank 2 preferences -->
+      <!-- Step 2: rank preferences (one slot per lottery tier on this concert) -->
       <div v-else-if="step === 2" class="panel">
         <h2 class="panel-title">{{ $t('lotteryEntry.preferencesTitle') }}</h2>
         <p class="panel-hint">{{ $t('lotteryEntry.preferencesHint') }}</p>
 
-        <label class="field">
-          <span class="field__label">{{ $t('lotteryEntry.firstChoice') }}</span>
-          <div v-if="firstChoiceLocked" class="locked-choice">
-            <span>{{ tierLabel(firstChoiceTier) }} — &yen;{{ formatNumber(withTax(firstChoiceTier.price)) }}</span>
-            <span class="locked-choice__note">{{ $t('lotteryEntry.firstChoiceLockedNote') }}</span>
-          </div>
-          <select v-else v-model="firstChoiceId">
-            <option value="" disabled>{{ $t('lotteryEntry.selectTierPlaceholder') }}</option>
-            <option v-for="entry in lotteryTiers" :key="entry.tier.id" :value="entry.tier.id">
-              {{ tierLabel(entry.tier) }} — &yen;{{ formatNumber(withTax(entry.tier.price)) }}
-            </option>
-          </select>
-        </label>
-
-        <label class="field" v-if="lotteryTiers.length > 1">
-          <span class="field__label">{{ $t('lotteryEntry.secondChoice') }}</span>
-          <select v-model="secondChoiceId">
-            <option value="" disabled>{{ $t('lotteryEntry.selectTierPlaceholder') }}</option>
-            <option v-for="entry in secondChoiceOptions" :key="entry.tier.id" :value="entry.tier.id">
-              {{ tierLabel(entry.tier) }} — &yen;{{ formatNumber(withTax(entry.tier.price)) }}
-            </option>
-          </select>
-        </label>
+        <template v-for="(choiceId, i) in choices" :key="i">
+          <label class="field" v-if="i === 0 || choices[i - 1]">
+            <span class="field__label">{{ $t('lotteryEntry.rankLabel', { rank: i + 1 }) }}</span>
+            <div v-if="isLocked(i)" class="locked-choice">
+              <span>{{ tierLabel(tierById(choices[i])) }} — &yen;{{ formatNumber(withTax(tierById(choices[i]).price)) }}</span>
+              <span class="locked-choice__note">{{ lockNote(i) }}</span>
+            </div>
+            <div v-else class="rankable-field">
+              <select v-model="choices[i]" @change="onSelectChange(i)">
+                <option value="" disabled>{{ $t('lotteryEntry.selectTierPlaceholder') }}</option>
+                <option v-for="entry in optionsForRank(i)" :key="entry.tier.id" :value="entry.tier.id">
+                  {{ tierLabel(entry.tier) }} — &yen;{{ formatNumber(withTax(entry.tier.price)) }}
+                </option>
+              </select>
+              <button v-if="choices[i]" type="button" class="clear-rank-btn" @click="clearRank(i)" :aria-label="$t('lotteryEntry.clearRank')">&times;</button>
+            </div>
+          </label>
+        </template>
 
         <div class="form-actions">
-          <button type="button" class="back-btn" @click="step = 1">&larr; {{ $t('ticketPurchase.back') }}</button>
-          <button type="button" class="continue-btn" :disabled="!canProceedPreferences" @click="step = 3">{{ $t('lotteryEntry.reviewEntry') }} →</button>
+          <button v-if="!isEditing" type="button" class="back-btn" @click="step = 1">&larr; {{ $t('ticketPurchase.back') }}</button>
+          <button type="button" class="continue-btn" :disabled="!canProceedPreferences" @click="step = 3">{{ isEditing ? $t('lotteryEntry.reviewUpdate') : $t('lotteryEntry.reviewEntry') }} →</button>
         </div>
       </div>
 
       <!-- Step 3: confirm -->
       <div v-else-if="step === 3" class="panel">
-        <h2 class="panel-title">{{ $t('lotteryEntry.confirmTitle') }}</h2>
-        <p class="panel-hint">{{ $t('lotteryEntry.confirmHint') }}</p>
+        <h2 class="panel-title">{{ isEditing ? $t('lotteryEntry.updateReviewTitle') : $t('lotteryEntry.confirmTitle') }}</h2>
+        <p class="panel-hint">{{ isEditing ? $t('lotteryEntry.updateReviewHint') : $t('lotteryEntry.confirmHint') }}</p>
 
         <div class="choice-list">
-          <div class="choice-row">
-            <span class="choice-row__rank">{{ $t('lotteryEntry.rankLabel', { rank: 1 }) }}</span>
-            <span class="choice-row__name">{{ tierLabel(firstChoiceTier) }}</span>
-            <span class="choice-row__price">&yen;{{ formatNumber(withTax(firstChoiceTier.price)) }}</span>
-          </div>
-          <div class="choice-row" v-if="secondChoiceTier">
-            <span class="choice-row__rank">{{ $t('lotteryEntry.rankLabel', { rank: 2 }) }}</span>
-            <span class="choice-row__name">{{ tierLabel(secondChoiceTier) }}</span>
-            <span class="choice-row__price">&yen;{{ formatNumber(withTax(secondChoiceTier.price)) }}</span>
+          <div class="choice-row" v-for="(tierId, i) in filledChoices" :key="tierId">
+            <span class="choice-row__rank">{{ $t('lotteryEntry.rankLabel', { rank: i + 1 }) }}</span>
+            <span class="choice-row__name">{{ tierLabel(tierById(tierId)) }}</span>
+            <span class="choice-row__price">&yen;{{ formatNumber(withTax(tierById(tierId).price)) }}</span>
           </div>
         </div>
 
@@ -106,15 +96,15 @@
 
         <div class="form-actions">
           <button type="button" class="back-btn" :disabled="submitting" @click="step = 2">&larr; {{ $t('ticketPurchase.back') }}</button>
-          <button type="button" class="continue-btn" :disabled="submitting" @click="confirmEntry">{{ submitting ? $t('common.saving') : $t('lotteryEntry.confirmEntry') }}</button>
+          <button type="button" class="continue-btn" :disabled="submitting" @click="confirmEntry">{{ submitting ? $t('common.saving') : (isEditing ? $t('lotteryEntry.updateEntry') : $t('lotteryEntry.confirmEntry')) }}</button>
         </div>
       </div>
 
       <!-- Step 4: done -->
       <div v-else class="confirmation">
         <div class="confirmation__badge">&check;</div>
-        <h2 class="confirmation__title">{{ $t('ticketPurchase.appliedTitle') }}</h2>
-        <p class="confirmation__note">{{ $t('lotteryEntry.successNote', { title: concert.title }) }}</p>
+        <h2 class="confirmation__title">{{ isEditing ? $t('lotteryEntry.updatedTitle') : $t('ticketPurchase.appliedTitle') }}</h2>
+        <p class="confirmation__note">{{ isEditing ? $t('lotteryEntry.updateSuccessNote', { title: concert.title }) : $t('lotteryEntry.successNote', { title: concert.title }) }}</p>
         <div class="confirmation__actions">
           <router-link to="/history" class="confirmation__btn">{{ $t('ticketPurchase.viewHistory') }}</router-link>
           <router-link to="/events" class="confirmation__link">{{ $t('ticketPurchase.backToEvents') }}</router-link>
@@ -152,8 +142,16 @@ export default {
       loading: true,
       lotteryTiers: [], // [{ tier, campaign }] — only tiers with a currently-open campaign
       step: 1,
-      firstChoiceId: '',
-      secondChoiceId: '',
+      choices: [], // rank-ordered tier ids, one slot per lotteryTiers entry; choices[0] is usually locked
+      // Tier ids the fan already has a LotteryEntry for — apply() requires
+      // a matching preference to exist (trg_lottery_entries_require_preference),
+      // and there's no endpoint to withdraw an entry, so removing one of
+      // these from the ranking entirely would orphan it and crash the next
+      // draw for this concert (draw_lottery assumes every pending entry
+      // has a matching preference). They can be reordered, just never
+      // cleared out of the list.
+      lockedTierIds: [],
+      isEditing: false,
       submitting: false,
       error: ''
     }
@@ -178,34 +176,25 @@ export default {
       if (!this.concert) return this.$t('ticketPurchase.ineligibleNotFound')
       return this.$t('lotteryEntry.ineligibleNoCampaign')
     },
-    secondChoiceOptions () {
-      return this.lotteryTiers.filter(entry => entry.tier.id !== this.firstChoiceId)
-    },
     // TicketPurchasePage always sends the tier the fan picked there as a
     // ?tier= query param — once fetchPage() confirms it's actually
-    // enterable, the 1st choice is locked to it instead of asking the fan
-    // to pick a tier a second time.
+    // enterable, rank 1 is locked to it instead of asking the fan to pick
+    // a tier a second time.
     firstChoiceLocked () {
-      return !!this.firstChoiceId && this.$route.query.tier === this.firstChoiceId
+      return !!this.choices[0] && this.$route.query.tier === this.choices[0]
     },
+    // Every rank past the 1st is optional — a fan can submit with just
+    // their locked/chosen 1st pick and skip ranking the rest.
     canProceedPreferences () {
-      return !!this.firstChoiceId && (this.lotteryTiers.length < 2 || !!this.secondChoiceId)
+      return !!this.choices[0]
     },
-    firstChoiceTier () {
-      const entry = this.lotteryTiers.find(entry => entry.tier.id === this.firstChoiceId)
-      return entry ? entry.tier : null
+    filledChoices () {
+      return this.choices.filter(Boolean)
     },
-    secondChoiceTier () {
-      const entry = this.lotteryTiers.find(entry => entry.tier.id === this.secondChoiceId)
-      return entry ? entry.tier : null
-    },
-    // Draw date shown on the confirm step — the earlier of the two chosen
-    // tiers' campaigns, since that's the first result the fan will see.
+    // Draw date shown on the confirm step — the earliest of every ranked
+    // tier's campaign, since that's the first result the fan will see.
     drawDateLabel () {
-      const campaigns = [this.firstChoiceId, this.secondChoiceId]
-        .map(id => this.lotteryTiers.find(entry => entry.tier.id === id))
-        .filter(Boolean)
-        .map(entry => entry.campaign)
+      const campaigns = this.filledChoices.map(id => this.campaignById(id)).filter(Boolean)
       if (!campaigns.length) return ''
       const earliest = campaigns.reduce((a, b) => (new Date(a.draw_at) < new Date(b.draw_at) ? a : b))
       return formatDate(parseISO(earliest.draw_at), 'MMM d, yyyy')
@@ -236,8 +225,28 @@ export default {
     tierLabel (tier) {
       return tier ? tier.tier.charAt(0).toUpperCase() + tier.tier.slice(1) : ''
     },
-    remaining (tier) {
-      return Math.max(0, tier.total_quantity - tier.sold_quantity)
+    tierById (id) {
+      const entry = this.lotteryTiers.find(entry => entry.tier.id === id)
+      return entry ? entry.tier : null
+    },
+    campaignById (id) {
+      const entry = this.lotteryTiers.find(entry => entry.tier.id === id)
+      return entry ? entry.campaign : null
+    },
+    // Tiers already picked at another rank can't be picked again — a rank's
+    // own current choice stays in its list so re-selecting it (or leaving
+    // it as-is) still works.
+    optionsForRank (rankIndex) {
+      const chosenElsewhere = this.choices.filter((id, i) => i !== rankIndex && id)
+      return this.lotteryTiers.filter(entry => !chosenElsewhere.includes(entry.tier.id))
+    },
+    // Changing a rank invalidates every rank after it (its own options
+    // list just changed), so those are reset rather than left stale —
+    // except a locked one, which never gets cleared by anything.
+    clearFrom (startIndex) {
+      for (let i = startIndex; i < this.choices.length; i++) {
+        if (!this.isLocked(i)) this.choices[i] = ''
+      }
     },
     // A campaign is enterable right now if it's still open and today falls
     // inside its entry window — mirrors what the backend's apply()/set()
@@ -259,10 +268,38 @@ export default {
           return campaign ? { tier, campaign } : null
         }))
         this.lotteryTiers = resolved.filter(Boolean)
+        this.choices = new Array(this.lotteryTiers.length).fill('')
 
-        const preselected = this.$route.query.tier
-        if (preselected && this.lotteryTiers.some(entry => entry.tier.id === preselected)) {
-          this.firstChoiceId = preselected
+        // A fan who already has entries/preferences for this concert is
+        // editing, not applying fresh — pre-fill their current ranking and
+        // skip straight to the preferences step instead of the intro.
+        const lotteryEntriesStore = useLotteryEntriesStore()
+        await lotteryEntriesStore.fetchAll()
+        const openCampaignIds = new Set(this.lotteryTiers.map(entry => entry.campaign.id))
+        this.lockedTierIds = lotteryEntriesStore.items
+          .filter(entry => openCampaignIds.has(entry.campaign_id))
+          .map(entry => {
+            const match = this.lotteryTiers.find(t => t.campaign.id === entry.campaign_id)
+            return match ? match.tier.id : null
+          })
+          .filter(Boolean)
+
+        const preferencesResponse = await LotteryService.getMyPreferences(this.id)
+        const existingRanked = preferencesResponse.data
+          .slice()
+          .sort((a, b) => a.rank - b.rank)
+          .map(preference => preference.ticket_type_id)
+          .filter(tierId => this.lotteryTiers.some(entry => entry.tier.id === tierId))
+
+        if (existingRanked.length || this.lockedTierIds.length) {
+          this.isEditing = true
+          this.step = 2
+          existingRanked.forEach((tierId, i) => { this.choices[i] = tierId })
+        } else {
+          const preselected = this.$route.query.tier
+          if (preselected && this.lotteryTiers.some(entry => entry.tier.id === preselected)) {
+            this.choices[0] = preselected
+          }
         }
       } catch (error) {
         this.error = error.message
@@ -270,24 +307,57 @@ export default {
         this.loading = false
       }
     },
+    // A rank is locked either because it's the tier TicketPurchasePage sent
+    // the fan here with (a UX nicety — nothing stops them going back and
+    // picking differently there), or because it already has a real entry
+    // (a data-safety constraint — see lockedTierIds above). Both render the
+    // same read-only row; only the note underneath differs.
+    isLocked (i) {
+      if (i === 0 && this.firstChoiceLocked) return true
+      return this.lockedTierIds.includes(this.choices[i])
+    },
+    lockNote (i) {
+      return (i === 0 && this.firstChoiceLocked) ? this.$t('lotteryEntry.firstChoiceLockedNote') : this.$t('lotteryEntry.lockedExistingNote')
+    },
+    onSelectChange (i) {
+      this.clearFrom(i + 1)
+      this.compactChoices()
+    },
+    clearRank (i) {
+      if (this.isLocked(i)) return
+      this.choices[i] = ''
+      this.clearFrom(i + 1)
+      this.compactChoices()
+    },
+    // Keeps every filled choice contiguous from index 0. Without this, a
+    // cleared middle rank leaves a gap: the template's "only show the next
+    // rank once the previous one is filled" guard would hide any rank
+    // after the gap, but filledChoices' flat filter would still submit it —
+    // the two would disagree on what the fan is actually seeing.
+    compactChoices () {
+      const filled = this.choices.filter(Boolean)
+      this.choices = [...filled, ...new Array(this.lotteryTiers.length - filled.length).fill('')]
+    },
     async confirmEntry () {
       this.submitting = true
       this.error = ''
       try {
-        const idsInOrder = this.secondChoiceId ? [this.firstChoiceId, this.secondChoiceId] : [this.firstChoiceId]
+        const idsInOrder = this.filledChoices
         await LotteryService.setPreferences(this.concert.id, idsInOrder)
 
-        const firstCampaign = this.lotteryTiers.find(entry => entry.tier.id === this.firstChoiceId).campaign
-        const firstEntry = await LotteryService.applyToEntry(firstCampaign.id)
-        useLotteryEntriesStore().add(firstEntry.data)
-
-        if (this.secondChoiceId) {
-          const secondCampaign = this.lotteryTiers.find(entry => entry.tier.id === this.secondChoiceId).campaign
-          const secondEntry = await LotteryService.applyToEntry(secondCampaign.id)
-          useLotteryEntriesStore().add(secondEntry.data)
+        // Only apply for tiers that don't already have an entry — calling
+        // apply() again for one that does would just hit "cap_reached"
+        // (max_entries_per_user), since setPreferences above only touches
+        // the ranking, never the entries themselves.
+        const newTierIds = idsInOrder.filter(tierId => !this.lockedTierIds.includes(tierId))
+        for (const tierId of newTierIds) {
+          const campaign = this.campaignById(tierId)
+          const entryResponse = await LotteryService.applyToEntry(campaign.id)
+          useLotteryEntriesStore().add(entryResponse.data)
         }
 
-        useToastStore().add({ type: 'success', message: this.$t('ticketPurchase.appliedTitle') })
+        const successKey = this.isEditing ? 'lotteryEntry.updatedTitle' : 'ticketPurchase.appliedTitle'
+        useToastStore().add({ type: 'success', message: this.$t(successKey) })
         this.step = 4
       } catch (error) {
         this.error = error.message
@@ -512,6 +582,38 @@ export default {
   &:focus {
     border-color: $color-brand;
     box-shadow: 0 0 0 4px $color-brand-tint;
+  }
+}
+
+.rankable-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  select {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.clear-rank-btn {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1.5px solid $color-line;
+  background: $color-white;
+  color: $color-gray-400;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    border-color: $color-error;
+    color: $color-error;
   }
 }
 

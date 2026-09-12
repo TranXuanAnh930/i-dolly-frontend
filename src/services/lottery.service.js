@@ -39,6 +39,22 @@ export class LotteryService extends BaseService {
     }
   }
 
+  // GET /lottery_preferences/mine/{concert_id} — auth required. The fan's
+  // current ranked wishlist for one concert, in rank order. 404s on none —
+  // treated as an empty list like every other list endpoint here.
+  static async getMyPreferences (concertId) {
+    try {
+      const response = await this.request({ auth: true }).get(`lottery_preferences/mine/${concertId}`)
+      return this.responseWrapper(response, response.data)
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
+        return this.responseWrapper(error.response, [])
+      }
+      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
+      throw this.errorWrapper(error, message)
+    }
+  }
+
   // POST /lottery_preferences/set — auth required. Replaces the fan's whole
   // ranked wishlist for this concert in one call; `ticketTypeIds` order IS
   // the rank (1st element = rank 1). A LotteryEntry.apply() call for any of
