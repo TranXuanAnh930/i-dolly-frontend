@@ -55,11 +55,7 @@
         <template v-for="(choiceId, i) in choices" :key="i">
           <label class="field" v-if="i === 0 || choices[i - 1]">
             <span class="field__label">{{ $t('lotteryEntry.rankLabel', { rank: i + 1 }) }}</span>
-            <div v-if="isLocked(i)" class="locked-choice">
-              <span>{{ tierLabel(tierById(choices[i])) }} — &yen;{{ formatNumber(withTax(tierById(choices[i]).price)) }}</span>
-              <span class="locked-choice__note">{{ lockNote(i) }}</span>
-            </div>
-            <div v-else class="rankable-field">
+            <div class="rankable-field">
               <select v-model="choices[i]" @change="onSelectChange(i)">
                 <option value="" disabled>{{ $t('lotteryEntry.selectTierPlaceholder') }}</option>
                 <option v-for="entry in optionsForRank(i)" :key="entry.tier.id" :value="entry.tier.id">
@@ -68,12 +64,16 @@
               </select>
               <button v-if="choices[i]" type="button" class="clear-rank-btn" @click="clearRank(i)" :aria-label="$t('lotteryEntry.clearRank')">&times;</button>
             </div>
+            <!-- Just a default, not a lock — a fan can freely swap this
+                 rank out. If they do, their existing entry for this tier
+                 (if any) stays as-is; there's no way to withdraw one. -->
+            <span v-if="lockedTierIds.includes(choices[i])" class="field__note">{{ $t('lotteryEntry.lockedExistingNote') }}</span>
           </label>
         </template>
 
         <div class="form-actions">
           <button v-if="!isEditing" type="button" class="back-btn" @click="step = 1">&larr; {{ $t('ticketPurchase.back') }}</button>
-          <button type="button" class="continue-btn" :disabled="!canProceedPreferences" @click="step = 3">{{ isEditing ? $t('lotteryEntry.reviewUpdate') : $t('lotteryEntry.reviewEntry') }} →</button>
+          <button type="button" class="continue-btn" :disabled="!canProceedPreferences" @click="step = 3">{{ $t('lotteryEntry.reviewEntry') }} →</button>
         </div>
       </div>
 
@@ -90,7 +90,7 @@
           </div>
         </div>
 
-        <p class="confirm-note">{{ $t('lotteryEntry.confirmNote', { date: drawDateLabel }) }}</p>
+        <p class="confirm-note">{{ $t('lotteryEntry.confirmNote') }}</p>
 
         <p class="form-error" v-if="error">{{ error }}</p>
 
@@ -120,14 +120,12 @@
 </template>
 
 <script>
-import { parseISO } from 'date-fns'
-
 import { useConcertsStore } from '@/store/concerts'
 import { useLotteryEntriesStore } from '@/store/lotteryEntries'
 import { useToastStore } from '@/store/toast'
 import { LotteryService } from '@/services/lottery.service'
 import { paletteColorForId, contrastTextColor } from '@/utils/palette'
-import { formatDate, formatNumber } from '@/utils/format'
+import { formatNumber } from '@/utils/format'
 import { withTax } from '@/utils/tax'
 
 export default {
@@ -142,14 +140,13 @@ export default {
       loading: true,
       lotteryTiers: [], // [{ tier, campaign }] — only tiers with a currently-open campaign
       step: 1,
-      choices: [], // rank-ordered tier ids, one slot per lotteryTiers entry; choices[0] is usually locked
-      // Tier ids the fan already has a LotteryEntry for — apply() requires
-      // a matching preference to exist (trg_lottery_entries_require_preference),
-      // and there's no endpoint to withdraw an entry, so removing one of
-      // these from the ranking entirely would orphan it and crash the next
-      // draw for this concert (draw_lottery assumes every pending entry
-      // has a matching preference). They can be reordered, just never
-      // cleared out of the list.
+      choices: [], // rank-ordered tier ids, one slot per lotteryTiers entry — pre-filled with defaults, always freely editable
+      // Tier ids the fan already has a LotteryEntry for. Purely
+      // informational in the UI (a fan can still swap one of these out —
+      // there's just no way to withdraw the entry itself once made, so
+      // doing so leaves that entry orphaned from the new ranking); also
+      // used at submit time to skip re-calling apply() for a tier that
+      // already has one.
       lockedTierIds: [],
       isEditing: false,
       submitting: false,
@@ -176,28 +173,13 @@ export default {
       if (!this.concert) return this.$t('ticketPurchase.ineligibleNotFound')
       return this.$t('lotteryEntry.ineligibleNoCampaign')
     },
-    // TicketPurchasePage always sends the tier the fan picked there as a
-    // ?tier= query param — once fetchPage() confirms it's actually
-    // enterable, rank 1 is locked to it instead of asking the fan to pick
-    // a tier a second time.
-    firstChoiceLocked () {
-      return !!this.choices[0] && this.$route.query.tier === this.choices[0]
-    },
     // Every rank past the 1st is optional — a fan can submit with just
-    // their locked/chosen 1st pick and skip ranking the rest.
+    // their 1st pick and skip ranking the rest.
     canProceedPreferences () {
       return !!this.choices[0]
     },
     filledChoices () {
       return this.choices.filter(Boolean)
-    },
-    // Draw date shown on the confirm step — the earliest of every ranked
-    // tier's campaign, since that's the first result the fan will see.
-    drawDateLabel () {
-      const campaigns = this.filledChoices.map(id => this.campaignById(id)).filter(Boolean)
-      if (!campaigns.length) return ''
-      const earliest = campaigns.reduce((a, b) => (new Date(a.draw_at) < new Date(b.draw_at) ? a : b))
-      return formatDate(parseISO(earliest.draw_at), 'MMM d, yyyy')
     }
   },
 
@@ -241,12 +223,9 @@ export default {
       return this.lotteryTiers.filter(entry => !chosenElsewhere.includes(entry.tier.id))
     },
     // Changing a rank invalidates every rank after it (its own options
-    // list just changed), so those are reset rather than left stale —
-    // except a locked one, which never gets cleared by anything.
+    // list just changed), so those are reset rather than left stale.
     clearFrom (startIndex) {
-      for (let i = startIndex; i < this.choices.length; i++) {
-        if (!this.isLocked(i)) this.choices[i] = ''
-      }
+      for (let i = startIndex; i < this.choices.length; i++) this.choices[i] = ''
     },
     // A campaign is enterable right now if it's still open and today falls
     // inside its entry window — mirrors what the backend's apply()/set()
@@ -307,26 +286,20 @@ export default {
         this.loading = false
       }
     },
-    // A rank is locked either because it's the tier TicketPurchasePage sent
-    // the fan here with (a UX nicety — nothing stops them going back and
-    // picking differently there), or because it already has a real entry
-    // (a data-safety constraint — see lockedTierIds above). Both render the
-    // same read-only row; only the note underneath differs.
-    isLocked (i) {
-      if (i === 0 && this.firstChoiceLocked) return true
-      return this.lockedTierIds.includes(this.choices[i])
-    },
-    lockNote (i) {
-      return (i === 0 && this.firstChoiceLocked) ? this.$t('lotteryEntry.firstChoiceLockedNote') : this.$t('lotteryEntry.lockedExistingNote')
-    },
+    // Picking a different tier for rank i can collide with whatever a
+    // later rank already holds (optionsForRank only excludes duplicates at
+    // the moment each select renders, not retroactively) — clearing
+    // everything after i resolves that the same way changing rank 1 used
+    // to reset the whole chain, then compaction reflows what's left.
     onSelectChange (i) {
       this.clearFrom(i + 1)
       this.compactChoices()
     },
+    // Removing a rank can't create a duplicate the way changing one can,
+    // so later ranks are left alone — compaction just shifts them up to
+    // fill the gap instead of erasing them.
     clearRank (i) {
-      if (this.isLocked(i)) return
       this.choices[i] = ''
-      this.clearFrom(i + 1)
       this.compactChoices()
     },
     // Keeps every filled choice contiguous from index 0. Without this, a
@@ -617,28 +590,12 @@ export default {
   }
 }
 
-.locked-choice {
-  border: 1.5px solid $color-brand-tint;
-  border-radius: 12px;
-  padding: 11px 14px;
-  background: $color-brand-tint-2;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+.field__note {
+  margin-top: 2px;
   font-family: $font-content;
-  font-weight: 700;
-  font-size: 14px;
-  color: $color-ink;
-}
-
-.locked-choice__note {
-  flex: none;
-  font-weight: 700;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: .02em;
-  color: $color-brand;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: $color-gray-500;
 }
 
 .choice-list {
