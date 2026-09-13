@@ -1,6 +1,7 @@
 import eventsPage from '../pages/EventsPage.vue'
 import eventDetailPage from '../pages/EventDetailPage.vue'
 import ticketPurchasePage from '../pages/TicketPurchasePage.vue'
+import lotteryEntryPage from '../pages/LotteryEntryPage.vue'
 import membersPage from '../pages/MembersPage.vue'
 import idolDetailPage from '../pages/IdolDetailPage.vue'
 import groupsPage from '../pages/GroupsPage.vue'
@@ -14,6 +15,7 @@ import notificationsPage from '../pages/NotificationsPage.vue'
 import orderDetailsPage from '../pages/OrderDetailsPage.vue'
 import ticketDetailsPage from '../pages/TicketDetailsPage.vue'
 import lotteryResultDetailsPage from '../pages/LotteryResultDetailsPage.vue'
+import lotteryPaymentPage from '../pages/LotteryPaymentPage.vue'
 import accountSettingsPage from '../pages/AccountSettingsPage.vue'
 import guidelinesPage from '../pages/GuidelinesPage.vue'
 import aboutPage from '../pages/AboutPage.vue'
@@ -70,6 +72,13 @@ export const routes = [
     component: ticketPurchasePage,
     props: true,
     meta: { isAuth: true, title: `${DOMAIN_TITLE} | tickets` }
+  },
+  {
+    path: '/events/:id/lottery',
+    name: 'event-lottery-entry',
+    component: lotteryEntryPage,
+    props: true,
+    meta: { isAuth: true, title: `${DOMAIN_TITLE} | lottery entry` }
   },
   {
     path: '/members',
@@ -149,11 +158,18 @@ export const routes = [
     meta: { title: `${DOMAIN_TITLE} | ticket` }
   },
   {
-    path: '/history/lottery/:orderNumber',
+    path: '/history/lottery/:id',
     name: 'lottery-details',
     component: lotteryResultDetailsPage,
     props: true,
-    meta: { title: `${DOMAIN_TITLE} | lottery entry` }
+    meta: { isAuth: true, title: `${DOMAIN_TITLE} | lottery entry` }
+  },
+  {
+    path: '/history/lottery/:id/pay',
+    name: 'lottery-payment',
+    component: lotteryPaymentPage,
+    props: true,
+    meta: { isAuth: true, title: `${DOMAIN_TITLE} | pay for ticket` }
   },
   {
     path: '/account',

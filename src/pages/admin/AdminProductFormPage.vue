@@ -50,6 +50,7 @@
 
 <script>
 import { ProductsService } from '@/services/products.service'
+import { useToastStore } from '@/store/toast'
 
 function emptyForm () {
   return { name: '', category_id: '', price: '', quantity: '', description: '' }
@@ -138,12 +139,14 @@ export default {
         if (this.isEditing) {
           await ProductsService.update(this.id, fields)
           if (this.imageFile) await ProductsService.uploadImage(this.id, this.imageFile)
+          useToastStore().add({ type: 'success', message: this.$t('managerProductForm.updateSuccess') })
         } else {
           await ProductsService.create({ ...fields, image: this.imageFile })
         }
         this.$router.push({ name: 'admin-products' })
       } catch (error) {
         this.error = error.message
+        if (this.isEditing) useToastStore().add({ type: 'error', message: error.message })
       } finally {
         this.saving = false
       }
@@ -213,6 +216,10 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  // Grid items default to min-width: auto, so a long <option> (e.g. a
+  // category name) forces its whole column wider than the sibling
+  // column's 1fr share instead of the two columns splitting evenly.
+  min-width: 0;
 }
 
 .field__label {

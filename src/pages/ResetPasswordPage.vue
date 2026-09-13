@@ -74,6 +74,7 @@
 
 <script>
 import { UsersService } from '@/services/users.service'
+import { useToastStore } from '@/store/toast'
 import BowIcon from '@/components/icons/BowIcon.vue'
 
 export default {
@@ -112,6 +113,7 @@ export default {
       try {
         await UsersService.setPassword(this.token.trim(), this.password)
         this.done = true
+        useToastStore().add({ type: 'success', message: this.$t('resetPassword.successToast') })
       } catch (error) {
         this.error = error.status === 401 ? this.$t('resetPassword.errorInvalidToken') : error.message
       } finally {

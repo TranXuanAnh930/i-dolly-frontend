@@ -216,6 +216,7 @@ export default {
         useToastStore().add({ type: 'success', message: this.$t('account.addressSaved') })
       } catch (error) {
         this.addressError = error.message
+        useToastStore().add({ type: 'error', message: error.message })
       } finally {
         this.addressSaving = false
       }

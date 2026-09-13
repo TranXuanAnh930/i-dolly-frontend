@@ -59,8 +59,32 @@
           <div class="tier" v-for="tier in ticketTypes" :key="tier.id">
             <div class="tier__info">
               <span class="tier__name">{{ tierLabel(tier) }}</span>
-              <span class="tier__note">{{ tier.sale_method === 'lottery' ? $t('eventDetail.lotteryLabel') : $t('eventDetail.directSaleLabel') }} &middot; {{ $t('eventDetail.leftSuffix', { count: remaining(tier) }) }}</span>
+              <span class="tier__note">{{ tier.sale_method === 'lottery' ? $t('eventDetail.lotteryLabel') : $t('eventDetail.directSaleLabel') }} &middot; {{ $t('eventDetail.leftSuffix', { count: tier.total_quantity }) }}</span>
             </div>
+
+            <div class="tier__campaign">
+              <template v-if="campaignFor(tier)">
+                <span class="tier__campaign-badge" :class="`tier__campaign-badge--${campaignFor(tier).status}`">{{ campaignStatusLabel(campaignFor(tier)) }}</span>
+
+                <ol class="campaign-timeline">
+                  <template v-for="(step, i) in timelineSteps(campaignFor(tier))" :key="step.key">
+                    <li class="timeline-step" :class="{ 'is-done': step.done, 'is-active': step.active }">
+                      <span class="timeline-step__dot"></span>
+                      <span class="timeline-step__label">{{ step.label }}</span>
+                      <span class="timeline-step__date">{{ step.date }}</span>
+                    </li>
+                    <li v-if="i < 1" class="timeline-line" :class="{ 'is-done': step.done }"></li>
+                  </template>
+                </ol>
+              </template>
+
+              <!-- A tier with no campaign row yet (not scheduled by the
+                   venue's manager) — say so plainly rather than silently
+                   showing nothing, whether it's a lottery or direct-sale
+                   tier. -->
+              <span v-else class="tier__campaign-badge tier__campaign-badge--pending">{{ $t('eventDetail.campaignNotScheduled') }}</span>
+            </div>
+
             <span class="tier__price-block">
               <span class="tier__price">&yen;{{ formatNumber(tier.price) }}</span>
               <span class="tier__price-tax">{{ $t('store.taxIncluded', { price: formatNumber(withTax(tier.price)) }) }}</span>
@@ -165,6 +189,11 @@ export default {
       ticketTypes: [],
       lineup: [],
       performingGroups: [],
+      campaignsByTierId: {},
+      // Personalized by the concert-detail endpoint for whoever's logged
+      // in — both stay false for a guest, same as a fan with neither.
+      hasTicket: false,
+      hasWonLottery: false,
       loading: true
     }
   },
@@ -191,8 +220,15 @@ export default {
     doorsLabel () {
       return this.concert && this.concert.doors_open_at ? formatDate(parseISO(this.concert.doors_open_at), 'h:mm a') : null
     },
+    // A direct-sale tier is on sale while it still has stock; a lottery
+    // tier is "on sale" only while its campaign is actually open for
+    // entries — a lottery tier with no campaign yet, or a closed/drawn
+    // one, isn't something a fan can act on right now.
+    anyTierOnSale () {
+      return this.ticketTypes.some(tier => this.tierOnSale(tier))
+    },
     ctaDisabled () {
-      return !this.concert || this.concert.status !== 'on_sale' || !this.ticketTypes.length
+      return !this.concert || this.concert.status !== 'on_sale' || !this.ticketTypes.length || !this.anyTierOnSale || this.hasTicket || this.hasWonLottery
     },
     ctaLabel () {
       if (!this.concert) return ''
@@ -200,7 +236,14 @@ export default {
       if (this.concert.status === 'scheduled') return this.$t('eventDetail.statusComingSoon')
       if (this.concert.status === 'completed') return this.$t('eventDetail.statusEnded')
       if (this.concert.status === 'cancelled') return this.$t('eventDetail.statusCancelled')
+      // Checked ahead of the ticketTypes/anyTierOnSale fallbacks below —
+      // a fan who's already secured a ticket shouldn't see a generic
+      // "not available" label just because every tier they'd otherwise
+      // qualify for reads as sold out or lottery-closed to them.
+      if (this.hasTicket) return this.$t('eventDetail.statusAlreadyBought')
+      if (this.hasWonLottery) return this.$t('eventDetail.statusAlreadyWon')
       if (!this.ticketTypes.length) return this.$t('eventDetail.statusNotOnSale')
+      if (!this.anyTierOnSale) return this.$t('eventDetail.statusUnavailable')
       return this.$t('eventDetail.ctaApply')
     },
     ctaTo () {
@@ -212,6 +255,9 @@ export default {
       if (this.concert.status === 'scheduled') return this.$t('eventDetail.saleNoteScheduled')
       if (this.concert.status === 'completed') return this.$t('eventDetail.saleNoteCompleted')
       if (this.concert.status === 'cancelled') return this.$t('eventDetail.saleNoteCancelled')
+      if (this.hasTicket) return this.$t('eventDetail.saleNoteAlreadyBought')
+      if (this.hasWonLottery) return this.$t('eventDetail.saleNoteAlreadyWon')
+      if (!this.anyTierOnSale) return this.$t('eventDetail.saleNoteUnavailable')
       if (!this.directTicketTypes.length) return this.$t('eventDetail.saleNoteLotteryOnly')
       return this.$t('eventDetail.saleNoteDefault')
     }
@@ -236,17 +282,110 @@ export default {
     async fetchPage () {
       this.loading = true
       try {
+        // One call — the concert-detail endpoint now embeds every
+        // campaign (lottery and direct-sale) across every tier on this
+        // concert directly, so there's nothing left to fetch separately.
         const response = await ConcertsService.getDetailPublic(this.id)
         this.concert = response.data.concert
         this.venue = response.data.venue
         this.ticketTypes = response.data.ticket_types
         this.lineup = response.data.lineup
         this.performingGroups = response.data.performing_groups
+        this.hasTicket = response.data.has_ticket
+        this.hasWonLottery = response.data.has_won_lottery
+
+        const campaignsByTierId = {}
+        const collect = (campaigns, startKey, endKey, saleMethod) => {
+          campaigns.forEach(campaign => {
+            const normalized = this.normalizeCampaign(campaign, startKey, endKey, saleMethod)
+            if (!campaignsByTierId[campaign.ticket_type_id]) campaignsByTierId[campaign.ticket_type_id] = []
+            campaignsByTierId[campaign.ticket_type_id].push(normalized)
+          })
+        }
+        collect(response.data.lottery_campaigns, 'entry_start_at', 'entry_end_at', 'lottery')
+        collect(response.data.direct_sale_campaigns, 'sale_start_at', 'sale_end_at', 'direct')
+        this.campaignsByTierId = Object.fromEntries(
+          this.ticketTypes.map(tier => [tier.id, this.mostRelevantCampaign(campaignsByTierId[tier.id] || [])])
+        )
       } catch {
         this.concert = null
       } finally {
         this.loading = false
       }
+    },
+    // LotteryCampaignRead and DirectSaleCampaignRead carry the same
+    // "when is this open" shape under different field names (entry_* for
+    // a lottery tier's apply window, sale_* for a direct-sale tier's
+    // purchase window) — flatten both onto start_at/end_at so every other
+    // method here (badge, timeline) can treat a campaign as one shape
+    // regardless of which endpoint it came from. saleMethod is kept too,
+    // only to pick the right wording for an "open" badge below — a
+    // lottery's "open" means entries are being accepted, a direct-sale
+    // tier's means it's simply on sale.
+    normalizeCampaign (campaign, startKey, endKey, saleMethod) {
+      return { ...campaign, start_at: campaign[startKey], end_at: campaign[endKey], sale_method: saleMethod }
+    },
+    // A tier can accumulate more than one campaign over time (re-run after
+    // cancellation, etc.) — prefer the currently open one, otherwise fall
+    // back to whichever was created most recently.
+    mostRelevantCampaign (campaigns) {
+      if (!campaigns.length) return null
+      const open = campaigns.find(campaign => campaign.status === 'open')
+      if (open) return open
+      return [...campaigns].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0]
+    },
+    campaignFor (tier) {
+      return this.campaignsByTierId[tier.id] || null
+    },
+    isCampaignActive (campaign) {
+      const now = new Date()
+      return campaign.status === 'open' && now >= new Date(campaign.start_at) && now <= new Date(campaign.end_at)
+    },
+    // A tier is only "on sale" while its campaign is actually open and
+    // inside its window — for direct-sale that's on top of still having
+    // stock, matching ticket_service.checkout_ticket's own two checks
+    // (open campaign, then remaining stock) so this never shows a tier as
+    // available that checkout would then reject.
+    tierOnSale (tier) {
+      const campaign = this.campaignFor(tier)
+      if (!campaign || !this.isCampaignActive(campaign)) return false
+      return tier.sale_method === 'direct' ? this.remaining(tier) > 0 : true
+    },
+    campaignStatusLabel (campaign) {
+      if (campaign.status === 'open') {
+        return campaign.sale_method === 'direct' ? this.$t('eventDetail.saleStatusOpen') : this.$t('eventDetail.lotteryStatusOpen')
+      }
+      const key = campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1)
+      return this.$t(`eventDetail.lotteryStatus${key}`)
+    },
+    // Two fixed nodes (opens → closes) — a lottery campaign's draw_at is
+    // only ever set retroactively by the draw job itself (NULL until
+    // actually drawn, see LotteryCampaignRead's own comment) and a
+    // direct-sale campaign has no draw step at all, so neither ever has a
+    // third date this timeline could show ahead of time. "done" reflects
+    // whichever already happened, and the first node still pending is
+    // highlighted as "active" so a fan can see where the campaign
+    // currently sits at a glance. A cancelled campaign never highlights a
+    // node — there's no "next" step to point at.
+    timelineSteps (campaign) {
+      const now = new Date()
+      const started = now >= new Date(campaign.start_at)
+      const closed = campaign.status !== 'open' || now >= new Date(campaign.end_at)
+
+      const steps = [
+        { key: 'start', label: this.$t('eventDetail.lotteryTimelineOpens'), date: this.formatCampaignDate(campaign.start_at), done: started },
+        { key: 'end', label: this.$t('eventDetail.lotteryTimelineCloses'), date: this.formatCampaignDate(campaign.end_at), done: closed }
+      ]
+
+      if (campaign.status !== 'cancelled') {
+        const activeStep = steps.find(step => !step.done)
+        if (activeStep) activeStep.active = true
+      }
+
+      return steps
+    },
+    formatCampaignDate (date) {
+      return formatDate(parseISO(date), 'MMM d')
     },
     // The idol's real color (embedded by the backend, on the lineup entry)
     // when set, otherwise the same stable palette fallback used elsewhere.
@@ -488,11 +627,17 @@ export default {
   padding: 14px 18px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 20px;
+
+  @include media_mobile {
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
 }
 
 .tier__info {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -509,6 +654,128 @@ export default {
   font-family: $font-content;
   font-size: 12px;
   color: $color-gray-400;
+}
+
+.tier__campaign {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+
+  @include media_mobile {
+    align-items: flex-start;
+    width: 100%;
+    order: 1;
+  }
+}
+
+.tier__campaign-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 2px 9px;
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+
+  &--open {
+    background: #e9f2fb;
+    color: #2a6fa8;
+  }
+
+  &--drawn {
+    background: #e6f7ef;
+    color: #147a52;
+  }
+
+  &--completed {
+    background: $color-gray-100;
+    color: $color-gray-500;
+  }
+
+  &--cancelled {
+    background: $color-gray-100;
+    color: $color-gray-500;
+  }
+
+  &--pending {
+    background: $color-gray-100;
+    color: $color-gray-500;
+    font-style: italic;
+    text-transform: none;
+  }
+}
+
+.campaign-timeline {
+  display: flex;
+  align-items: flex-start;
+  list-style: none;
+}
+
+.timeline-step {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 60px;
+  text-align: center;
+}
+
+.timeline-step__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: $color-white;
+  border: 2px solid $color-line;
+}
+
+.timeline-step.is-done .timeline-step__dot {
+  background: #1fa876;
+  border-color: #1fa876;
+}
+
+.timeline-step.is-active .timeline-step__dot {
+  background: $color-white;
+  border-color: $color-brand;
+  box-shadow: 0 0 0 3px $color-brand-tint;
+}
+
+.timeline-step__label {
+  margin-top: 2px;
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+  color: $color-gray-400;
+}
+
+.timeline-step.is-done .timeline-step__label,
+.timeline-step.is-active .timeline-step__label {
+  color: $color-ink;
+}
+
+.timeline-step__date {
+  font-family: $font-content;
+  font-size: 11px;
+  color: $color-gray-400;
+  white-space: nowrap;
+}
+
+.timeline-line {
+  flex: 1;
+  min-width: 12px;
+  height: 2px;
+  margin-top: 5px;
+  background: $color-line;
+
+  &.is-done {
+    background: #1fa876;
+  }
 }
 
 .tier__price-block {

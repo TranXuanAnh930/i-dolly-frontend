@@ -72,6 +72,7 @@
 <script>
 import { useCompaniesStore } from '@/store/companies'
 import { IdolsService } from '@/services/idols.service'
+import { useToastStore } from '@/store/toast'
 
 function emptyForm () {
   return {
@@ -191,12 +192,14 @@ export default {
         if (this.isEditing) {
           await IdolsService.update(this.id, fields)
           if (this.imageFile) await IdolsService.uploadImage(this.id, this.imageFile)
+          useToastStore().add({ type: 'success', message: this.$t('managerIdolForm.updateSuccess') })
         } else {
           await IdolsService.create({ ...fields, company_id: this.companyId, image: this.imageFile })
         }
         this.$router.push({ name: 'admin-idols' })
       } catch (error) {
         this.error = error.message
+        if (this.isEditing) useToastStore().add({ type: 'error', message: error.message })
       } finally {
         this.saving = false
       }
@@ -297,6 +300,10 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  // Grid items default to min-width: auto, so a long <option> (e.g. a
+  // group name) forces its whole column wider than the sibling column's
+  // 1fr share instead of the two columns splitting evenly.
+  min-width: 0;
 }
 
 .field__label {

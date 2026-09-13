@@ -62,18 +62,33 @@ import { parseISO } from 'date-fns'
 import { useNotificationStore } from '@/store/notifications'
 import { useOrdersStore } from '@/store/orders'
 import { useTicketsStore } from '@/store/tickets'
+import { useLotteryEntriesStore } from '@/store/lotteryEntries'
 import { formatDate, formatNumber } from '@/utils/format'
 import { withTax } from '@/utils/tax'
 
 export default {
   name: 'HistoryPage',
 
-  created () {
+  data () {
+    return {
+      lotteryContexts: {}
+    }
+  },
+
+  async created () {
     // A no-op for guests/non-fan roles, and already loaded on every page
     // once Header's own fetch resolves — this just covers a direct/refresh
     // landing straight on this page.
     useOrdersStore().fetchAll()
     useTicketsStore().fetchAll()
+
+    const lotteryEntriesStore = useLotteryEntriesStore()
+    await lotteryEntriesStore.fetchAll()
+    const contexts = {}
+    await Promise.all(lotteryEntriesStore.items.map(async entry => {
+      contexts[entry.id] = await lotteryEntriesStore.resolveContext(entry)
+    }))
+    this.lotteryContexts = contexts
   },
 
   computed: {
@@ -92,21 +107,49 @@ export default {
         messageParams: { orderNumber: order.id.slice(0, 8), amount: formatNumber(order.total_price) }
       }))
     },
-    // Real tickets from the backend (see ticketsStore) — direct-sale
-    // purchases only for now, same as ticketsStore itself.
+    // Real tickets from the backend (see ticketsStore) — a still-unpaid
+    // lottery win (status pending_payment) is left out here since the
+    // lotteryItems entry below already covers it with a "pay now" link;
+    // showing both would read as two contradictory entries for one ticket.
     ticketItems () {
-      return useTicketsStore().sorted.map(ticket => ({
-        id: `ticket-${ticket.id}`,
-        type: 'ticket',
-        timestamp: ticket.created_at,
-        to: `/history/tickets/${ticket.id}`,
-        titleKey: ticket.status === 'cancelled' ? 'history.ticketCancelledTitle' : 'history.ticketPurchasedTitle',
-        messageKey: ticket.status === 'cancelled' ? 'history.ticketCancelledMessage' : 'history.ticketPurchasedMessage',
-        messageParams: { orderNumber: ticket.id.slice(0, 8), amount: formatNumber(withTax(ticket.ticket_type.price)) }
-      }))
+      return useTicketsStore().sorted
+        .filter(ticket => ticket.status !== 'pending_payment')
+        .map(ticket => ({
+          id: `ticket-${ticket.id}`,
+          type: 'ticket',
+          timestamp: ticket.created_at,
+          to: `/history/tickets/${ticket.id}`,
+          titleKey: ticket.status === 'cancelled' ? 'history.ticketCancelledTitle' : 'history.ticketPurchasedTitle',
+          messageKey: ticket.status === 'cancelled' ? 'history.ticketCancelledMessage' : 'history.ticketPurchasedMessage',
+          messageParams: { orderNumber: ticket.id.slice(0, 8), amount: formatNumber(withTax(ticket.ticket_type.price)) }
+        }))
+    },
+    // Lottery entries come from the real backend too (see lotteryEntries
+    // store), but need an async lookup to resolve tier/concert labels —
+    // resolved contexts are cached in this.lotteryContexts by created().
+    lotteryItems () {
+      return useLotteryEntriesStore().sorted
+        .map(entry => {
+          const context = this.lotteryContexts[entry.id]
+          if (!context) return null
+          const tier = context.ticketType.tier.charAt(0).toUpperCase() + context.ticketType.tier.slice(1)
+          const title = context.concert ? context.concert.title : ''
+          const iconType = entry.status === 'won' ? 'lottery-won' : (entry.status === 'lost' || entry.status === 'expired') ? 'lottery-lost' : 'lottery-pending'
+          const outcomeKey = entry.status === 'won' ? 'Won' : (entry.status === 'lost' || entry.status === 'expired') ? 'Lost' : 'Pending'
+          return {
+            id: `lottery-${entry.id}`,
+            type: iconType,
+            timestamp: entry.created_at,
+            to: `/history/lottery/${entry.id}`,
+            titleKey: `history.lottery${outcomeKey}Title`,
+            messageKey: `history.lottery${outcomeKey}Message`,
+            messageParams: { tier, title }
+          }
+        })
+        .filter(Boolean)
     },
     items () {
-      return [...this.orderItems, ...this.ticketItems, ...useNotificationStore().sorted]
+      return [...this.orderItems, ...this.ticketItems, ...this.lotteryItems, ...useNotificationStore().sorted]
         .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
     }
   },
@@ -239,6 +282,11 @@ export default {
   &--lottery-lost {
     background: $color-gray-50;
     color: $color-gray-400;
+  }
+
+  &--lottery-pending {
+    background: $color-brand-tint;
+    color: $color-brand;
   }
 }
 

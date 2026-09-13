@@ -32,6 +32,7 @@
             <tr v-for="idol in myIdols" :key="idol.id" :class="{ 'is-inactive': !idol.is_active }">
               <td class="thumb-cell">
                 <img v-if="resolveMediaUrl(idol.profile_image_url)" :src="resolveMediaUrl(idol.profile_image_url)" :alt="idol.name" class="thumb">
+                <span v-else class="thumb thumb--empty" aria-hidden="true"></span>
               </td>
               <td>{{ idol.name }}</td>
               <td>{{ groupName(idol.group_id) }}</td>
@@ -272,6 +273,13 @@ export default {
   height: 36px;
   border-radius: 8px;
   object-fit: cover;
+}
+
+// An idol with no photo renders nothing here otherwise, collapsing that
+// row shorter than every other row in the table.
+.thumb--empty {
+  display: block;
+  background: $color-gray-100;
 }
 
 .actions {

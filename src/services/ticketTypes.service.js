@@ -20,4 +20,17 @@ export class TicketTypesService extends BaseService {
       throw this.errorWrapper(error, message)
     }
   }
+
+  // GET /ticket_types/{id} — public, no auth. Used to resolve a bare
+  // ticket_type_id back to its tier/price/concert_id — e.g. a
+  // LotteryCampaign only carries ticket_type_id, not the tier itself.
+  static async getByIdPublic (id) {
+    try {
+      const response = await this.request().get(`${this.entity}/${id}`)
+      return this.responseWrapper(response, response.data)
+    } catch (error) {
+      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
+      throw this.errorWrapper(error, message)
+    }
+  }
 }

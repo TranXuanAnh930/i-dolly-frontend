@@ -35,6 +35,7 @@
 
 <script>
 import { useCompaniesStore } from '@/store/companies'
+import { useToastStore } from '@/store/toast'
 
 function emptyForm () {
   return { name: '', description: '', contact_email: '' }
@@ -101,12 +102,14 @@ export default {
       try {
         if (this.isEditing) {
           await this.companiesStore.updateCompany(this.id, fields)
+          useToastStore().add({ type: 'success', message: this.$t('adminCompanyForm.updateSuccess') })
         } else {
           await this.companiesStore.createCompany(fields)
         }
         this.$router.push({ name: 'admin-companies' })
       } catch (error) {
         this.error = error.message
+        if (this.isEditing) useToastStore().add({ type: 'error', message: error.message })
       } finally {
         this.saving = false
       }

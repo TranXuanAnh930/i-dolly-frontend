@@ -19,20 +19,20 @@
           <router-link
             v-for="item in items"
             :key="item.id"
-            :to="item.to || '/notifications'"
+            :to="linkFor(item)"
             class="notif__item"
-            :class="{ 'is-unread': !item.read }"
+            :class="{ 'is-unread': !item.is_read }"
             @click="onItemClick(item)">
-            <span class="notif__icon" :class="`notif__icon--${item.type}`">
-              <svg v-if="item.type === 'order'" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <span class="notif__icon" :class="`notif__icon--${iconType(item)}`">
+              <svg v-if="iconType(item) === 'order'" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                 <path d="M5 6.5h10l-.8 8.5a1.5 1.5 0 0 1-1.5 1.4H7.3a1.5 1.5 0 0 1-1.5-1.4L5 6.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
                 <path d="M7 6.5V5a3 3 0 0 1 6 0v1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
               </svg>
-              <svg v-else-if="item.type === 'ticket'" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <svg v-else-if="iconType(item) === 'ticket'" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                 <path d="M3 7.5V6a1.5 1.5 0 0 1 1.5-1.5h11A1.5 1.5 0 0 1 17 6v1.5a1.5 1.5 0 0 0 0 3V14a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 14v-3.5a1.5 1.5 0 0 0 0-3Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
                 <path d="M11 5v10" stroke="currentColor" stroke-width="1.5" stroke-dasharray="1.6 1.6" stroke-linecap="round"/>
               </svg>
-              <svg v-else-if="item.type === 'lottery-won'" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <svg v-else-if="iconType(item) === 'lottery-won'" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                 <path fill="currentColor" d="M10 2 11.9 7.1 17.5 7.5 13.2 11 14.5 16.5 10 13.3 5.5 16.5 6.8 11 2.5 7.5 8.1 7.1 10 2Z"/>
               </svg>
               <svg v-else viewBox="0 0 20 20" fill="none" aria-hidden="true">
@@ -42,7 +42,7 @@
             <span class="notif__body">
               <span class="notif__title">{{ notificationTitle(item) }}</span>
               <span class="notif__message">{{ notificationMessage(item) }}</span>
-              <span class="notif__time">{{ relativeTime(item.timestamp) }}</span>
+              <span class="notif__time">{{ relativeTime(item.created_at) }}</span>
             </span>
           </router-link>
         </div>
@@ -58,10 +58,9 @@
 import { parseISO } from 'date-fns'
 
 import { useNotificationStore } from '@/store/notifications'
-import { useOrdersStore } from '@/store/orders'
-import { useTicketsStore } from '@/store/tickets'
-import { formatNumber, formatRelativeTime } from '@/utils/format'
-import { withTax } from '@/utils/tax'
+import { useLotteryEntriesStore } from '@/store/lotteryEntries'
+import { formatRelativeTime } from '@/utils/format'
+import { notificationIconType, notificationLink, notificationTitleKey, notificationMessageKey, isLotteryWin } from '@/utils/notification'
 import UiOnClickOutside from './UiOnClickOutside.vue'
 
 export default {
@@ -79,42 +78,8 @@ export default {
     notifications () {
       return useNotificationStore()
     },
-    // Real orders (see ordersStore) have no server-side "read" state, so
-    // they're mapped in as always-read — they show up here and in the
-    // count-free part of the list, but never contribute to unreadCount or
-    // the unread-dot styling the way a local ticket/lottery notification does.
-    orderItems () {
-      return useOrdersStore().sorted.map(order => ({
-        id: `order-${order.id}`,
-        type: 'order',
-        read: true,
-        timestamp: order.created_at,
-        to: `/history/orders/${order.id}`,
-        titleKey: order.status === 'cancelled' ? 'history.orderCancelledTitle' : 'history.orderPlacedTitle',
-        messageKey: order.status === 'cancelled' ? 'history.orderCancelledMessage' : 'history.orderPlacedMessage',
-        messageParams: { orderNumber: order.id.slice(0, 8), amount: formatNumber(order.total_price) }
-      }))
-    },
-    // Real tickets (see ticketsStore) — same "always read" reasoning as
-    // orderItems above. Named generically ("Ticket #12345678") rather than
-    // by concert title, same as orderItems not naming its products, so this
-    // never needs concertsStore loaded just to render a notification.
-    ticketItems () {
-      return useTicketsStore().sorted.map(ticket => ({
-        id: `ticket-${ticket.id}`,
-        type: 'ticket',
-        read: true,
-        timestamp: ticket.created_at,
-        to: `/history/tickets/${ticket.id}`,
-        titleKey: ticket.status === 'cancelled' ? 'history.ticketCancelledTitle' : 'history.ticketPurchasedTitle',
-        messageKey: ticket.status === 'cancelled' ? 'history.ticketCancelledMessage' : 'history.ticketPurchasedMessage',
-        messageParams: { orderNumber: ticket.id.slice(0, 8), amount: formatNumber(withTax(ticket.ticket_type.price)) }
-      }))
-    },
     items () {
-      return [...this.orderItems, ...this.ticketItems, ...this.notifications.sorted]
-        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-        .slice(0, 5)
+      return this.notifications.sorted.slice(0, 5)
     },
     unreadCount () {
       return this.notifications.unreadCount
@@ -124,12 +89,16 @@ export default {
   methods: {
     toggle () {
       this.open = !this.open
+      // Refreshes on every open rather than trusting the last poll's
+      // snapshot — a notification marked read from another tab/device
+      // wouldn't otherwise show up here until the count next changes.
+      if (this.open) this.notifications.fetchMine()
     },
     close () {
       this.open = false
     },
     onItemClick (item) {
-      this.notifications.markRead(item.id)
+      if (!item.is_read) this.notifications.markRead(item.id)
       this.close()
     },
     markAllRead () {
@@ -138,11 +107,17 @@ export default {
     relativeTime (timestamp) {
       return formatRelativeTime(parseISO(timestamp))
     },
+    iconType (item) {
+      return notificationIconType(item, isLotteryWin(item, useLotteryEntriesStore()))
+    },
+    linkFor (item) {
+      return notificationLink(item)
+    },
     notificationTitle (item) {
-      return item.titleKey ? this.$t(item.titleKey, item.titleParams || {}) : item.title
+      return this.$t(notificationTitleKey(item, isLotteryWin(item, useLotteryEntriesStore())))
     },
     notificationMessage (item) {
-      return item.messageKey ? this.$t(item.messageKey, item.messageParams || {}) : item.message
+      return this.$t(notificationMessageKey(item, isLotteryWin(item, useLotteryEntriesStore())))
     }
   }
 }

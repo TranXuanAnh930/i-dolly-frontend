@@ -1,76 +1,132 @@
 import { defineStore } from 'pinia'
 
-const STORAGE_KEY = 'i-dolly-notifications'
+import { NotificationService } from '@/services/notification.service'
+import { useUserStore } from './user'
 
-// order/ticket/lottery notifications are added for real from Checkout and
-// TicketPurchasePage. `detail` carries the structured data their /history
-// detail pages render (see OrderDetailsPage/TicketDetailsPage/
-// LotteryResultDetailsPage).
-function loadItems () {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    const parsed = raw ? JSON.parse(raw) : []
-    return Array.isArray(parsed) ? parsed : []
-  } catch {
-    return []
-  }
-}
+// api-spec.md §7's suggested range is 15-30s; 20s splits the difference.
+const POLL_INTERVAL_MS = 20000
 
-function saveItems (items) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
-  } catch {
-    // ignore — storage may be unavailable
-  }
-}
+// Module-level, not store state — a setInterval id and a DOM event
+// listener reference aren't plain reactive data, and Pinia is a singleton
+// per app anyway, so there's only ever one poll loop to track.
+let pollTimer = null
+let visibilityHandler = null
 
+// Real notifications, fan-account-only server-side (see api-spec.md §7) —
+// short-polling since there's no WebSocket/SSE layer. Only
+// GET /notifications/unread-count is actually polled; the heavier
+// GET /notifications/mine is fetched only when that count goes up, never
+// on every tick.
 export const useNotificationStore = defineStore('notifications', {
   state: () => ({
-    items: loadItems()
+    items: [],
+    unreadCount: 0,
+    loading: false,
+    error: null
   }),
 
   getters: {
     sorted (state) {
-      return [...state.items].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-    },
-    unreadCount (state) {
-      return state.items.filter(item => !item.read).length
-    },
-    // detail pages (OrderDetailsPage/TicketDetailsPage/LotteryResultDetailsPage)
-    // are routed by order/entry number rather than the internal notification
-    // id, since that's what the confirmation screen and history list both
-    // already show the user.
-    byOrderNumber: (state) => (orderNumber) => state.items.find(item => item.detail && item.detail.orderNumber === orderNumber)
+      return [...state.items].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    }
   },
 
   actions: {
-    add (notification) {
-      const item = {
-        id: `n-${Date.now()}`,
-        read: false,
-        timestamp: new Date().toISOString(),
-        ...notification
+    // The cheap poll target — see startPolling(). Escalates to fetchMine()
+    // only when the count actually increased, per the spec's "only fetch
+    // the heavier endpoint when the count goes up."
+    async pollUnreadCount () {
+      const user = useUserStore().currentUser
+      if (!user.id || user.role !== 'fan') return
+      try {
+        const previous = this.unreadCount
+        const response = await NotificationService.getUnreadCount()
+        this.unreadCount = response.data.count
+        if (this.unreadCount > previous) await this.fetchMine()
+      } catch (error) {
+        // A 429 here just means this poll cadence overlapped with another
+        // tab's (or itself) — not a real error per api-spec.md §7, so it's
+        // swallowed rather than surfaced like every other action's errors.
+        if (error.status === 429) return
+        this.error = error.message
       }
-      this.items.unshift(item)
-      saveItems(this.items)
-      return item
     },
-    markRead (id) {
-      const item = this.items.find(i => i.id === id)
-      if (!item) return
-      item.read = true
-      saveItems(this.items)
+
+    async fetchMine () {
+      this.loading = true
+      try {
+        const response = await NotificationService.getMine()
+        this.items = response.data
+      } catch (error) {
+        this.error = error.message
+      } finally {
+        this.loading = false
+      }
     },
-    markAllRead () {
-      this.items = this.items.map(item => ({ ...item, read: true }))
-      saveItems(this.items)
+
+    async markRead (id) {
+      try {
+        const response = await NotificationService.markRead(id)
+        const index = this.items.findIndex(item => item.id === id)
+        const wasUnread = index !== -1 && !this.items[index].is_read
+        if (index !== -1) this.items[index] = response.data
+        if (wasUnread) this.unreadCount = Math.max(0, this.unreadCount - 1)
+      } catch (error) {
+        this.error = error.message
+      }
     },
-    // Called on logout, alongside cartStore.clearOnLogout() — history is
-    // per-account, so the next person on this device (or a guest) shouldn't
-    // see the previous fan's order/ticket/lottery notifications.
+
+    async markAllRead () {
+      try {
+        await NotificationService.markAllRead()
+        this.items = this.items.map(item => ({ ...item, is_read: true }))
+        this.unreadCount = 0
+      } catch (error) {
+        this.error = error.message
+      }
+    },
+
+    // Called once from Header.vue (mounted for the whole session) on app
+    // boot if already logged in, and again on an interactive login. Fires
+    // an immediate poll rather than waiting out the first interval, then
+    // pauses/resumes around tab visibility so a backgrounded tab isn't
+    // still hitting the server every 20s (api-spec.md §7).
+    startPolling () {
+      const user = useUserStore().currentUser
+      if (!user.id || user.role !== 'fan') return
+      this.stopPolling()
+      this.pollUnreadCount()
+      pollTimer = setInterval(() => this.pollUnreadCount(), POLL_INTERVAL_MS)
+      visibilityHandler = () => {
+        if (document.hidden) {
+          if (pollTimer) {
+            clearInterval(pollTimer)
+            pollTimer = null
+          }
+        } else if (!pollTimer) {
+          this.pollUnreadCount()
+          pollTimer = setInterval(() => this.pollUnreadCount(), POLL_INTERVAL_MS)
+        }
+      }
+      document.addEventListener('visibilitychange', visibilityHandler)
+    },
+
+    stopPolling () {
+      if (pollTimer) {
+        clearInterval(pollTimer)
+        pollTimer = null
+      }
+      if (visibilityHandler) {
+        document.removeEventListener('visibilitychange', visibilityHandler)
+        visibilityHandler = null
+      }
+    },
+
     clearOnLogout () {
+      this.stopPolling()
       this.items = []
-      saveItems(this.items)
+      this.unreadCount = 0
+      this.error = null
     }
   }
 })

@@ -5,6 +5,13 @@ import { VenuesService } from '@/services/venues.service'
 import { TicketTypesService } from '@/services/ticketTypes.service'
 import { paletteColorForId, contrastTextColor } from '@/utils/palette'
 
+// Module-level, not store state — several independent callers (Header on
+// mount/login, plus whichever page is loading) can all call fetchAll()
+// before the first one finishes and flips `loaded`; without this, each of
+// those callers fires its own concerts/all+venues/all pair instead of
+// sharing the one already in flight.
+let fetchAllPromise = null
+
 // The generic concert/venue collection — every customer-facing page and the
 // manager/admin settings pages all have their own page-shaped endpoint
 // instead (services/concerts.service.js's getEventsPagePublic/
@@ -42,21 +49,26 @@ export const useConcertsStore = defineStore('concerts', {
   actions: {
     async fetchAll ({ force = false } = {}) {
       if (this.loaded && !force) return
+      if (fetchAllPromise) return fetchAllPromise
       this.loading = true
       this.error = null
-      try {
-        const [concertsRes, venuesRes] = await Promise.all([
-          ConcertsService.getAllPublic(),
-          VenuesService.getAllPublic()
-        ])
-        this.concerts = concertsRes.data
-        this.venues = venuesRes.data
-        this.loaded = true
-      } catch (error) {
-        this.error = error.message
-      } finally {
-        this.loading = false
-      }
+      fetchAllPromise = (async () => {
+        try {
+          const [concertsRes, venuesRes] = await Promise.all([
+            ConcertsService.getAllPublic(),
+            VenuesService.getAllPublic()
+          ])
+          this.concerts = concertsRes.data
+          this.venues = venuesRes.data
+          this.loaded = true
+        } catch (error) {
+          this.error = error.message
+        } finally {
+          this.loading = false
+          fetchAllPromise = null
+        }
+      })()
+      return fetchAllPromise
     },
 
     // Ticket types for one concert — fetched on demand by the event-detail

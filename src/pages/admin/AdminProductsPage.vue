@@ -21,6 +21,7 @@
           <tr v-for="product in products" :key="product.id">
             <td class="thumb-cell">
               <img v-if="resolveMediaUrl(product.image_url)" :src="resolveMediaUrl(product.image_url)" :alt="product.name" class="thumb">
+              <span v-else class="thumb thumb--empty" aria-hidden="true"></span>
             </td>
             <td>{{ product.name }}</td>
             <td>{{ product.category }}</td>
@@ -177,6 +178,14 @@ export default {
   height: 36px;
   border-radius: 8px;
   object-fit: cover;
+}
+
+// A product with no image renders nothing here otherwise, collapsing
+// that row shorter than every other row in the table (there's nothing
+// else in a row to keep it at the same height).
+.thumb--empty {
+  display: block;
+  background: $color-gray-100;
 }
 
 .actions {

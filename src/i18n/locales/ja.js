@@ -51,7 +51,8 @@ export default {
     login: 'ログイン',
     logout: 'ログアウト',
     cart: 'カート',
-    notifications: '通知'
+    notifications: '通知',
+    loggedOut: 'ログアウトしました。'
   },
 
   notifications: {
@@ -62,7 +63,19 @@ export default {
     markAllRead: 'すべて既読にする',
     empty: '通知はまだありません。',
     emptyHint: 'ご注文の確認や抽選結果はここに表示されます。',
-    more: 'もっと見る'
+    more: 'もっと見る',
+    orderConfirmationTitle: 'ご注文が確定しました',
+    orderConfirmationMessage: 'ご注文が確定しました — タップして詳細を確認してください。',
+    ticketConfirmationTitle: 'チケットが確定しました',
+    ticketConfirmationMessage: 'チケットのご購入が確定しました — タップして詳細を確認してください。',
+    lotteryWonTitle: '当選しました！',
+    lotteryWonMessage: 'おめでとうございます、抽選に当選しました。タップしてお支払いを完了してください。',
+    lotteryLostTitle: '抽選結果',
+    lotteryLostMessage: '抽選が行われました — タップして結果を確認してください。',
+    passwordResetTitle: 'パスワードが変更されました',
+    passwordResetMessage: 'パスワードがリセットされました。心当たりがない場合はサポートにご連絡ください。',
+    genericTitle: '通知',
+    genericMessage: 'タップして詳細を確認してください。'
   },
 
   menu: {
@@ -177,6 +190,10 @@ export default {
     simulateFailure: '決済を拒否する',
     orderSummary: 'ご注文内容',
     total: '合計',
+    back: '戻る',
+    reviewOrder: '注文内容を確認',
+    confirmTitle: '内容を確認して確定',
+    confirmHint: 'モック決済を実行する前に、以下の内容をご確認ください。',
     placeOrder: '注文を確定する',
     placingOrder: '注文処理中…',
     orderPlaced: 'ご注文ありがとうございます！',
@@ -203,7 +220,13 @@ export default {
     ticketPurchasedTitle: 'チケットが確定しました',
     ticketPurchasedMessage: 'チケット #{orderNumber}（¥{amount}）が確定しました。',
     ticketCancelledTitle: 'チケット購入が失敗しました',
-    ticketCancelledMessage: 'チケット #{orderNumber}（¥{amount}）は決済できませんでした。'
+    ticketCancelledMessage: 'チケット #{orderNumber}（¥{amount}）は決済できませんでした。',
+    lotteryPendingTitle: '抽選応募が完了しました',
+    lotteryPendingMessage: '{title} の{tier}に応募しました — 抽選結果をお待ちください。',
+    lotteryWonTitle: '抽選に当選しました!',
+    lotteryWonMessage: '{title} の{tier} — お支払いを完了してチケットを確保してください。',
+    lotteryLostTitle: '抽選結果: 落選',
+    lotteryLostMessage: '{title} の{tier}は今回落選しました。'
   },
 
   account: {
@@ -286,7 +309,8 @@ export default {
     noAccount: 'アカウントをお持ちでない方は',
     register: '新規登録',
     errorUserNotFound: '同じメールアドレスのユーザーが見つかりません',
-    forgotPassword: 'パスワードをお忘れですか？'
+    forgotPassword: 'パスワードをお忘れですか？',
+    successMessage: 'おかえりなさい、{name}さん！'
   },
 
   forgotPassword: {
@@ -310,6 +334,7 @@ export default {
     errorTokenRequired: 'メールに記載のリセットトークンを入力してください。',
     errorInvalidToken: 'トークンが無効か期限切れです。もう一度リクエストしてください。',
     successMessage: 'パスワードをリセットしました。新しいパスワードでログインできます。',
+    successToast: 'パスワードを更新しました — 新しいパスワードでログインできます。',
     goToLogin: 'ログインへ',
     noToken: 'トークンをお持ちでない方は',
     requestOne: 'リクエストする'
@@ -339,7 +364,15 @@ export default {
     tickets: 'チケット',
     lotteryLabel: '抽選',
     directSaleLabel: '先着販売',
-    leftSuffix: '残り{count}枚',
+    leftSuffix: '{count}枠',
+    lotteryStatusOpen: '応募受付中',
+    saleStatusOpen: '販売中',
+    lotteryStatusDrawn: '抽選済み',
+    lotteryStatusCompleted: '終了',
+    lotteryStatusCancelled: '中止',
+    lotteryTimelineOpens: '受付開始',
+    lotteryTimelineCloses: '受付終了',
+    campaignNotScheduled: 'まだ予定されていません',
     seatMap: '座席表',
     goodToKnow: '知っておきたいこと',
     eventGuidelines: 'イベントガイドライン',
@@ -358,12 +391,18 @@ export default {
     statusEnded: '終了',
     statusCancelled: '中止',
     statusNotOnSale: '販売前',
+    statusUnavailable: '利用不可',
+    statusAlreadyBought: 'チケット確保済み',
+    statusAlreadyWon: '当選しました',
     ctaApply: '応募する →',
     saleNoteSoldOut: 'この公演の座席はすべて完売しました — リセール情報は随時ご確認ください。',
     saleNoteScheduled: '販売情報はまだ発表されていません。しばらくお待ちください。',
     saleNoteCompleted: 'この公演はすでに終了しました。',
     saleNoteCancelled: 'この公演は中止となりました。',
+    saleNoteAlreadyBought: 'この公演のチケットはすでにお持ちです — 購入履歴からご確認ください。',
+    saleNoteAlreadyWon: 'この公演の抽選にすでに当選しています — 履歴からチケットをご確認ください。',
     saleNoteLotteryOnly: 'この公演は抽選での販売です — 次の画面から応募してください。',
+    saleNoteUnavailable: '現在応募・購入できるものはありません — しばらくしてから再度ご確認ください。',
     saleNoteDefault: '次の画面から抽選応募または座席の確保ができます。'
   },
 
@@ -385,12 +424,11 @@ export default {
     directSaleCheckout: '先着販売チェックアウト',
     getTickets: 'チケットを取得',
     stepTickets: 'チケット',
-    stepEntry: '応募',
     stepPayment: 'お支払い',
+    stepConfirm: '確認',
     stepDone: '完了',
     chooseTier: 'チケット種別を選択',
     tier: '種別',
-    quantity: '枚数',
     seatMap: '座席表',
     orderSummary: 'ご注文内容',
     total: '合計',
@@ -403,10 +441,12 @@ export default {
     expiry: '有効期限',
     cvc: 'セキュリティコード',
     back: '戻る',
+    reviewOrder: '注文内容を確認',
+    confirmTitle: '内容の確認',
+    confirmHint: 'モック決済で請求する前に、以下の内容をご確認ください。',
     placeOrder: '注文を確定する',
     appliedTitle: '応募しました！',
     wentTitle: '参加確定！',
-    appliedNote: 'エントリー番号 {orderNumber}（{tier} · {title}）を受け付けました。当選者には公演の約2週間前にメールでお知らせします。',
     wentNote: '注文番号 {orderNumber}（{title} · {date}）が確定しました。これはモックのチェックアウトのため、実際の請求は発生しません。',
     declinedTitle: 'お支払いが拒否されました',
     declinedNote: 'このモック決済は拒否されたため、チケットは発行されませんでした。もう一度お試しください。',
@@ -417,11 +457,38 @@ export default {
     ineligibleSoldOut: 'この公演は売り切れです。',
     ineligibleCompleted: 'この公演はすでに終了しました。',
     ineligibleCancelled: 'この公演は中止となりました。',
+    ineligibleUnavailable: 'このイベントのチケット種別はすべて完売または応募受付終了です — しばらくしてから再度ご確認ください。',
     ineligibleDefault: 'このイベントのチケットはまだ販売されていません。',
     errorContactEmail: 'お名前とメールアドレスを入力してください。',
-    errorPayment: 'お支払い情報（モック）を入力してください。',
-    notifLotteryTitle: '抽選応募を受け付けました',
-    notifLotteryMessage: 'エントリー番号 {orderNumber}（{tier} · {title}）を受け付けました。'
+    errorPayment: 'お支払い情報（モック）を入力してください。'
+  },
+
+  lotteryEntry: {
+    title: '抽選に応募する',
+    editModeTitle: '応募内容を編集',
+    stepEntry: '応募',
+    stepPreferences: '希望順位',
+    stepConfirm: '確認',
+    introTitle: '{title} の抽選に応募します',
+    introBody: '希望順にランクを選んでください — 第1希望が外れた場合、この順位で抽選されます。今は決済不要です。当選した場合のみお支払いいただきます。',
+    startEntry: '応募を始める',
+    preferencesTitle: 'チケット種別の希望順位を選択',
+    preferencesHint: '第1希望は必須です — 外れた場合に選びたい順で残りの種別も並べてください。',
+    lockedExistingNote: 'この種別にはすでに応募済みです — ここで変更してもその応募は取り消されません。',
+    selectTierPlaceholder: '種別を選択…',
+    reviewEntry: '応募内容を確認',
+    confirmTitle: '応募内容の確認',
+    confirmHint: '送信前に希望順位をご確認ください — 抽選後は変更できません。',
+    updateReviewTitle: '変更内容の確認',
+    updateReviewHint: '保存前に更新後の希望順位をご確認ください — 応募が受付中であれば、後からまた変更できます。',
+    rankLabel: '第{rank}希望',
+    confirmNote: '抽選が行われ次第、こちらとメールでお知らせします。',
+    confirmEntry: '応募を確定する',
+    updateEntry: '変更を保存',
+    successNote: '{title} への希望順位付き応募を受け付けました。抽選結果が出次第お知らせします。',
+    updatedTitle: '応募内容を更新しました！',
+    updateSuccessNote: '{title} への希望順位を更新しました。抽選結果が出次第お知らせします。',
+    ineligibleNoCampaign: 'このイベントの抽選は現在応募を受け付けていません。'
   },
 
   productDetail: {
@@ -474,14 +541,56 @@ export default {
   lotteryDetails: {
     backToHistory: '履歴',
     title: '抽選応募',
+    wonEyebrow: '抽選に当選しました',
+    wonTitle: 'おめでとうございます!',
+    wonNote: '{title} のチケット当選おめでとうございます。お支払いを完了してチケットを確保してください。',
     event: 'イベント',
     tier: '種別',
     quantity: '枚数',
+    drawnAt: '抽選日',
     viewEvent: 'イベントを見る',
+    payNow: 'チケットを支払う',
+    editPreferences: '希望順位を編集',
     statusPending: '結果待ち',
     statusWon: '当選',
     statusLost: '落選',
+    statusExpired: '期限切れ',
     notFound: 'その抽選応募が見つかりませんでした。'
+  },
+
+  lotteryPayment: {
+    eyebrow: 'チケット当選',
+    title: 'チケットの支払い',
+    stepPayment: 'お支払い',
+    stepConfirm: '確認',
+    stepDone: '完了',
+    backToEntry: '応募詳細に戻る',
+    backToHistory: '履歴に戻る',
+    contactPayment: '連絡先とお支払い',
+    fullName: 'お名前',
+    paymentMock: 'お支払い（モック）',
+    mockNotice: '抽選チケットの決済用バックエンドはまだ存在しないため、この決済はブラウザ内で完結するシミュレーションで、外部には送信されません。',
+    cardNumber: 'カード番号',
+    expiry: '有効期限',
+    cvc: 'セキュリティコード',
+    reviewPayment: '内容を確認',
+    orderSummary: 'ご注文内容',
+    total: '合計',
+    confirmTitle: 'お支払い内容の確認',
+    confirmHint: 'モック決済を実行する前に、以下の内容をご確認ください。',
+    payNow: '支払う',
+    paidTitle: '支払いが完了しました!',
+    paidNote: '{title} のチケットが確定しました。当日を楽しみにお待ちください！',
+    declinedTitle: '決済が拒否されました',
+    declinedNote: 'モックゲートウェイがこの決済を拒否しました。チケットへの影響はありません — 準備ができたら再度お試しください。',
+    tryAgain: 'もう一度試す',
+    alreadyPaidTitle: '支払い済み',
+    alreadyPaidNote: 'このチケットはすでに支払い済みです。',
+    viewHistory: '履歴を見る',
+    notFound: 'その抽選応募が見つかりませんでした。',
+    notWon: 'この抽選応募はまだ当選していません — お支払いの必要はありません。',
+    noTicket: 'この応募に対するチケットはまだ発行されていません。',
+    notPayable: 'このチケットは支払い待ちの状態ではありません。'
   },
 
   groupDetail: {
@@ -524,7 +633,8 @@ export default {
     dateOfBirth: '生年月日',
     color: 'カラー',
     shortIntro: '簡単な紹介',
-    longDescription: '詳しい紹介'
+    longDescription: '詳しい紹介',
+    updateSuccess: 'アイドル情報を更新しました。'
   },
 
   managerGroups: {
@@ -539,7 +649,8 @@ export default {
     backToGroups: 'ユニット一覧へ戻る',
     selectCompanyPrompt: '上で会社を選択するとユニットを追加できます。',
     addTitle: 'ユニットを追加',
-    editTitle: 'ユニットを編集'
+    editTitle: 'ユニットを編集',
+    updateSuccess: 'ユニット情報を更新しました。'
   },
 
   managerEvents: {
@@ -552,7 +663,10 @@ export default {
     selectCompanyPrompt: '上で会社を選択するとイベントを管理できます。',
     noResults: 'この会社のイベントはまだありません。',
     cancelEvent: 'イベントを中止',
-    confirmCancel: '「{title}」を中止しますか？チケット購入者には自動で通知されません — ステータスは編集画面からいつでも戻せます。'
+    confirmCancel: '「{title}」を中止しますか？チケット購入者には自動で通知されません — ステータスは編集画面からいつでも戻せます。',
+    runLotteryDraw: '抽選を実行',
+    confirmLotteryDraw: '「{title}」の抽選を実行しますか？このイベントの開催中の全キャンペーンの当選者が決定され、取り消せません。',
+    lotteryDrawQueued: '抽選処理をキューに登録しました — 完了すると結果が反映されます。'
   },
 
   managerEventForm: {
@@ -565,7 +679,8 @@ export default {
     eventDateTime: '開催日時',
     doorsOpen: '開場時間',
     errorRequired: 'タイトル・会場・開催日は必須です。',
-    dateLockedHint: 'このイベントは既に発売中です — 先にステータスを「中止」にして保存し、その後あらためて編集画面から日時・収容人数を変更してください。'
+    dateLockedHint: 'このイベントは既に発売中です — 先にステータスを「中止」にして保存し、その後あらためて編集画面から日時・収容人数を変更してください。',
+    updateSuccess: 'イベント情報を更新しました。'
   },
 
   managerProducts: {
@@ -584,7 +699,8 @@ export default {
     editTitle: '商品を編集',
     selectCategoryPlaceholder: 'カテゴリーを選択…',
     errorRequired: '名前・カテゴリー・説明は必須です。',
-    priceLocked: '価格は商品作成時のみ設定できます — 変更が必要な場合は管理者に依頼してください。'
+    priceLocked: '価格は商品作成時のみ設定できます — 変更が必要な場合は管理者に依頼してください。',
+    updateSuccess: '商品情報を更新しました。'
   },
 
   managerProductSales: {
@@ -622,7 +738,8 @@ export default {
   adminCompanyForm: {
     backToCompanies: '会社一覧へ戻る',
     addTitle: '会社を追加',
-    editTitle: '会社を編集'
+    editTitle: '会社を編集',
+    updateSuccess: '会社情報を更新しました。'
   },
 
   adminManagerAccountForm: {
