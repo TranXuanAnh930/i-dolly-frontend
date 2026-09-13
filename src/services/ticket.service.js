@@ -38,4 +38,16 @@ export class TicketService extends BaseService {
       throw this.errorWrapper(error, message)
     }
   }
+
+  // GET /tickets/concert/{id}/sales — manager/admin only. Paginated ticket
+  // sales history for one concert, mirroring ProductsService.getSalesHistory.
+  static async getConcertSalesHistory (concertId, { page = 1, limit = 10 } = {}) {
+    try {
+      const response = await this.request({ auth: true }).get(`${this.entity}/concert/${concertId}/sales`, { params: { page, limit } })
+      return this.responseWrapper(response, response.data)
+    } catch (error) {
+      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
+      throw this.errorWrapper(error, message)
+    }
+  }
 }

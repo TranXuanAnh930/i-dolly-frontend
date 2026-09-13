@@ -53,12 +53,127 @@
         </div>
       </form>
     </div>
+
+    <!-- Ticket types + campaigns only make sense once the concert itself
+         exists — a brand new one lands here right after its first save. -->
+    <div class="form-wrap" v-if="isEditing">
+      <h3 class="form-card__title">{{ $t('managerEventForm.ticketTypesTitle') }}</h3>
+      <div class="form-card">
+        <div class="tier-list" v-if="ticketTypes.length">
+          <div class="tier-row" v-for="tier in ticketTypes" :key="tier.id">
+            <div class="tier-row__head">
+              <span class="tier-row__name">{{ tierLabel(tier.tier) }}</span>
+              <span class="tier-row__method">{{ tier.sale_method === 'lottery' ? $t('eventDetail.lotteryLabel') : $t('eventDetail.directSaleLabel') }}</span>
+              <span class="tier-row__price">&yen;{{ formatNumber(tier.price) }}</span>
+              <span class="tier-row__qty">{{ $t('managerEventForm.soldOfTotal', { sold: tier.sold_quantity, total: tier.total_quantity }) }}</span>
+            </div>
+
+            <div class="campaign-list" v-if="campaignsFor(tier.id).length">
+              <div class="campaign-row" v-for="campaign in campaignsFor(tier.id)" :key="campaign.id">
+                <span class="campaign-row__status" :class="`campaign-row__status--${campaign.status}`">{{ campaign.status }}</span>
+                <span class="campaign-row__window">{{ formatDate(campaign.kind === 'lottery' ? campaign.entry_start_at : campaign.sale_start_at) }} &rarr; {{ formatDate(campaign.kind === 'lottery' ? campaign.entry_end_at : campaign.sale_end_at) }}</span>
+              </div>
+            </div>
+            <p class="empty-note" v-else>{{ $t('managerEventForm.noCampaigns') }}</p>
+
+            <button v-if="campaignFormTierId !== tier.id" type="button" class="add-link" @click="openAddCampaign(tier)">{{ $t('managerEventForm.addCampaign') }}</button>
+
+            <form v-else class="field-grid campaign-form" @submit.prevent="addCampaign(tier)">
+              <template v-if="tier.sale_method === 'lottery'">
+                <label class="field">
+                  <span class="field__label">{{ $t('managerEventForm.entryStart') }}</span>
+                  <input type="datetime-local" v-model="newCampaign.entry_start_at" required>
+                </label>
+                <label class="field">
+                  <span class="field__label">{{ $t('managerEventForm.entryEnd') }}</span>
+                  <input type="datetime-local" v-model="newCampaign.entry_end_at" required>
+                </label>
+                <label class="field">
+                  <span class="field__label">{{ $t('managerEventForm.maxEntriesPerUser') }}</span>
+                  <input type="number" min="1" v-model.number="newCampaign.max_entries_per_user">
+                </label>
+                <label class="field">
+                  <span class="field__label">{{ $t('managerEventForm.paymentDeadlineHours') }}</span>
+                  <input type="number" min="1" v-model.number="newCampaign.payment_deadline_hours">
+                </label>
+              </template>
+              <template v-else>
+                <label class="field">
+                  <span class="field__label">{{ $t('managerEventForm.saleStart') }}</span>
+                  <input type="datetime-local" v-model="newCampaign.sale_start_at" required>
+                </label>
+                <label class="field">
+                  <span class="field__label">{{ $t('managerEventForm.saleEnd') }}</span>
+                  <input type="datetime-local" v-model="newCampaign.sale_end_at" required>
+                </label>
+              </template>
+              <div class="form-actions campaign-form__actions">
+                <button type="button" class="cancel-btn" @click="campaignFormTierId = null">{{ $t('common.cancel') }}</button>
+                <button type="submit" class="save-btn" :disabled="savingCampaign">{{ savingCampaign ? $t('common.saving') : $t('common.save') }}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+        <p class="empty-note" v-else>{{ $t('managerEventForm.noTicketTypes') }}</p>
+
+        <p class="form-error" v-if="campaignError">{{ campaignError }}</p>
+
+        <button v-if="!showAddTicketType" type="button" class="add-link" @click="openAddTicketType">{{ $t('managerEventForm.addTicketType') }}</button>
+
+        <form v-else class="ticket-type-form" @submit.prevent="addTicketType">
+          <div class="field-grid">
+            <label class="field">
+              <span class="field__label">{{ $t('managerEventForm.tier') }}</span>
+              <select v-model="newTicketType.tier">
+                <option value="vip">{{ $t('managerEventForm.tierVip') }}</option>
+                <option value="premium">{{ $t('managerEventForm.tierPremium') }}</option>
+                <option value="regular">{{ $t('managerEventForm.tierRegular') }}</option>
+              </select>
+            </label>
+            <label class="field">
+              <span class="field__label">{{ $t('managerEventForm.saleMethod') }}</span>
+              <select v-model="newTicketType.sale_method">
+                <option value="direct">{{ $t('eventDetail.directSaleLabel') }}</option>
+                <option value="lottery">{{ $t('eventDetail.lotteryLabel') }}</option>
+              </select>
+            </label>
+            <label class="field">
+              <span class="field__label">{{ $t('managerEventForm.price') }}</span>
+              <input type="number" min="0" step="1" v-model.number="newTicketType.price" required>
+            </label>
+            <label class="field">
+              <span class="field__label">{{ $t('managerEventForm.totalQuantity') }}</span>
+              <input type="number" min="1" v-model.number="newTicketType.total_quantity" required>
+            </label>
+          </div>
+          <p class="form-error" v-if="ticketTypeError">{{ ticketTypeError }}</p>
+          <div class="form-actions">
+            <button type="button" class="cancel-btn" @click="showAddTicketType = false">{{ $t('common.cancel') }}</button>
+            <button type="submit" class="save-btn" :disabled="savingTicketType">{{ savingTicketType ? $t('common.saving') : $t('common.save') }}</button>
+          </div>
+        </form>
+      </div>
+
+      <h3 class="form-card__title">{{ $t('managerEventForm.lotteryDrawTitle') }}</h3>
+      <div class="form-card">
+        <p class="field__hint">{{ canDrawLottery ? $t('managerEventForm.lotteryDrawReady') : $t('managerEventForm.lotteryDrawNotReady') }}</p>
+        <div class="form-actions">
+          <button type="button" class="save-btn" :disabled="!canDrawLottery || drawing" @click="runLotteryDraw">{{ drawing ? $t('common.saving') : $t('managerEvents.runLotteryDraw') }}</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
+import { format, parseISO } from 'date-fns'
+
 import { ConcertsService } from '@/services/concerts.service'
+import { TicketTypesService } from '@/services/ticketTypes.service'
+import { LotteryService } from '@/services/lottery.service'
+import { DirectSaleCampaignService } from '@/services/directSaleCampaign.service'
 import { useToastStore } from '@/store/toast'
+import { formatNumber } from '@/utils/format'
 
 const STATUS_OPTIONS = ['scheduled', 'on_sale', 'sold_out', 'completed', 'cancelled']
 
@@ -84,6 +199,20 @@ function emptyForm () {
   return { title: '', venue_id: '', capacity: '', event_datetime: '', doors_open_at: '', description: '', status: STATUS_OPTIONS[0] }
 }
 
+function emptyTicketTypeForm () {
+  return { tier: 'regular', sale_method: 'direct', price: '', total_quantity: '' }
+}
+
+// Shape depends on which tier's "add campaign" form is open — lottery
+// needs an entry window + per-fan cap + payment deadline, direct-sale
+// just needs a sale window (see LotteryCampaignCreate/DirectSaleCampaignCreate
+// in the backend repo's app/schema/).
+function emptyCampaignForm (saleMethod) {
+  return saleMethod === 'lottery'
+    ? { entry_start_at: '', entry_end_at: '', max_entries_per_user: 1, payment_deadline_hours: 48 }
+    : { sale_start_at: '', sale_end_at: '' }
+}
+
 export default {
   name: 'ManagerEventFormPage',
 
@@ -98,7 +227,21 @@ export default {
       form: emptyForm(),
       error: '',
       saving: false,
-      statusOptions: STATUS_OPTIONS
+      statusOptions: STATUS_OPTIONS,
+      ticketTypes: [],
+      lotteryCampaigns: [],
+      directSaleCampaigns: [],
+      showAddTicketType: false,
+      newTicketType: emptyTicketTypeForm(),
+      ticketTypeError: '',
+      savingTicketType: false,
+      // Which ticket type's inline "add campaign" form is currently open —
+      // only one at a time, rather than tracking form state per tier.
+      campaignFormTierId: null,
+      newCampaign: emptyCampaignForm('direct'),
+      campaignError: '',
+      savingCampaign: false,
+      drawing: false
     }
   },
 
@@ -125,6 +268,20 @@ export default {
     // to change the date/doors-open time/capacity.
     isEventLocked () {
       return this.isEditing && !!this.concert && EVENT_OPEN_STATUSES.includes(this.concert.status)
+    },
+    openLotteryCampaigns () {
+      return this.lotteryCampaigns.filter(campaign => campaign.status === 'open')
+    },
+    // Mirrors lottery_draw_service.draw_lottery's own gate exactly: it
+    // rejects the whole draw if ANY open campaign's entry window hasn't
+    // ended yet. That check only runs inside the async Celery task, though
+    // — the endpoint that enqueues it just says "queued" regardless — so
+    // without this the manager gets no feedback at all that the draw they
+    // just "successfully" queued silently did nothing.
+    canDrawLottery () {
+      if (!this.openLotteryCampaigns.length) return false
+      const now = new Date()
+      return this.openLotteryCampaigns.every(campaign => new Date(campaign.entry_end_at) < now)
     }
   },
 
@@ -148,9 +305,11 @@ export default {
 
   created () {
     this.fetchPage()
+    this.fetchTicketData()
   },
 
   methods: {
+    formatNumber,
     async fetchPage () {
       try {
         const response = await ConcertsService.getManagerEventsPagePublic()
@@ -158,6 +317,113 @@ export default {
         this.venues = response.data.venues
       } catch (error) {
         this.error = error.message
+      }
+    },
+    // The concert-detail bundle already carries ticket_types and every
+    // lottery/direct-sale campaign for this concert (see
+    // ConcertsService.getDetailPublic) — reused here instead of a bespoke
+    // manager-only read endpoint. A brand new concert has no id yet, so
+    // there's nothing to fetch until isEditing.
+    async fetchTicketData () {
+      if (!this.isEditing) return
+      try {
+        const response = await ConcertsService.getDetailPublic(this.id)
+        this.ticketTypes = response.data.ticket_types
+        this.lotteryCampaigns = response.data.lottery_campaigns
+        this.directSaleCampaigns = response.data.direct_sale_campaigns
+      } catch (error) {
+        this.ticketTypeError = error.message
+      }
+    },
+    tierLabel (tier) {
+      return tier ? tier.charAt(0).toUpperCase() + tier.slice(1) : ''
+    },
+    formatDate (iso) {
+      return iso ? format(parseISO(iso), 'MMM d, yyyy · h:mm a') : '—'
+    },
+    campaignsFor (tierId) {
+      return [
+        ...this.lotteryCampaigns.filter(campaign => campaign.ticket_type_id === tierId).map(campaign => ({ ...campaign, kind: 'lottery' })),
+        ...this.directSaleCampaigns.filter(campaign => campaign.ticket_type_id === tierId).map(campaign => ({ ...campaign, kind: 'direct' }))
+      ]
+    },
+    openAddTicketType () {
+      this.showAddTicketType = true
+      this.newTicketType = emptyTicketTypeForm()
+      this.ticketTypeError = ''
+    },
+    async addTicketType () {
+      if (!this.newTicketType.price || !this.newTicketType.total_quantity) {
+        this.ticketTypeError = this.$t('managerEventForm.errorTicketTypeRequired')
+        return
+      }
+      this.savingTicketType = true
+      this.ticketTypeError = ''
+      try {
+        await TicketTypesService.create({
+          concert_id: this.id,
+          tier: this.newTicketType.tier,
+          sale_method: this.newTicketType.sale_method,
+          price: this.newTicketType.price,
+          total_quantity: this.newTicketType.total_quantity
+        })
+        this.showAddTicketType = false
+        await this.fetchTicketData()
+        useToastStore().add({ type: 'success', message: this.$t('managerEventForm.ticketTypeAdded') })
+      } catch (error) {
+        this.ticketTypeError = error.message
+      } finally {
+        this.savingTicketType = false
+      }
+    },
+    openAddCampaign (tier) {
+      this.campaignFormTierId = tier.id
+      this.newCampaign = emptyCampaignForm(tier.sale_method)
+      this.campaignError = ''
+    },
+    async addCampaign (tier) {
+      this.savingCampaign = true
+      this.campaignError = ''
+      try {
+        if (tier.sale_method === 'lottery') {
+          await LotteryService.create({
+            ticket_type_id: tier.id,
+            entry_start_at: fromDatetimeLocal(this.newCampaign.entry_start_at),
+            entry_end_at: fromDatetimeLocal(this.newCampaign.entry_end_at),
+            max_entries_per_user: this.newCampaign.max_entries_per_user,
+            payment_deadline_hours: this.newCampaign.payment_deadline_hours
+          })
+        } else {
+          await DirectSaleCampaignService.create({
+            ticket_type_id: tier.id,
+            sale_start_at: fromDatetimeLocal(this.newCampaign.sale_start_at),
+            sale_end_at: fromDatetimeLocal(this.newCampaign.sale_end_at)
+          })
+        }
+        this.campaignFormTierId = null
+        await this.fetchTicketData()
+        useToastStore().add({ type: 'success', message: this.$t('managerEventForm.campaignAdded') })
+      } catch (error) {
+        this.campaignError = error.message
+      } finally {
+        this.savingCampaign = false
+      }
+    },
+    // Enqueues the backend's async draw job (see concerts.service.js) —
+    // this call only confirms the job was scheduled, not its outcome, so
+    // there's nothing here to refetch immediately after. canDrawLottery
+    // already keeps this disabled until every open campaign's entry window
+    // has ended, mirroring the job's own gate (see that computed).
+    async runLotteryDraw () {
+      if (!window.confirm(this.$t('managerEvents.confirmLotteryDraw', { title: this.concert.title }))) return
+      this.drawing = true
+      try {
+        await ConcertsService.drawLottery(this.id)
+        useToastStore().add({ type: 'success', message: this.$t('managerEvents.lotteryDrawQueued') })
+      } catch (error) {
+        useToastStore().add({ type: 'error', message: error.message })
+      } finally {
+        this.drawing = false
       }
     },
     statusLabel (status) {
@@ -194,7 +460,13 @@ export default {
           await ConcertsService.update(this.id, { ...fields, status: this.form.status })
           useToastStore().add({ type: 'success', message: this.$t('managerEventForm.updateSuccess') })
         } else {
-          await ConcertsService.create({ ...fields, company_id: this.companyId })
+          // Straight into Edit for the concert just created, not back to
+          // the list — ticket types/campaigns can only be added once the
+          // concert itself exists, so this is where a manager needs to
+          // land next anyway.
+          const response = await ConcertsService.create({ ...fields, company_id: this.companyId })
+          this.$router.push({ name: 'manager-events-edit', params: { id: response.data.id } })
+          return
         }
         this.$router.push({ name: 'manager-events' })
       } catch (error) {
@@ -368,5 +640,131 @@ export default {
     opacity: .6;
     cursor: default;
   }
+}
+
+.empty-note {
+  font-family: $font-content;
+  font-size: 13px;
+  color: $color-gray-500;
+}
+
+.tier-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tier-row {
+  border: 1.5px solid $color-line;
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tier-row__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.tier-row__name {
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 14px;
+  color: $color-ink;
+}
+
+.tier-row__method {
+  font-family: $font-content;
+  font-size: 12px;
+  color: $color-gray-500;
+  background: $color-gray-100;
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+.tier-row__price {
+  font-family: $font-content;
+  font-weight: 900;
+  font-size: 14px;
+  color: $color-ink;
+  margin-left: auto;
+}
+
+.tier-row__qty {
+  font-family: $font-content;
+  font-size: 12px;
+  color: $color-gray-500;
+}
+
+.campaign-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.campaign-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: $font-content;
+  font-size: 12.5px;
+  color: $color-font-main;
+}
+
+.campaign-row__status {
+  flex: none;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+  background: $color-gray-100;
+  color: $color-gray-500;
+
+  &--open {
+    background: #e6f7ef;
+    color: #147a52;
+  }
+
+  &--drawn,
+  &--completed {
+    background: $color-brand-tint;
+    color: $color-brand;
+  }
+
+  &--cancelled {
+    background: #fdeaf1;
+    color: $color-error;
+  }
+}
+
+.add-link {
+  align-self: flex-start;
+  border: none;
+  background: none;
+  padding: 4px 0;
+  cursor: pointer;
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 13px;
+  color: $color-brand;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.campaign-form {
+  border-top: 1px dashed $color-line;
+  padding-top: 12px;
+}
+
+.campaign-form__actions {
+  grid-column: 1 / -1;
 }
 </style>

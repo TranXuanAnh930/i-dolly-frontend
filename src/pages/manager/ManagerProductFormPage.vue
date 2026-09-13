@@ -38,6 +38,69 @@
           <textarea v-model="form.description" rows="4" required></textarea>
         </label>
 
+        <!-- Only for a brand-new product — a product is always created
+             together with its album/merch detail row now (see
+             product_service.add_product_with_detail), so this only ever
+             makes sense while there isn't a product yet to attach to. -->
+        <template v-if="!isEditing && form.category_id">
+          <h4 class="section-title">{{ $t('managerProductForm.attachToTitle') }}</h4>
+
+          <div class="field-grid">
+            <label class="field">
+              <span class="field__label">{{ $t('managerProductForm.ownerType') }}</span>
+              <select v-model="detail.ownerType">
+                <option value="idol">{{ $t('managerProductForm.ownerTypeIdol') }}</option>
+                <option value="group">{{ $t('managerProductForm.ownerTypeGroup') }}</option>
+              </select>
+            </label>
+            <label class="field" v-if="detail.ownerType === 'idol'">
+              <span class="field__label">{{ $t('managerProductForm.idol') }}</span>
+              <select v-model="detail.idol_id" required>
+                <option value="" disabled>{{ $t('managerProductForm.selectIdolPlaceholder') }}</option>
+                <option v-for="idol in myIdols" :key="idol.id" :value="idol.id">{{ idol.name }}</option>
+              </select>
+            </label>
+            <label class="field" v-else>
+              <span class="field__label">{{ $t('managerProductForm.group') }}</span>
+              <select v-model="detail.group_id" required>
+                <option value="" disabled>{{ $t('managerProductForm.selectGroupPlaceholder') }}</option>
+                <option v-for="group in myGroups" :key="group.id" :value="group.id">{{ group.name }}</option>
+              </select>
+            </label>
+
+            <template v-if="detailKind === 'album'">
+              <label class="field">
+                <span class="field__label">{{ $t('managerProductForm.releaseDate') }}</span>
+                <input type="date" v-model="detail.release_date">
+              </label>
+              <label class="field">
+                <span class="field__label">{{ $t('managerProductForm.trackCount') }}</span>
+                <input type="number" min="1" v-model.number="detail.track_count">
+              </label>
+              <label class="field">
+                <span class="field__label">{{ $t('managerProductForm.format') }}</span>
+                <select v-model="detail.format">
+                  <option value="physical">{{ $t('managerProductForm.formatPhysical') }}</option>
+                  <option value="digital">{{ $t('managerProductForm.formatDigital') }}</option>
+                </select>
+              </label>
+            </template>
+            <template v-else>
+              <label class="field">
+                <span class="field__label">{{ $t('managerProductForm.edition') }}</span>
+                <input v-model="detail.edition">
+              </label>
+              <label class="field">
+                <span class="field__label">{{ $t('managerProductForm.color') }}</span>
+                <select v-model="detail.color_id">
+                  <option value="">{{ $t('managerProductForm.noColor') }}</option>
+                  <option v-for="color in colors" :key="color.id" :value="color.id">{{ color.name }}</option>
+                </select>
+              </label>
+            </template>
+          </div>
+        </template>
+
         <p class="form-error" v-if="error">{{ error }}</p>
 
         <div class="form-actions">
@@ -57,6 +120,19 @@ function emptyForm () {
   return { name: '', category_id: '', price: '', quantity: '', description: '' }
 }
 
+function emptyDetailForm () {
+  return {
+    ownerType: 'idol', // 'idol' | 'group' — which of idol_id/group_id is sent
+    idol_id: '',
+    group_id: '',
+    release_date: '',
+    track_count: '',
+    format: 'physical',
+    edition: '',
+    color_id: ''
+  }
+}
+
 export default {
   name: 'ManagerProductFormPage',
 
@@ -68,7 +144,11 @@ export default {
     return {
       products: [],
       categories: [],
+      idols: [],
+      groups: [],
+      colors: [],
       form: emptyForm(),
+      detail: emptyDetailForm(),
       imageFile: null,
       error: '',
       saving: false
@@ -87,6 +167,22 @@ export default {
     // AdminProductFormPage for the unscoped admin equivalent.
     companyId () {
       return this.$currentUser.company_id
+    },
+    selectedCategory () {
+      return this.categories.find(c => c.id === this.form.category_id) || null
+    },
+    // "Merch" is the one category name that isn't an album/single/EP — see
+    // add_product_with_detail's detail_kind. Categories are a small, fixed
+    // seeded set (docs/database-design.md), not open-ended, so matching by
+    // name here is safe.
+    detailKind () {
+      return this.selectedCategory && this.selectedCategory.name === 'Merch' ? 'merch' : 'album'
+    },
+    myIdols () {
+      return this.idols.filter(idol => idol.company_id === this.companyId)
+    },
+    myGroups () {
+      return this.groups.filter(group => group.company_id === this.companyId)
     }
   },
 
@@ -119,6 +215,9 @@ export default {
         const response = await ProductsService.getManagerProductFormPagePublic(this.companyId)
         this.products = response.data.products
         this.categories = response.data.categories
+        this.idols = response.data.idols
+        this.groups = response.data.groups
+        this.colors = response.data.colors
       } catch (error) {
         this.error = error.message
       }
@@ -129,6 +228,11 @@ export default {
     async save () {
       if (!this.form.name.trim() || !this.form.category_id || !this.form.description.trim()) {
         this.error = this.$t('managerProductForm.errorRequired')
+        return
+      }
+      const ownerId = this.detail.ownerType === 'idol' ? this.detail.idol_id : this.detail.group_id
+      if (!this.isEditing && !ownerId) {
+        this.error = this.$t('managerProductForm.errorOwnerRequired')
         return
       }
       this.saving = true
@@ -146,7 +250,19 @@ export default {
           if (this.imageFile) await ProductsService.uploadImage(this.id, this.imageFile)
           useToastStore().add({ type: 'success', message: this.$t('managerProductForm.updateSuccess') })
         } else {
-          await ProductsService.create({ ...fields, image: this.imageFile })
+          const isAlbum = this.detailKind === 'album'
+          await ProductsService.createWithDetail({
+            ...fields,
+            image: this.imageFile,
+            detail_kind: this.detailKind,
+            idol_id: this.detail.ownerType === 'idol' ? this.detail.idol_id : null,
+            group_id: this.detail.ownerType === 'group' ? this.detail.group_id : null,
+            release_date: isAlbum ? (this.detail.release_date || null) : null,
+            track_count: isAlbum ? (this.detail.track_count || null) : null,
+            format: isAlbum ? this.detail.format : null,
+            edition: isAlbum ? null : (this.detail.edition || null),
+            color_id: isAlbum ? null : (this.detail.color_id || null)
+          })
         }
         this.$router.push({ name: 'manager-products' })
       } catch (error) {
@@ -205,6 +321,16 @@ export default {
   font-weight: 900;
   font-size: 18px;
   color: $color-ink;
+}
+
+.section-title {
+  margin-top: -4px;
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: $color-gray-500;
 }
 
 .field-grid {
