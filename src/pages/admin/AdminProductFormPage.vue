@@ -216,6 +216,10 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  // Grid items default to min-width: auto, so a long <option> (e.g. a
+  // category name) forces its whole column wider than the sibling
+  // column's 1fr share instead of the two columns splitting evenly.
+  min-width: 0;
 }
 
 .field__label {

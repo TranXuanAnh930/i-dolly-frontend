@@ -23,12 +23,15 @@ export class ConcertsService extends BaseService {
     }
   }
 
-  // GET /concerts/{id}/detail — public, no auth. One bundled response for a
-  // concert's own detail page: the concert, its venue, its ticket types,
-  // the resolved idol lineup, and the distinct performing groups.
+  // GET /concerts/{id}/detail — public, works with or without auth. One
+  // bundled response for a concert's own detail page: the concert, its
+  // venue, its ticket types, the resolved idol lineup, the distinct
+  // performing groups, and — personalized for whoever's logged in, false/
+  // false for a guest — has_ticket/has_won_lottery. `auth: true` attaches
+  // the bearer when one exists; the endpoint itself never requires it.
   static async getDetailPublic (id) {
     try {
-      const response = await this.request().get(`${this.entity}/${id}/detail`)
+      const response = await this.request({ auth: true }).get(`${this.entity}/${id}/detail`)
       return this.responseWrapper(response, response.data)
     } catch (error) {
       const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
@@ -44,6 +47,22 @@ export class ConcertsService extends BaseService {
   static async getManagerEventsPagePublic () {
     try {
       const response = await this.request().get(`${this.entity}/manager-events-page`)
+      return this.responseWrapper(response, response.data)
+    } catch (error) {
+      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
+      throw this.errorWrapper(error, message)
+    }
+  }
+
+  // PUT /concerts/lottery-draw/{id} — manager/admin only. Enqueues the
+  // backend's async lottery-draw job for every open campaign on this
+  // concert; the response is just a "queued" acknowledgement, not the
+  // actual results — winners/losers show up once the worker finishes by
+  // re-fetching the campaign(s) (status flips open → drawn) or the
+  // affected fans' own lottery entries, not from this call's response.
+  static async drawLottery (id) {
+    try {
+      const response = await this.request({ auth: true }).put(`${this.entity}/lottery-draw/${id}`)
       return this.responseWrapper(response, response.data)
     } catch (error) {
       const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText

@@ -39,6 +39,7 @@
               </td>
               <td class="actions">
                 <router-link :to="{ name: 'admin-events-edit', params: { id: concert.id } }">{{ $t('common.edit') }}</router-link>
+                <button v-if="concert.status !== 'cancelled'" type="button" @click="runLotteryDraw(concert)">{{ $t('managerEvents.runLotteryDraw') }}</button>
                 <button v-if="concert.status !== 'cancelled'" type="button" class="danger" @click="cancelEvent(concert)">{{ $t('managerEvents.cancelEvent') }}</button>
               </td>
             </tr>
@@ -57,6 +58,7 @@ import { format, parseISO } from 'date-fns'
 
 import { ConcertsService } from '@/services/concerts.service'
 import { useCompaniesStore } from '@/store/companies'
+import { useToastStore } from '@/store/toast'
 
 export default {
   name: 'AdminEventsPage',
@@ -123,6 +125,18 @@ export default {
         await this.fetchPage()
       } catch (error) {
         this.error = error.message
+      }
+    },
+    // Enqueues the backend's async draw job (see concerts.service.js) —
+    // this call only confirms the job was scheduled, not its outcome, so
+    // there's nothing here to refetch immediately after.
+    async runLotteryDraw (concert) {
+      if (!window.confirm(this.$t('managerEvents.confirmLotteryDraw', { title: concert.title }))) return
+      try {
+        await ConcertsService.drawLottery(concert.id)
+        useToastStore().add({ type: 'success', message: this.$t('managerEvents.lotteryDrawQueued') })
+      } catch (error) {
+        useToastStore().add({ type: 'error', message: error.message })
       }
     }
   }

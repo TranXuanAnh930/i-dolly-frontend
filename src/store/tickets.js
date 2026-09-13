@@ -17,7 +17,12 @@ export const useTicketsStore = defineStore('tickets', {
     sorted (state) {
       return [...state.items].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
     },
-    byId: (state) => (id) => state.items.find(ticket => ticket.id === id)
+    byId: (state) => (id) => state.items.find(ticket => ticket.id === id),
+    // A lottery win creates a Ticket row pointing back at the LotteryEntry
+    // that won it (see lotteryEntries store's comment on why that link
+    // can't be read the other way round) — used by LotteryResultDetailsPage
+    // to find the ticket a "Pay now" button should link to.
+    byLotteryEntryId: (state) => (lotteryEntryId) => state.items.find(ticket => ticket.lottery_entry_id === lotteryEntryId)
   },
 
   actions: {
