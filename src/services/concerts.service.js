@@ -23,12 +23,15 @@ export class ConcertsService extends BaseService {
     }
   }
 
-  // GET /concerts/{id}/detail — public, no auth. One bundled response for a
-  // concert's own detail page: the concert, its venue, its ticket types,
-  // the resolved idol lineup, and the distinct performing groups.
+  // GET /concerts/{id}/detail — public, works with or without auth. One
+  // bundled response for a concert's own detail page: the concert, its
+  // venue, its ticket types, the resolved idol lineup, the distinct
+  // performing groups, and — personalized for whoever's logged in, false/
+  // false for a guest — has_ticket/has_won_lottery. `auth: true` attaches
+  // the bearer when one exists; the endpoint itself never requires it.
   static async getDetailPublic (id) {
     try {
-      const response = await this.request().get(`${this.entity}/${id}/detail`)
+      const response = await this.request({ auth: true }).get(`${this.entity}/${id}/detail`)
       return this.responseWrapper(response, response.data)
     } catch (error) {
       const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText

@@ -1,5 +1,7 @@
 <template>
-  <div v-if="eligible" class="lottery-entry-page">
+  <UiPageLoader v-if="loading"/>
+
+  <div v-else-if="eligible" class="lottery-entry-page">
     <section class="hero">
       <div class="wrapper hero__inner">
         <router-link :to="`/events/${id}`" class="back-link">&larr; {{ concert.title }}</router-link>
@@ -55,15 +57,12 @@
         <template v-for="(choiceId, i) in choices" :key="i">
           <label class="field" v-if="i === 0 || choices[i - 1]">
             <span class="field__label">{{ $t('lotteryEntry.rankLabel', { rank: i + 1 }) }}</span>
-            <div class="rankable-field">
-              <select v-model="choices[i]" @change="onSelectChange(i)">
-                <option value="" disabled>{{ $t('lotteryEntry.selectTierPlaceholder') }}</option>
-                <option v-for="entry in optionsForRank(i)" :key="entry.tier.id" :value="entry.tier.id">
-                  {{ tierLabel(entry.tier) }} — &yen;{{ formatNumber(withTax(entry.tier.price)) }}
-                </option>
-              </select>
-              <button v-if="choices[i]" type="button" class="clear-rank-btn" @click="clearRank(i)" :aria-label="$t('lotteryEntry.clearRank')">&times;</button>
-            </div>
+            <select v-model="choices[i]" @change="onSelectChange(i)">
+              <option value="">{{ $t('lotteryEntry.selectTierPlaceholder') }}</option>
+              <option v-for="entry in optionsForRank(i)" :key="entry.tier.id" :value="entry.tier.id">
+                {{ tierLabel(entry.tier) }} — &yen;{{ formatNumber(withTax(entry.tier.price)) }}
+              </option>
+            </select>
             <!-- Just a default, not a lock — a fan can freely swap this
                  rank out. If they do, their existing entry for this tier
                  (if any) stays as-is; there's no way to withdraw one. -->
@@ -120,16 +119,19 @@
 </template>
 
 <script>
-import { useConcertsStore } from '@/store/concerts'
 import { useLotteryEntriesStore } from '@/store/lotteryEntries'
 import { useToastStore } from '@/store/toast'
+import { ConcertsService } from '@/services/concerts.service'
 import { LotteryService } from '@/services/lottery.service'
 import { paletteColorForId, contrastTextColor } from '@/utils/palette'
 import { formatNumber } from '@/utils/format'
 import { withTax } from '@/utils/tax'
+import UiPageLoader from '@/components/progress-loaders/UiPageLoader.vue'
 
 export default {
   name: 'LotteryEntryPage',
+
+  components: { UiPageLoader },
 
   props: {
     id: { type: String, required: true }
@@ -138,6 +140,7 @@ export default {
   data () {
     return {
       loading: true,
+      concert: null,
       lotteryTiers: [], // [{ tier, campaign }] — only tiers with a currently-open campaign
       step: 1,
       choices: [], // rank-ordered tier ids, one slot per lotteryTiers entry — pre-filled with defaults, always freely editable
@@ -155,21 +158,14 @@ export default {
   },
 
   computed: {
-    concertsStore () {
-      return useConcertsStore()
-    },
-    concert () {
-      return this.concertsStore.concertById(this.id)
-    },
     color () {
       const hex = this.concert ? paletteColorForId(this.concert.id) : '#cccccc'
       return { hex, text: contrastTextColor(hex) }
     },
     eligible () {
-      return !this.loading && !!this.concert && this.concert.status === 'on_sale' && this.lotteryTiers.length > 0
+      return !!this.concert && this.concert.status === 'on_sale' && this.lotteryTiers.length > 0
     },
     ineligibleMessage () {
-      if (this.loading) return this.$t('common.loading')
       if (!this.concert) return this.$t('ticketPurchase.ineligibleNotFound')
       return this.$t('lotteryEntry.ineligibleNoCampaign')
     },
@@ -238,33 +234,37 @@ export default {
     async fetchPage () {
       this.loading = true
       try {
-        await this.concertsStore.fetchAll()
-        await this.concertsStore.fetchTicketTypesForConcert(this.id)
-        const lotteryTypes = this.concertsStore.ticketTypesForConcert(this.id).filter(tier => tier.sale_method === 'lottery')
-        const resolved = await Promise.all(lotteryTypes.map(async tier => {
-          const response = await LotteryService.getCampaignsForTicketType(tier.id)
-          const campaign = response.data.find(this.isEntryOpen)
-          return campaign ? { tier, campaign } : null
-        }))
-        this.lotteryTiers = resolved.filter(Boolean)
+        // One call — the concert-detail endpoint embeds this concert's
+        // ticket types, every lottery campaign across them, and (for
+        // whoever's logged in) which of those campaigns they've already
+        // entered and their existing preference ranking. Nothing here
+        // needs a second request.
+        const response = await ConcertsService.getDetailPublic(this.id)
+        this.concert = response.data.concert
+
+        const campaignsByTierId = {}
+        response.data.lottery_campaigns.forEach(campaign => {
+          if (!campaignsByTierId[campaign.ticket_type_id]) campaignsByTierId[campaign.ticket_type_id] = []
+          campaignsByTierId[campaign.ticket_type_id].push(campaign)
+        })
+        const lotteryTypes = response.data.ticket_types.filter(tier => tier.sale_method === 'lottery')
+        this.lotteryTiers = lotteryTypes
+          .map(tier => {
+            const campaign = (campaignsByTierId[tier.id] || []).find(this.isEntryOpen)
+            return campaign ? { tier, campaign } : null
+          })
+          .filter(Boolean)
         this.choices = new Array(this.lotteryTiers.length).fill('')
 
         // A fan who already has entries/preferences for this concert is
         // editing, not applying fresh — pre-fill their current ranking and
         // skip straight to the preferences step instead of the intro.
-        const lotteryEntriesStore = useLotteryEntriesStore()
-        await lotteryEntriesStore.fetchAll()
-        const openCampaignIds = new Set(this.lotteryTiers.map(entry => entry.campaign.id))
-        this.lockedTierIds = lotteryEntriesStore.items
-          .filter(entry => openCampaignIds.has(entry.campaign_id))
-          .map(entry => {
-            const match = this.lotteryTiers.find(t => t.campaign.id === entry.campaign_id)
-            return match ? match.tier.id : null
-          })
-          .filter(Boolean)
+        const enteredCampaignIds = new Set(response.data.entered_campaign_ids)
+        this.lockedTierIds = this.lotteryTiers
+          .filter(entry => enteredCampaignIds.has(entry.campaign.id))
+          .map(entry => entry.tier.id)
 
-        const preferencesResponse = await LotteryService.getMyPreferences(this.id)
-        const existingRanked = preferencesResponse.data
+        const existingRanked = response.data.my_lottery_preferences
           .slice()
           .sort((a, b) => a.rank - b.rank)
           .map(preference => preference.ticket_type_id)
@@ -291,15 +291,11 @@ export default {
     // the moment each select renders, not retroactively) — clearing
     // everything after i resolves that the same way changing rank 1 used
     // to reset the whole chain, then compaction reflows what's left.
+    // Picking the empty placeholder instead can't create a duplicate, so
+    // later ranks are left alone — compaction just shifts them up to fill
+    // the gap instead of erasing them.
     onSelectChange (i) {
-      this.clearFrom(i + 1)
-      this.compactChoices()
-    },
-    // Removing a rank can't create a duplicate the way changing one can,
-    // so later ranks are left alone — compaction just shifts them up to
-    // fill the gap instead of erasing them.
-    clearRank (i) {
-      this.choices[i] = ''
+      if (this.choices[i]) this.clearFrom(i + 1)
       this.compactChoices()
     },
     // Keeps every filled choice contiguous from index 0. Without this, a
@@ -555,38 +551,6 @@ export default {
   &:focus {
     border-color: $color-brand;
     box-shadow: 0 0 0 4px $color-brand-tint;
-  }
-}
-
-.rankable-field {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  select {
-    flex: 1;
-    min-width: 0;
-  }
-}
-
-.clear-rank-btn {
-  flex: none;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 1.5px solid $color-line;
-  background: $color-white;
-  color: $color-gray-400;
-  font-size: 16px;
-  line-height: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  &:hover {
-    border-color: $color-error;
-    color: $color-error;
   }
 }
 

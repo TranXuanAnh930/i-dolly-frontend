@@ -161,8 +161,6 @@
 import { parseISO } from 'date-fns'
 
 import { ConcertsService } from '@/services/concerts.service'
-import { LotteryService } from '@/services/lottery.service'
-import { DirectSaleCampaignService } from '@/services/directSaleCampaign.service'
 import { paletteColorForId, contrastTextColor } from '@/utils/palette'
 import { resolveMediaUrl } from '@/utils/media'
 import { fallbackPortraitFor } from '@/utils/idolPortrait'
@@ -192,6 +190,10 @@ export default {
       lineup: [],
       performingGroups: [],
       campaignsByTierId: {},
+      // Personalized by the concert-detail endpoint for whoever's logged
+      // in — both stay false for a guest, same as a fan with neither.
+      hasTicket: false,
+      hasWonLottery: false,
       loading: true
     }
   },
@@ -226,7 +228,7 @@ export default {
       return this.ticketTypes.some(tier => this.tierOnSale(tier))
     },
     ctaDisabled () {
-      return !this.concert || this.concert.status !== 'on_sale' || !this.ticketTypes.length || !this.anyTierOnSale
+      return !this.concert || this.concert.status !== 'on_sale' || !this.ticketTypes.length || !this.anyTierOnSale || this.hasTicket || this.hasWonLottery
     },
     ctaLabel () {
       if (!this.concert) return ''
@@ -234,6 +236,12 @@ export default {
       if (this.concert.status === 'scheduled') return this.$t('eventDetail.statusComingSoon')
       if (this.concert.status === 'completed') return this.$t('eventDetail.statusEnded')
       if (this.concert.status === 'cancelled') return this.$t('eventDetail.statusCancelled')
+      // Checked ahead of the ticketTypes/anyTierOnSale fallbacks below —
+      // a fan who's already secured a ticket shouldn't see a generic
+      // "not available" label just because every tier they'd otherwise
+      // qualify for reads as sold out or lottery-closed to them.
+      if (this.hasTicket) return this.$t('eventDetail.statusAlreadyBought')
+      if (this.hasWonLottery) return this.$t('eventDetail.statusAlreadyWon')
       if (!this.ticketTypes.length) return this.$t('eventDetail.statusNotOnSale')
       if (!this.anyTierOnSale) return this.$t('eventDetail.statusUnavailable')
       return this.$t('eventDetail.ctaApply')
@@ -247,6 +255,8 @@ export default {
       if (this.concert.status === 'scheduled') return this.$t('eventDetail.saleNoteScheduled')
       if (this.concert.status === 'completed') return this.$t('eventDetail.saleNoteCompleted')
       if (this.concert.status === 'cancelled') return this.$t('eventDetail.saleNoteCancelled')
+      if (this.hasTicket) return this.$t('eventDetail.saleNoteAlreadyBought')
+      if (this.hasWonLottery) return this.$t('eventDetail.saleNoteAlreadyWon')
       if (!this.anyTierOnSale) return this.$t('eventDetail.saleNoteUnavailable')
       if (!this.directTicketTypes.length) return this.$t('eventDetail.saleNoteLotteryOnly')
       return this.$t('eventDetail.saleNoteDefault')
@@ -272,32 +282,31 @@ export default {
     async fetchPage () {
       this.loading = true
       try {
+        // One call — the concert-detail endpoint now embeds every
+        // campaign (lottery and direct-sale) across every tier on this
+        // concert directly, so there's nothing left to fetch separately.
         const response = await ConcertsService.getDetailPublic(this.id)
         this.concert = response.data.concert
         this.venue = response.data.venue
         this.ticketTypes = response.data.ticket_types
         this.lineup = response.data.lineup
         this.performingGroups = response.data.performing_groups
+        this.hasTicket = response.data.has_ticket
+        this.hasWonLottery = response.data.has_won_lottery
 
-        // The concert-detail endpoint doesn't embed campaigns (it's a
-        // ticket_type concern, not a concert one) — resolve one per tier,
-        // lottery or direct-sale alike, so the tickets section can show
-        // its on-sale window next to the tier's price either way.
-        const lotteryTiers = this.ticketTypes.filter(tier => tier.sale_method === 'lottery')
-        const directTiers = this.ticketTypes.filter(tier => tier.sale_method === 'direct')
-        const resolved = await Promise.all([
-          ...lotteryTiers.map(async tier => {
-            const response = await LotteryService.getCampaignsForTicketType(tier.id)
-            const campaigns = response.data.map(campaign => this.normalizeCampaign(campaign, 'entry_start_at', 'entry_end_at', 'lottery'))
-            return [tier.id, this.mostRelevantCampaign(campaigns)]
-          }),
-          ...directTiers.map(async tier => {
-            const response = await DirectSaleCampaignService.getCampaignsForTicketType(tier.id)
-            const campaigns = response.data.map(campaign => this.normalizeCampaign(campaign, 'sale_start_at', 'sale_end_at', 'direct'))
-            return [tier.id, this.mostRelevantCampaign(campaigns)]
+        const campaignsByTierId = {}
+        const collect = (campaigns, startKey, endKey, saleMethod) => {
+          campaigns.forEach(campaign => {
+            const normalized = this.normalizeCampaign(campaign, startKey, endKey, saleMethod)
+            if (!campaignsByTierId[campaign.ticket_type_id]) campaignsByTierId[campaign.ticket_type_id] = []
+            campaignsByTierId[campaign.ticket_type_id].push(normalized)
           })
-        ])
-        this.campaignsByTierId = Object.fromEntries(resolved)
+        }
+        collect(response.data.lottery_campaigns, 'entry_start_at', 'entry_end_at', 'lottery')
+        collect(response.data.direct_sale_campaigns, 'sale_start_at', 'sale_end_at', 'direct')
+        this.campaignsByTierId = Object.fromEntries(
+          this.ticketTypes.map(tier => [tier.id, this.mostRelevantCampaign(campaignsByTierId[tier.id] || [])])
+        )
       } catch {
         this.concert = null
       } finally {

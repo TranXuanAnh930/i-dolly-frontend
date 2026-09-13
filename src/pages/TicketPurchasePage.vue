@@ -1,5 +1,7 @@
 <template>
-  <div v-if="eligible" class="ticket-page">
+  <UiPageLoader v-if="loading"/>
+
+  <div v-else-if="eligible" class="ticket-page">
     <section class="hero">
       <div class="wrapper hero__inner">
         <router-link :to="`/events/${concert.id}`" class="back-link">&larr; {{ concert.title }}</router-link>
@@ -215,20 +217,21 @@
 <script>
 import { parseISO } from 'date-fns'
 
-import { useConcertsStore } from '@/store/concerts'
 import { useTicketsStore } from '@/store/tickets'
 import { useToastStore } from '@/store/toast'
+import { ConcertsService } from '@/services/concerts.service'
+import { TicketTypesService } from '@/services/ticketTypes.service'
 import { TicketService } from '@/services/ticket.service'
-import { LotteryService } from '@/services/lottery.service'
-import { DirectSaleCampaignService } from '@/services/directSaleCampaign.service'
+import { paletteColorForId, contrastTextColor } from '@/utils/palette'
 import { formatDate, formatNumber } from '@/utils/format'
 import { withTax } from '@/utils/tax'
 import VenueSeatMap from '@/components/VenueSeatMap.vue'
+import UiPageLoader from '@/components/progress-loaders/UiPageLoader.vue'
 
 export default {
   name: 'TicketPurchasePage',
 
-  components: { VenueSeatMap },
+  components: { VenueSeatMap, UiPageLoader },
 
   props: {
     id: { type: String, required: true }
@@ -236,6 +239,9 @@ export default {
 
   data () {
     return {
+      loading: true,
+      concert: null,
+      ticketTypes: [],
       step: 1,
       selectedTierId: null,
       campaignsByTierId: {},
@@ -255,26 +261,16 @@ export default {
   },
 
   computed: {
-    concertsStore () {
-      return useConcertsStore()
-    },
-    concert () {
-      return this.concertsStore.concertById(this.id)
-    },
     color () {
-      return this.concertsStore.colorForConcert(this.concert)
-    },
-    // Every tier for this concert — buyers can either apply for a lottery
-    // tier or go straight to checkout for a direct-sale one.
-    allTicketTypes () {
-      return this.concert ? this.concertsStore.ticketTypesForConcert(this.concert.id) : []
+      const hex = this.concert ? paletteColorForId(this.concert.id) : '#cccccc'
+      return { hex, text: contrastTextColor(hex) }
     },
     // Only tiers a fan could actually act on right now: a direct-sale tier
     // with stock left, or a lottery tier with a currently open campaign.
     // Sold-out/lottery-closed tiers are left off the list entirely rather
     // than shown disabled, so there's nothing to select in the first place.
     availableTicketTypes () {
-      return this.allTicketTypes.filter(tier => this.tierOnSale(tier))
+      return this.ticketTypes.filter(tier => this.tierOnSale(tier))
     },
     eligible () {
       return !!this.concert && this.concert.status === 'on_sale' && this.availableTicketTypes.length > 0
@@ -284,7 +280,7 @@ export default {
       if (this.concert.status === 'sold_out') return this.$t('ticketPurchase.ineligibleSoldOut')
       if (this.concert.status === 'completed') return this.$t('ticketPurchase.ineligibleCompleted')
       if (this.concert.status === 'cancelled') return this.$t('ticketPurchase.ineligibleCancelled')
-      if (this.allTicketTypes.length && !this.availableTicketTypes.length) return this.$t('ticketPurchase.ineligibleUnavailable')
+      if (this.ticketTypes.length && !this.availableTicketTypes.length) return this.$t('ticketPurchase.ineligibleUnavailable')
       return this.$t('ticketPurchase.ineligibleDefault')
     },
     selectedTier () {
@@ -314,18 +310,23 @@ export default {
     id: {
       immediate: true,
       async handler () {
-        await this.concertsStore.fetchAll()
-        if (!this.concert) return
-        await this.concertsStore.fetchTicketTypesForConcert(this.concert.id)
-        await this.fetchCampaigns()
+        this.loading = true
+        try {
+          // One call — the concert-detail endpoint embeds this concert's
+          // ticket types and every campaign (lottery and direct-sale)
+          // across them, so there's nothing left to fetch separately.
+          const response = await ConcertsService.getDetailPublic(this.id)
+          this.concert = response.data.concert
+          this.ticketTypes = response.data.ticket_types
+          this.campaignsByTierId = this.campaignsByTierIdFrom(response.data)
 
-        // Only default/fall back the selection once ticket types AND
-        // campaigns have both resolved — availableTicketTypes recomputes
-        // reactively after each await above, so picking a default any
-        // earlier could latch onto a tier that only looked available
-        // because its campaign hadn't loaded yet.
-        if (!this.availableTicketTypes.some(tier => tier.id === this.selectedTierId)) {
-          this.selectedTierId = this.availableTicketTypes.length ? this.availableTicketTypes[0].id : null
+          if (!this.availableTicketTypes.some(tier => tier.id === this.selectedTierId)) {
+            this.selectedTierId = this.availableTicketTypes.length ? this.availableTicketTypes[0].id : null
+          }
+        } catch {
+          this.concert = null
+        } finally {
+          this.loading = false
         }
       }
     }
@@ -367,20 +368,15 @@ export default {
       const now = new Date()
       return campaign.status === 'open' && now >= new Date(campaign.sale_start_at) && now <= new Date(campaign.sale_end_at)
     },
-    async fetchCampaigns () {
-      const lotteryTiers = this.allTicketTypes.filter(tier => tier.sale_method === 'lottery')
-      const directTiers = this.allTicketTypes.filter(tier => tier.sale_method === 'direct')
-      const resolved = await Promise.all([
-        ...lotteryTiers.map(async tier => {
-          const response = await LotteryService.getCampaignsForTicketType(tier.id)
-          return [tier.id, response.data.find(this.isEntryOpen) || null]
-        }),
-        ...directTiers.map(async tier => {
-          const response = await DirectSaleCampaignService.getCampaignsForTicketType(tier.id)
-          return [tier.id, response.data.find(this.isSaleOpen) || null]
-        })
-      ])
-      this.campaignsByTierId = Object.fromEntries(resolved)
+    campaignsByTierIdFrom (detail) {
+      const byTierId = {}
+      detail.lottery_campaigns.forEach(campaign => {
+        if (!byTierId[campaign.ticket_type_id] && this.isEntryOpen(campaign)) byTierId[campaign.ticket_type_id] = campaign
+      })
+      detail.direct_sale_campaigns.forEach(campaign => {
+        if (!byTierId[campaign.ticket_type_id] && this.isSaleOpen(campaign)) byTierId[campaign.ticket_type_id] = campaign
+      })
+      return byTierId
     },
     // Lottery entry is its own multi-step ranked-preference flow now (see
     // LotteryEntryPage.vue) — this page only ever handles direct-sale
@@ -437,9 +433,9 @@ export default {
         })
 
         // The tier's sold_quantity just changed server-side (on a
-        // successful purchase) — force a refetch so the cached ticket
-        // types stay accurate if the buyer navigates back to step 1.
-        this.concertsStore.fetchTicketTypesForConcert(this.concert.id, { force: true })
+        // successful purchase) — refetch so ticketTypes stays accurate if
+        // the buyer navigates back to step 1.
+        TicketTypesService.getByConcertPublic(this.concert.id).then(response => { this.ticketTypes = response.data })
       } catch (err) {
         this.error = err.message
       } finally {
