@@ -27,9 +27,8 @@
               </span>
             </td>
             <td class="actions">
+              <router-link :to="{ name: 'manager-events-sales', params: { id: concert.id }, query: { title: concert.title } }">{{ $t('managerProducts.viewSales') }}</router-link>
               <router-link :to="{ name: 'manager-events-edit', params: { id: concert.id } }">{{ $t('common.edit') }}</router-link>
-              <button v-if="concert.status !== 'cancelled'" type="button" @click="runLotteryDraw(concert)">{{ $t('managerEvents.runLotteryDraw') }}</button>
-              <button v-if="concert.status !== 'cancelled'" type="button" class="danger" @click="cancelEvent(concert)">{{ $t('managerEvents.cancelEvent') }}</button>
             </td>
           </tr>
         </tbody>
@@ -45,7 +44,6 @@
 import { format, parseISO } from 'date-fns'
 
 import { ConcertsService } from '@/services/concerts.service'
-import { useToastStore } from '@/store/toast'
 
 export default {
   name: 'ManagerEventsPage',
@@ -93,32 +91,6 @@ export default {
     statusLabel (status) {
       const key = 'status' + status.split('_').map(part => part[0].toUpperCase() + part.slice(1)).join('')
       return this.$t(`events.${key}`)
-    },
-    // "Delete" cancels server-side (sets status="cancelled" — see
-    // concert_service.delete_concert) rather than removing the row, so the
-    // confirm/action pair is named to match: cancelling, not a destructive
-    // "gone for good" delete. A manager can move the status off "cancelled"
-    // again from Edit.
-    async cancelEvent (concert) {
-      if (!window.confirm(this.$t('managerEvents.confirmCancel', { title: concert.title }))) return
-      try {
-        await ConcertsService.remove(concert.id)
-        await this.fetchPage()
-      } catch (error) {
-        this.error = error.message
-      }
-    },
-    // Enqueues the backend's async draw job (see concerts.service.js) —
-    // this call only confirms the job was scheduled, not its outcome, so
-    // there's nothing here to refetch immediately after.
-    async runLotteryDraw (concert) {
-      if (!window.confirm(this.$t('managerEvents.confirmLotteryDraw', { title: concert.title }))) return
-      try {
-        await ConcertsService.drawLottery(concert.id)
-        useToastStore().add({ type: 'success', message: this.$t('managerEvents.lotteryDrawQueued') })
-      } catch (error) {
-        useToastStore().add({ type: 'error', message: error.message })
-      }
     }
   }
 }
@@ -248,11 +220,6 @@ export default {
     &:hover {
       border-color: $color-brand;
       color: $color-brand;
-    }
-
-    &.danger:hover {
-      border-color: $color-error;
-      color: $color-error;
     }
   }
 }

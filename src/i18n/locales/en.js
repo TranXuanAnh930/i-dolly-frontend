@@ -680,7 +680,32 @@ export default {
     doorsOpen: 'Doors open',
     errorRequired: 'Title, venue and event date are required.',
     dateLockedHint: 'This event is already on sale — cancel it first (set status to Cancelled and save), then edit the date/doors-open time/capacity in a separate edit.',
-    updateSuccess: 'Event updated successfully.'
+    updateSuccess: 'Event updated successfully.',
+    ticketTypesTitle: 'Ticket Types',
+    noTicketTypes: 'No ticket types yet for this event.',
+    soldOfTotal: '{sold} / {total} sold',
+    addTicketType: '+ Add ticket type',
+    tier: 'Tier',
+    tierVip: 'VIP',
+    tierPremium: 'Premium',
+    tierRegular: 'Regular',
+    saleMethod: 'Sale method',
+    price: 'Price',
+    totalQuantity: 'Total quantity',
+    errorTicketTypeRequired: 'Price and total quantity are required.',
+    ticketTypeAdded: 'Ticket type added.',
+    noCampaigns: 'No campaigns yet for this tier.',
+    addCampaign: '+ Add campaign',
+    entryStart: 'Entry opens',
+    entryEnd: 'Entry closes',
+    maxEntriesPerUser: 'Max entries per fan',
+    paymentDeadlineHours: 'Payment deadline (hours)',
+    saleStart: 'Sale opens',
+    saleEnd: 'Sale closes',
+    campaignAdded: 'Campaign added.',
+    lotteryDrawTitle: 'Lottery Draw',
+    lotteryDrawReady: 'Every open lottery campaign\'s entry window has closed — ready to draw.',
+    lotteryDrawNotReady: 'The draw unlocks once every open lottery campaign\'s entry window has closed.'
   },
 
   managerProducts: {
@@ -700,7 +725,24 @@ export default {
     selectCategoryPlaceholder: 'Select a category…',
     errorRequired: 'Name, category and description are required.',
     priceLocked: 'Price can only be set when a product is created — ask an admin to change it.',
-    updateSuccess: 'Product updated successfully.'
+    updateSuccess: 'Product updated successfully.',
+    attachToTitle: 'Attach to',
+    ownerType: 'Owner',
+    ownerTypeIdol: 'An idol',
+    ownerTypeGroup: 'A group',
+    idol: 'Idol',
+    selectIdolPlaceholder: 'Select an idol…',
+    group: 'Group',
+    selectGroupPlaceholder: 'Select a group…',
+    releaseDate: 'Release date',
+    trackCount: 'Track count',
+    format: 'Format',
+    formatPhysical: 'Physical',
+    formatDigital: 'Digital',
+    edition: 'Edition',
+    color: 'Color',
+    noColor: 'No color',
+    errorOwnerRequired: 'Choose an idol or group to attach this product to.'
   },
 
   managerProductSales: {
@@ -712,6 +754,18 @@ export default {
     unitPrice: 'Unit price',
     total: 'Total',
     noResults: 'No sales yet for this product.'
+  },
+
+  managerEventSales: {
+    backToEvents: 'Back to events',
+    title: 'Sales — {title}',
+    date: 'Date',
+    tier: 'Tier',
+    source: 'Source',
+    sourceLottery: 'Lottery win',
+    sourceDirect: 'Direct sale',
+    price: 'Price',
+    noResults: 'No sales yet for this event.'
   },
 
   managerOrders: {

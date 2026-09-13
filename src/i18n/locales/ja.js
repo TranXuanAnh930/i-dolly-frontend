@@ -680,7 +680,32 @@ export default {
     doorsOpen: '開場時間',
     errorRequired: 'タイトル・会場・開催日は必須です。',
     dateLockedHint: 'このイベントは既に発売中です — 先にステータスを「中止」にして保存し、その後あらためて編集画面から日時・収容人数を変更してください。',
-    updateSuccess: 'イベント情報を更新しました。'
+    updateSuccess: 'イベント情報を更新しました。',
+    ticketTypesTitle: 'チケット種別',
+    noTicketTypes: 'このイベントのチケット種別はまだありません。',
+    soldOfTotal: '{sold} / {total} 売却済み',
+    addTicketType: '+ チケット種別を追加',
+    tier: '種別',
+    tierVip: 'VIP',
+    tierPremium: 'プレミアム',
+    tierRegular: 'レギュラー',
+    saleMethod: '販売方法',
+    price: '価格',
+    totalQuantity: '総数',
+    errorTicketTypeRequired: '価格と総数は必須です。',
+    ticketTypeAdded: 'チケット種別を追加しました。',
+    noCampaigns: 'この種別のキャンペーンはまだありません。',
+    addCampaign: '+ キャンペーンを追加',
+    entryStart: '応募開始',
+    entryEnd: '応募締切',
+    maxEntriesPerUser: '1人あたりの最大応募数',
+    paymentDeadlineHours: '支払い期限（時間）',
+    saleStart: '販売開始',
+    saleEnd: '販売終了',
+    campaignAdded: 'キャンペーンを追加しました。',
+    lotteryDrawTitle: '抽選',
+    lotteryDrawReady: '開催中の全キャンペーンの応募期間が終了しました — 抽選を実行できます。',
+    lotteryDrawNotReady: '開催中の全キャンペーンの応募期間が終了すると抽選を実行できるようになります。'
   },
 
   managerProducts: {
@@ -700,7 +725,24 @@ export default {
     selectCategoryPlaceholder: 'カテゴリーを選択…',
     errorRequired: '名前・カテゴリー・説明は必須です。',
     priceLocked: '価格は商品作成時のみ設定できます — 変更が必要な場合は管理者に依頼してください。',
-    updateSuccess: '商品情報を更新しました。'
+    updateSuccess: '商品情報を更新しました。',
+    attachToTitle: '関連付け',
+    ownerType: '種別',
+    ownerTypeIdol: 'アイドル',
+    ownerTypeGroup: 'グループ',
+    idol: 'アイドル',
+    selectIdolPlaceholder: 'アイドルを選択…',
+    group: 'グループ',
+    selectGroupPlaceholder: 'グループを選択…',
+    releaseDate: '発売日',
+    trackCount: '収録曲数',
+    format: '形式',
+    formatPhysical: 'フィジカル',
+    formatDigital: 'デジタル',
+    edition: 'エディション',
+    color: 'カラー',
+    noColor: 'カラーなし',
+    errorOwnerRequired: 'この商品を関連付けるアイドルまたはグループを選択してください。'
   },
 
   managerProductSales: {
@@ -712,6 +754,18 @@ export default {
     unitPrice: '単価',
     total: '合計',
     noResults: 'この商品の販売履歴はまだありません。'
+  },
+
+  managerEventSales: {
+    backToEvents: 'イベント一覧へ戻る',
+    title: '販売履歴 — {title}',
+    date: '日時',
+    tier: '種別',
+    source: '入手方法',
+    sourceLottery: '抽選当選',
+    sourceDirect: '直接購入',
+    price: '価格',
+    noResults: 'このイベントの販売履歴はまだありません。'
   },
 
   managerOrders: {

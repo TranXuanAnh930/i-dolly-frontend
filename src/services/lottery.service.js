@@ -1,11 +1,14 @@
 import { BaseService } from './base.service'
 
-// Wraps the fan-facing lottery_preferences/lottery_entries routers — see
-// docs/api-spec.md in the E-commerce backend repo. Campaign data itself is
-// read straight off GET /concerts/{id}/detail now (concerts.service.js),
-// not through here. There's still no endpoint to run the draw itself or to
-// pay for a ticket won through one — see LotteryPaymentPage.vue's comment
-// for how that gap is handled on the frontend for now.
+// Wraps the fan-facing lottery_preferences/lottery_entries routers, plus
+// the manager-facing lottery_campaigns add/update/remove CRUD (all
+// inherited straight from BaseService — POST .../add, PUT .../update/{id},
+// DELETE .../delete/{id} — see ManagerEventFormPage.vue). Reading campaign
+// data is a different path: GET /concerts/{id}/detail (concerts.service.js)
+// bundles it in already, not fetched through here. There's still no
+// endpoint to pay for a ticket won through a lottery — see
+// LotteryPaymentPage.vue's comment for how that gap is handled on the
+// frontend for now.
 export class LotteryService extends BaseService {
   static get entity () {
     return 'lottery_campaigns'
