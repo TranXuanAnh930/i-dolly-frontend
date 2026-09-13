@@ -97,13 +97,17 @@ export default {
     // the same shape the list/icons below already render, then merged with
     // ticketItems and the notification store's entries and re-sorted.
     orderItems () {
+      // A "pending" order only exists for a paypal checkout that hasn't been
+      // approved/captured yet (docs/api-spec.md §6) — the mock gateway never
+      // leaves an order in this state, so this used to be an unreachable
+      // third case.
       return useOrdersStore().sorted.map(order => ({
         id: `order-${order.id}`,
         type: 'order',
         timestamp: order.created_at,
         to: `/history/orders/${order.id}`,
-        titleKey: order.status === 'cancelled' ? 'history.orderCancelledTitle' : 'history.orderPlacedTitle',
-        messageKey: order.status === 'cancelled' ? 'history.orderCancelledMessage' : 'history.orderPlacedMessage',
+        titleKey: order.status === 'cancelled' ? 'history.orderCancelledTitle' : order.status === 'pending' ? 'history.orderPendingTitle' : 'history.orderPlacedTitle',
+        messageKey: order.status === 'cancelled' ? 'history.orderCancelledMessage' : order.status === 'pending' ? 'history.orderPendingMessage' : 'history.orderPlacedMessage',
         messageParams: { orderNumber: order.id.slice(0, 8), amount: formatNumber(order.total_price) }
       }))
     },

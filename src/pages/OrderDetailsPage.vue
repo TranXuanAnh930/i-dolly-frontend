@@ -203,6 +203,11 @@ export default {
     font-weight: 700;
     color: $color-error;
   }
+
+  &.status-line--pending {
+    font-weight: 700;
+    color: $color-brand;
+  }
 }
 
 .block__title {
