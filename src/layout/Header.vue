@@ -199,6 +199,7 @@ export default {
         useOrdersStore().fetchAll()
         useTicketsStore().fetchAll()
         useLotteryEntriesStore().fetchAll()
+        useNotificationStore().startPolling()
       } else {
         cart.clearOnLogout()
         useNotificationStore().clearOnLogout()
@@ -220,6 +221,11 @@ export default {
       useOrdersStore().fetchAll()
       useTicketsStore().fetchAll()
       useLotteryEntriesStore().fetchAll()
+      // Header stays mounted for the whole session, so this is also the
+      // one place that reliably starts the notification poll loop for an
+      // existing session on app boot (an interactive login starts it from
+      // the watcher above instead).
+      useNotificationStore().startPolling()
     }
   },
   methods: {

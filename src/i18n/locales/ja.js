@@ -63,7 +63,19 @@ export default {
     markAllRead: 'すべて既読にする',
     empty: '通知はまだありません。',
     emptyHint: 'ご注文の確認や抽選結果はここに表示されます。',
-    more: 'もっと見る'
+    more: 'もっと見る',
+    orderConfirmationTitle: 'ご注文が確定しました',
+    orderConfirmationMessage: 'ご注文が確定しました — タップして詳細を確認してください。',
+    ticketConfirmationTitle: 'チケットが確定しました',
+    ticketConfirmationMessage: 'チケットのご購入が確定しました — タップして詳細を確認してください。',
+    lotteryWonTitle: '当選しました！',
+    lotteryWonMessage: 'おめでとうございます、抽選に当選しました。タップしてお支払いを完了してください。',
+    lotteryLostTitle: '抽選結果',
+    lotteryLostMessage: '抽選が行われました — タップして結果を確認してください。',
+    passwordResetTitle: 'パスワードが変更されました',
+    passwordResetMessage: 'パスワードがリセットされました。心当たりがない場合はサポートにご連絡ください。',
+    genericTitle: '通知',
+    genericMessage: 'タップして詳細を確認してください。'
   },
 
   menu: {

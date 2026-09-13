@@ -63,7 +63,19 @@ export default {
     markAllRead: 'Mark all read',
     empty: 'No notifications yet.',
     emptyHint: 'Order confirmations and lottery results will show up here as they happen.',
-    more: 'More'
+    more: 'More',
+    orderConfirmationTitle: 'Order confirmed',
+    orderConfirmationMessage: 'Your order has been confirmed — tap to view it.',
+    ticketConfirmationTitle: 'Ticket confirmed',
+    ticketConfirmationMessage: 'Your ticket purchase has been confirmed — tap to view it.',
+    lotteryWonTitle: 'You won!',
+    lotteryWonMessage: 'Congratulations — you won the lottery. Tap to complete payment.',
+    lotteryLostTitle: 'Lottery result',
+    lotteryLostMessage: 'This lottery has been drawn — tap to see the result.',
+    passwordResetTitle: 'Password changed',
+    passwordResetMessage: 'Your password was reset. If this wasn\'t you, contact support.',
+    genericTitle: 'Notification',
+    genericMessage: 'Tap to view details.'
   },
 
   menu: {
