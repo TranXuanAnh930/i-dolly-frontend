@@ -29,6 +29,22 @@ export class ProductsService extends BaseService {
     }
   }
 
+  // POST /products/add_with_detail — bundles product creation with its
+  // AlbumDetail/MerchDetail row (fields.detail_kind: 'album' | 'merch',
+  // plus idol_id/group_id and whichever kind-specific fields apply) into
+  // one request, so a product is never left without one — see
+  // ManagerProductFormPage.vue and the backend's ProductWithDetailCreate.
+  // Same multipart shape as create() above, just a different route/fields.
+  static async createWithDetail (fields = {}) {
+    try {
+      const response = await this.request({ auth: true }).post(`${this.entity}/add_with_detail`, toFormData(fields))
+      return this.responseWrapper(response, response.data)
+    } catch (error) {
+      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
+      throw this.errorWrapper(error, message)
+    }
+  }
+
   // POST /products/{id}/image — replaces an existing product's image
   // without touching any other field.
   static async uploadImage (id, file) {

@@ -13,10 +13,17 @@ export async function initCurrentUserStateMiddleware (to, from, next) {
     try {
       await AuthService.debounceRefreshTokens()
       await userStore.getCurrent()
-      next()
     } catch (e) {
+      // A cold/slow backend (or a genuinely expired token) rejects here —
+      // refreshTokens() itself already resets the stale session and
+      // redirects to login on failure. Either way, next() must still run:
+      // never calling it leaves this navigation hanging forever, which
+      // renders as a permanently blank <router-view> under a fine header
+      // (the header lives outside <router-view>, so it renders fine)
+      // rather than ever reaching a real page or a loading state.
       console.error(e)
     }
+    next()
   } else {
     next()
   }

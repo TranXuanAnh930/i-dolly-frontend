@@ -59,7 +59,6 @@
 <script>
 import { parseISO } from 'date-fns'
 
-import { useNotificationStore } from '@/store/notifications'
 import { useOrdersStore } from '@/store/orders'
 import { useTicketsStore } from '@/store/tickets'
 import { useLotteryEntriesStore } from '@/store/lotteryEntries'
@@ -97,13 +96,17 @@ export default {
     // the same shape the list/icons below already render, then merged with
     // ticketItems and the notification store's entries and re-sorted.
     orderItems () {
+      // A "pending" order only exists for a paypal checkout that hasn't been
+      // approved/captured yet (docs/api-spec.md §6) — the mock gateway never
+      // leaves an order in this state, so this used to be an unreachable
+      // third case.
       return useOrdersStore().sorted.map(order => ({
         id: `order-${order.id}`,
         type: 'order',
         timestamp: order.created_at,
         to: `/history/orders/${order.id}`,
-        titleKey: order.status === 'cancelled' ? 'history.orderCancelledTitle' : 'history.orderPlacedTitle',
-        messageKey: order.status === 'cancelled' ? 'history.orderCancelledMessage' : 'history.orderPlacedMessage',
+        titleKey: order.status === 'cancelled' ? 'history.orderCancelledTitle' : order.status === 'pending' ? 'history.orderPendingTitle' : 'history.orderPlacedTitle',
+        messageKey: order.status === 'cancelled' ? 'history.orderCancelledMessage' : order.status === 'pending' ? 'history.orderPendingMessage' : 'history.orderPlacedMessage',
         messageParams: { orderNumber: order.id.slice(0, 8), amount: formatNumber(order.total_price) }
       }))
     },
@@ -148,8 +151,17 @@ export default {
         })
         .filter(Boolean)
     },
+    // Every current notification type (order/ticket/lottery-payment
+    // confirmation, lottery result) already has a richer equivalent row
+    // above sourced straight from its own domain store — so unlike
+    // NotificationsPage.vue/NotificationDropdown.vue, this page doesn't
+    // additionally merge in raw notification rows: doing so used to crash
+    // formatTimestamp() (a NotificationRead has no `timestamp` field) the
+    // first time this page ever rendered with a non-empty notification
+    // store, and even mapped correctly would just duplicate every entry
+    // already listed here under a second, less detailed title/message.
     items () {
-      return [...this.orderItems, ...this.ticketItems, ...this.lotteryItems, ...useNotificationStore().sorted]
+      return [...this.orderItems, ...this.ticketItems, ...this.lotteryItems]
         .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
     }
   },

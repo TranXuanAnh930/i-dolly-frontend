@@ -10,6 +10,8 @@ import storePage from '../pages/StorePage.vue'
 import productDetailPage from '../pages/ProductDetailPage.vue'
 import cartPage from '../pages/CartPage.vue'
 import checkoutPage from '../pages/CheckoutPage.vue'
+import paypalReturnPage from '../pages/PaypalReturnPage.vue'
+import paypalCancelPage from '../pages/PaypalCancelPage.vue'
 import historyPage from '../pages/HistoryPage.vue'
 import notificationsPage from '../pages/NotificationsPage.vue'
 import orderDetailsPage from '../pages/OrderDetailsPage.vue'
@@ -32,6 +34,7 @@ import managerGroupsPage from '../pages/manager/ManagerGroupsPage.vue'
 import managerGroupFormPage from '../pages/manager/ManagerGroupFormPage.vue'
 import managerEventsPage from '../pages/manager/ManagerEventsPage.vue'
 import managerEventFormPage from '../pages/manager/ManagerEventFormPage.vue'
+import managerEventSalesPage from '../pages/manager/ManagerEventSalesPage.vue'
 import managerProductsPage from '../pages/manager/ManagerProductsPage.vue'
 import managerProductFormPage from '../pages/manager/ManagerProductFormPage.vue'
 import managerProductSalesPage from '../pages/manager/ManagerProductSalesPage.vue'
@@ -130,6 +133,24 @@ export const routes = [
     name: 'checkout',
     component: checkoutPage,
     meta: { isAuth: true, title: `${DOMAIN_TITLE} | checkout` }
+  },
+  {
+    // PayPal's return_url (app/utils/paypal_client.py::create_order) —
+    // shared by both order and direct-sale ticket checkouts, see
+    // PaypalReturnPage.vue. isAuth so initCurrentUserStateMiddleware
+    // restores the session that this full-page redirect wiped before
+    // PaymentService.capturePaypal (auth: true) fires.
+    path: '/payment/paypal/return',
+    name: 'paypal-return',
+    component: paypalReturnPage,
+    meta: { isAuth: true, title: `${DOMAIN_TITLE} | payment` }
+  },
+  {
+    // PayPal's cancel_url — informational only, no capture call.
+    path: '/payment/paypal/cancel',
+    name: 'paypal-cancel',
+    component: paypalCancelPage,
+    meta: { isAuth: true, title: `${DOMAIN_TITLE} | payment cancelled` }
   },
   {
     path: '/history',
@@ -286,6 +307,13 @@ export const routes = [
     component: managerEventFormPage,
     props: true,
     meta: { isAuth: true, roles: ['manager'], title: `${DOMAIN_TITLE} | manager · edit event` }
+  },
+  {
+    path: '/manager/events/:id/sales',
+    name: 'manager-events-sales',
+    component: managerEventSalesPage,
+    props: true,
+    meta: { isAuth: true, roles: ['manager'], title: `${DOMAIN_TITLE} | manager · event sales` }
   },
   {
     path: '/manager/products',

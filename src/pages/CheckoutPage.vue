@@ -18,6 +18,15 @@
         </div>
       </div>
 
+      <div v-else-if="order && order.status === 'pending'" class="confirmation confirmation--pending">
+        <div class="confirmation__badge confirmation__badge--pending">→</div>
+        <h2 class="confirmation__title">{{ $t('checkout.paypalRedirectTitle') }}</h2>
+        <p class="confirmation__note">{{ $t('checkout.paypalRedirectNote') }}</p>
+        <div class="confirmation__actions">
+          <a v-if="paypalApprovalUrl" :href="paypalApprovalUrl" class="confirmation__btn">{{ $t('checkout.paypalContinue') }}</a>
+        </div>
+      </div>
+
       <div v-else-if="order" class="confirmation confirmation--declined">
         <div class="confirmation__badge confirmation__badge--declined">&times;</div>
         <h2 class="confirmation__title confirmation__title--declined">{{ $t('checkout.orderDeclinedTitle') }}</h2>
@@ -45,33 +54,49 @@
             <router-link to="/account" class="address-box__edit">{{ $t('checkout.goToAccount') }}</router-link>
           </div>
 
-          <h2 class="panel-title panel-title--spaced">{{ $t('checkout.paymentMock') }}</h2>
-          <p class="panel-hint">{{ $t('checkout.paymentMockHint') }}</p>
+          <h2 class="panel-title panel-title--spaced">{{ $t('checkout.paymentMethod') }}</h2>
 
-          <label class="field">
-            <span class="field__label">{{ $t('checkout.cardNumber') }}</span>
-            <input type="text" v-model="card.number" placeholder="4242 4242 4242 4242" autocomplete="cc-number" inputmode="numeric">
-          </label>
-
-          <div class="field-grid">
-            <label class="field">
-              <span class="field__label">{{ $t('checkout.expiry') }}</span>
-              <input type="text" v-model="card.expiry" placeholder="MM / YY" autocomplete="cc-exp">
+          <div class="gateway-choice">
+            <label class="gateway-option" :class="{ 'is-selected': gateway === 'mock' }">
+              <input type="radio" name="gateway" value="mock" v-model="gateway">
+              <span>{{ $t('checkout.gatewayMock') }}</span>
             </label>
-            <label class="field">
-              <span class="field__label">{{ $t('checkout.cvc') }}</span>
-              <input type="text" v-model="card.cvc" placeholder="123" autocomplete="cc-csc" inputmode="numeric">
+            <label class="gateway-option" :class="{ 'is-selected': gateway === 'paypal' }">
+              <input type="radio" name="gateway" value="paypal" v-model="gateway">
+              <span>{{ $t('checkout.gatewayPaypal') }}</span>
             </label>
           </div>
 
-          <label class="mock-option">
-            <input type="radio" name="simulate" :value="true" v-model="simulateSucc">
-            <span>{{ $t('checkout.simulateSuccess') }}</span>
-          </label>
-          <label class="mock-option">
-            <input type="radio" name="simulate" :value="false" v-model="simulateSucc">
-            <span>{{ $t('checkout.simulateFailure') }}</span>
-          </label>
+          <template v-if="gateway === 'mock'">
+            <p class="panel-hint">{{ $t('checkout.paymentMockHint') }}</p>
+
+            <label class="field">
+              <span class="field__label">{{ $t('checkout.cardNumber') }}</span>
+              <input type="text" v-model="card.number" placeholder="4242 4242 4242 4242" autocomplete="cc-number" inputmode="numeric">
+            </label>
+
+            <div class="field-grid">
+              <label class="field">
+                <span class="field__label">{{ $t('checkout.expiry') }}</span>
+                <input type="text" v-model="card.expiry" placeholder="MM / YY" autocomplete="cc-exp">
+              </label>
+              <label class="field">
+                <span class="field__label">{{ $t('checkout.cvc') }}</span>
+                <input type="text" v-model="card.cvc" placeholder="123" autocomplete="cc-csc" inputmode="numeric">
+              </label>
+            </div>
+
+            <label class="mock-option">
+              <input type="radio" name="simulate" :value="true" v-model="simulateSucc">
+              <span>{{ $t('checkout.simulateSuccess') }}</span>
+            </label>
+            <label class="mock-option">
+              <input type="radio" name="simulate" :value="false" v-model="simulateSucc">
+              <span>{{ $t('checkout.simulateFailure') }}</span>
+            </label>
+          </template>
+
+          <p class="panel-hint" v-else>{{ $t('checkout.paypalHint') }}</p>
 
           <p class="form-error" v-if="error" :key="error">{{ error }}</p>
 
@@ -98,7 +123,7 @@
       <div v-else-if="lines.length && step === 2" class="layout">
         <div class="form-panel">
           <h2 class="panel-title">{{ $t('checkout.confirmTitle') }}</h2>
-          <p class="panel-hint">{{ $t('checkout.confirmHint') }}</p>
+          <p class="panel-hint">{{ gateway === 'paypal' ? $t('checkout.confirmHintPaypal') : $t('checkout.confirmHint') }}</p>
 
           <div class="info-table">
             <div class="info-row">
@@ -106,8 +131,8 @@
               <span class="info-row__value">{{ shippingAddress.address_line1 }}<template v-if="shippingAddress.address_line2">, {{ shippingAddress.address_line2 }}</template>, {{ shippingAddress.city }}, {{ shippingAddress.state }} {{ shippingAddress.postal_code }}</span>
             </div>
             <div class="info-row">
-              <span class="info-row__label">{{ $t('checkout.cardNumber') }}</span>
-              <span class="info-row__value">&bull;&bull;&bull;&bull; {{ card.number.slice(-4) }}</span>
+              <span class="info-row__label">{{ $t('checkout.paymentMethod') }}</span>
+              <span class="info-row__value">{{ gateway === 'paypal' ? $t('checkout.gatewayPaypal') : $t('checkout.gatewayMock') }}<template v-if="gateway === 'mock'"> — &bull;&bull;&bull;&bull; {{ card.number.slice(-4) }}</template></span>
             </div>
           </div>
 
@@ -116,7 +141,7 @@
           <div class="form-actions">
             <button type="button" class="back-btn" :disabled="placing" @click="step = 1">&larr; {{ $t('checkout.back') }}</button>
             <button type="button" class="place-order-btn" :disabled="placing" @click="placeOrder">
-              {{ placing ? $t('checkout.placingOrder') : `${$t('checkout.placeOrder')} →` }}
+              {{ placing ? (gateway === 'paypal' ? $t('checkout.paypalRedirecting') : $t('checkout.placingOrder')) : `${$t('checkout.placeOrder')} →` }}
             </button>
           </div>
         </div>
@@ -151,6 +176,7 @@ import { useCatalogStore } from '@/store/catalog'
 import { useOrdersStore } from '@/store/orders'
 import { useToastStore } from '@/store/toast'
 import { OrderService } from '@/services/order.service'
+import { PaymentService } from '@/services/payment.service'
 import { ShippingAddressesService } from '@/services/shippingAddresses.service'
 import { formatNumber } from '@/utils/format'
 
@@ -162,6 +188,7 @@ export default {
       step: 1,
       shippingAddress: null,
       addressLoading: true,
+      gateway: 'mock',
       card: {
         number: '',
         expiry: '',
@@ -170,7 +197,8 @@ export default {
       simulateSucc: true,
       placing: false,
       error: '',
-      order: null
+      order: null,
+      paypalApprovalUrl: null
     }
   },
 
@@ -222,8 +250,10 @@ export default {
 
       // Card fields aren't sent anywhere — the mock gateway only reads
       // simulateSucc — but requiring them keeps the flow feeling real
-      // rather than skippable with an empty payment step.
-      if (!this.card.number.trim() || !this.card.expiry.trim() || !this.card.cvc.trim()) {
+      // rather than skippable with an empty payment step. PayPal has
+      // nothing to validate here: the buyer enters their own payment
+      // details on PayPal's side, not this form.
+      if (this.gateway === 'mock' && (!this.card.number.trim() || !this.card.expiry.trim() || !this.card.cvc.trim())) {
         this.error = this.$t('checkout.errorPayment')
         return
       }
@@ -239,21 +269,39 @@ export default {
         const response = await OrderService.checkout({
           amount: this.subtotal,
           shipping_address_id: this.shippingAddress.id,
-          gateway: 'mock',
-          simulate_succ: this.simulateSucc,
+          gateway: this.gateway,
+          simulate_succ: this.gateway === 'mock' ? this.simulateSucc : undefined,
           idempotency_key: crypto.randomUUID(),
         })
         this.order = response.data
 
         // The backend consumes the cart (stock decremented, rows deleted)
-        // as soon as checkout runs, whether the mock payment was approved
-        // or declined — resync from the server rather than assuming which.
+        // as soon as checkout runs — for mock that's immediate (approved or
+        // declined), for paypal it happens up front too even though the
+        // order itself stays "pending" until the buyer actually pays.
         await this.cart.fetchCart()
 
         // Cache the order directly rather than refetching the whole list —
         // it's already known in full, and this is what makes it show up in
         // History immediately (see ordersStore.add).
         useOrdersStore().add(this.order)
+
+        if (this.gateway === 'paypal') {
+          // docs/api-spec.md §6: checkout returns the order "pending", not
+          // an error — fetch the Payment row it created to read PayPal's
+          // buyer-facing approval link, then send the fan there with a full
+          // page redirect (not a new tab — PayPal itself redirects back to
+          // this same tab when the fan approves or cancels).
+          const paymentResponse = await PaymentService.getOrderStatus(this.order.id)
+          this.paypalApprovalUrl = paymentResponse.data.pg_approval_url
+          if (this.paypalApprovalUrl) {
+            window.location.href = this.paypalApprovalUrl
+            return
+          }
+          this.error = this.$t('checkout.paypalError')
+          this.order = null
+          return
+        }
 
         if (this.order.status === 'confirmed') {
           useToastStore().add({ type: 'success', message: this.$t('checkout.orderPlaced') })
@@ -508,6 +556,39 @@ export default {
   }
 }
 
+.gateway-choice {
+  display: flex;
+  gap: 10px;
+  margin-top: -4px;
+}
+
+.gateway-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1.5px solid $color-line;
+  border-radius: 12px;
+  padding: 11px 14px;
+  cursor: pointer;
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 13.5px;
+  color: $color-ink;
+  transition: border-color .15s ease, background .15s ease;
+
+  input {
+    accent-color: $color-brand;
+    width: 16px;
+    height: 16px;
+  }
+
+  &.is-selected {
+    border-color: $color-brand;
+    background: $color-brand-tint-2;
+  }
+}
+
 .form-error {
   background: #fdeaf1;
   color: $color-error;
@@ -661,6 +742,10 @@ export default {
 
   &--declined {
     background: $color-error;
+  }
+
+  &--pending {
+    background: $color-brand;
   }
 }
 

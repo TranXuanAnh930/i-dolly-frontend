@@ -1,6 +1,6 @@
 <template>
   <div v-if="entry" class="lottery-details-page">
-    <section class="hero" :class="{ 'hero--won': entry.status === 'won' }">
+    <section class="hero">
       <div class="wrapper hero__inner">
         <router-link to="/history" class="back-link">&larr; {{ $t('lotteryDetails.backToHistory') }}</router-link>
         <template v-if="entry.status === 'won'">
@@ -16,9 +16,13 @@
     </section>
 
     <div class="wrapper content">
-      <span class="status-badge" :class="`status-badge--${entry.status}`">{{ statusLabel }}</span>
+      <!-- Redundant once won — the hero above already announces "YOU WON
+           THE LOTTERY / Congratulations!" in full, so this badge only adds
+           value for the other three (non-won) statuses, which have no other
+           status indicator on the page. -->
+      <span v-if="entry.status !== 'won'" class="status-badge" :class="`status-badge--${entry.status}`">{{ statusLabel }}</span>
 
-      <p class="won-note" v-if="entry.status === 'won'">{{ $t('lotteryDetails.wonNote', { title: concertTitle }) }}</p>
+      <p class="won-note" v-if="entry.status === 'won'">{{ $t(ticketPaid ? 'lotteryDetails.wonPaidNote' : 'lotteryDetails.wonNote', { title: concertTitle }) }}</p>
 
       <div class="info-table" v-if="context">
         <div class="info-row">
@@ -40,7 +44,8 @@
       <p class="loading-note" v-else-if="loadingContext">{{ $t('common.loading') }}</p>
 
       <div class="cta-row">
-        <router-link v-if="entry.status === 'won' && winningTicket" :to="`/history/lottery/${entry.id}/pay`" class="cta-btn cta-btn--pay">{{ $t('lotteryDetails.payNow') }}</router-link>
+        <router-link v-if="entry.status === 'won' && winningTicket && !ticketPaid" :to="`/history/lottery/${entry.id}/pay`" class="cta-btn cta-btn--pay">{{ $t('lotteryDetails.payNow') }}</router-link>
+        <router-link v-if="ticketPaid" :to="`/history/tickets/${winningTicket.id}`" class="cta-btn cta-btn--pay">{{ $t('lotteryDetails.viewTicket') }}</router-link>
         <router-link v-if="entry.status === 'pending' && context &amp;&amp; context.concert" :to="`/events/${context.concert.id}/lottery`" class="cta-btn">{{ $t('lotteryDetails.editPreferences') }}</router-link>
         <router-link v-if="context &amp;&amp; context.concert" :to="`/events/${context.concert.id}`" class="cta-btn">{{ $t('lotteryDetails.viewEvent') }}</router-link>
       </div>
@@ -84,6 +89,13 @@ export default {
     },
     winningTicket () {
       return this.entry ? useTicketsStore().byLotteryEntryId(this.entry.id) : null
+    },
+    // A won entry's ticket only stays "pending_payment" until the fan pays
+    // for it (LotteryPaymentPage.vue) — the pay CTA below must stop
+    // offering to pay for it again once that's already happened, since a
+    // second POST /tickets/{id}/checkout would just 400 (TicketNotPayableError).
+    ticketPaid () {
+      return !!this.winningTicket && this.winningTicket.status === 'paid'
     },
     statusLabel () {
       if (!this.entry) return ''
@@ -148,10 +160,6 @@ export default {
 .hero {
   position: relative;
   padding: 24px 0 36px;
-
-  &--won {
-    background: linear-gradient(135deg, rgba($color-brand, .08), rgba(#f2b705, .12));
-  }
 }
 
 .back-link {
@@ -236,7 +244,10 @@ export default {
 }
 
 .won-note {
-  margin: -8px 0 16px;
+  // No longer hugging a status badge above it — that badge is hidden for
+  // "won" (the hero already announces it), so this is the first thing in
+  // .content now.
+  margin: 0 0 16px;
   font-family: $font-content;
   font-size: 14px;
   line-height: 1.6;
