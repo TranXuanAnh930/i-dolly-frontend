@@ -30,6 +30,8 @@
 <script>
 import { PaymentService } from '@/services/payment.service'
 import UiPageLoader from '@/components/progress-loaders/UiPageLoader.vue'
+import { useOrdersStore } from '@/store/orders'
+import { useTicketsStore } from '@/store/tickets'
 
 // Shared landing spot for PayPal's redirect back after the buyer approves
 // on PayPal's own site (docs/api-spec.md §6 step 4-5) — one route handles
@@ -74,6 +76,21 @@ export default {
       this.orderId = payment.order_id
       this.ticketId = payment.ticket_id
       this.outcome = payment.status === 'success' ? 'success' : 'failed'
+
+      // ordersStore/ticketsStore.fetchAll() is a once-per-session cache
+      // (see each store's own `if (this.loaded && !force) return`) — it
+      // was already populated with this order/ticket's PRE-payment
+      // "pending" snapshot, either by Header's early fetch or by
+      // CheckoutPage/TicketPurchasePage's own `.add()` call right before
+      // the PayPal redirect. Without forcing a refetch here, "View
+      // Details" below (and /history) would keep showing that stale
+      // snapshot until an unrelated full page reload happened to reset
+      // the store — looking exactly like a delayed webhook update when
+      // it was really just a cache never being told anything changed.
+      if (payment.status === 'success') {
+        if (this.orderId) await useOrdersStore().fetchAll({ force: true })
+        if (this.ticketId) await useTicketsStore().fetchAll({ force: true })
+      }
     } catch (err) {
       this.outcome = 'failed'
       this.error = err.message
