@@ -65,7 +65,7 @@
               <span class="tier-row__name">{{ tierLabel(tier.tier) }}</span>
               <span class="tier-row__method">{{ tier.sale_method === 'lottery' ? $t('eventDetail.lotteryLabel') : $t('eventDetail.directSaleLabel') }}</span>
               <span class="tier-row__price">&yen;{{ formatNumber(tier.price) }}</span>
-              <span class="tier-row__qty">{{ $t('managerEventForm.soldOfTotal', { sold: tier.sold_quantity, total: tier.total_quantity }) }}</span>
+              <span class="tier-row__qty">{{ tier.sale_method === 'lottery' ? $t('managerEventForm.entriesOfCapacity', { entries: entriesFor(tier.id), capacity: tier.total_quantity }) : $t('managerEventForm.soldOfTotal', { sold: tier.sold_quantity, total: tier.total_quantity }) }}</span>
             </div>
 
             <div class="campaign-list" v-if="campaignsFor(tier.id).length">
@@ -76,7 +76,10 @@
             </div>
             <p class="empty-note" v-else>{{ $t('managerEventForm.noCampaigns') }}</p>
 
-            <button v-if="campaignFormTierId !== tier.id" type="button" class="add-link" @click="openAddCampaign(tier)">{{ $t('managerEventForm.addCampaign') }}</button>
+            <template v-if="campaignFormTierId !== tier.id">
+              <button type="button" class="add-link" :disabled="hasOpenCampaign(tier.id)" @click="openAddCampaign(tier)">{{ $t('managerEventForm.addCampaign') }}</button>
+              <p class="field__hint" v-if="hasOpenCampaign(tier.id)">{{ $t('managerEventForm.campaignAlreadyOpenHint') }}</p>
+            </template>
 
             <form v-else class="field-grid campaign-form" @submit.prevent="addCampaign(tier)">
               <template v-if="tier.sale_method === 'lottery'">
@@ -346,6 +349,21 @@ export default {
         ...this.lotteryCampaigns.filter(campaign => campaign.ticket_type_id === tierId).map(campaign => ({ ...campaign, kind: 'lottery' })),
         ...this.directSaleCampaigns.filter(campaign => campaign.ticket_type_id === tierId).map(campaign => ({ ...campaign, kind: 'direct' }))
       ]
+    },
+    // Total fans who've applied across every lottery campaign this tier has
+    // ever had (usually just one) — distinct from tier.sold_quantity, which
+    // only counts seats actually allocated by the draw, not applications.
+    entriesFor (tierId) {
+      return this.lotteryCampaigns
+        .filter(campaign => campaign.ticket_type_id === tierId)
+        .reduce((sum, campaign) => sum + campaign.entry_count, 0)
+    },
+    // A tier can only ever have one live campaign at a time — the backend
+    // has no concept of "queuing" a second one behind an open campaign, so
+    // adding another before the current one closes/is cancelled would just
+    // give this tier two live sale windows fans could act on simultaneously.
+    hasOpenCampaign (tierId) {
+      return this.campaignsFor(tierId).some(campaign => campaign.status === 'open')
     },
     openAddTicketType () {
       this.showAddTicketType = true
@@ -756,6 +774,15 @@ export default {
 
   &:hover {
     text-decoration: underline;
+  }
+
+  &:disabled {
+    color: $color-gray-400;
+    cursor: not-allowed;
+
+    &:hover {
+      text-decoration: none;
+    }
   }
 }
 

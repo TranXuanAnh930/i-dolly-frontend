@@ -92,32 +92,47 @@
             </label>
           </div>
 
-          <h2 class="panel-title panel-title--spaced">{{ $t('ticketPurchase.paymentMock') }}</h2>
+          <h2 class="panel-title panel-title--spaced">{{ $t('ticketPurchase.paymentMethod') }}</h2>
 
-          <label class="field">
-            <span class="field__label">{{ $t('ticketPurchase.cardNumber') }}</span>
-            <input type="text" v-model="form.cardNumber" placeholder="4242 4242 4242 4242" autocomplete="cc-number" inputmode="numeric">
-          </label>
-
-          <div class="field-grid">
-            <label class="field">
-              <span class="field__label">{{ $t('ticketPurchase.expiry') }}</span>
-              <input type="text" v-model="form.cardExpiry" placeholder="MM / YY" autocomplete="cc-exp">
+          <div class="gateway-choice">
+            <label class="gateway-option" :class="{ 'is-selected': gateway === 'mock' }">
+              <input type="radio" name="gateway" value="mock" v-model="gateway">
+              <span>{{ $t('checkout.gatewayMock') }}</span>
             </label>
-            <label class="field">
-              <span class="field__label">{{ $t('ticketPurchase.cvc') }}</span>
-              <input type="text" v-model="form.cardCvc" placeholder="123" autocomplete="cc-csc" inputmode="numeric">
+            <label class="gateway-option" :class="{ 'is-selected': gateway === 'paypal' }">
+              <input type="radio" name="gateway" value="paypal" v-model="gateway">
+              <span>{{ $t('checkout.gatewayPaypal') }}</span>
             </label>
           </div>
 
-          <label class="mock-option">
-            <input type="radio" name="simulate" :value="true" v-model="simulateSucc">
-            <span>{{ $t('checkout.simulateSuccess') }}</span>
-          </label>
-          <label class="mock-option">
-            <input type="radio" name="simulate" :value="false" v-model="simulateSucc">
-            <span>{{ $t('checkout.simulateFailure') }}</span>
-          </label>
+          <template v-if="gateway === 'mock'">
+            <label class="field">
+              <span class="field__label">{{ $t('ticketPurchase.cardNumber') }}</span>
+              <input type="text" v-model="form.cardNumber" placeholder="4242 4242 4242 4242" autocomplete="cc-number" inputmode="numeric">
+            </label>
+
+            <div class="field-grid">
+              <label class="field">
+                <span class="field__label">{{ $t('ticketPurchase.expiry') }}</span>
+                <input type="text" v-model="form.cardExpiry" placeholder="MM / YY" autocomplete="cc-exp">
+              </label>
+              <label class="field">
+                <span class="field__label">{{ $t('ticketPurchase.cvc') }}</span>
+                <input type="text" v-model="form.cardCvc" placeholder="123" autocomplete="cc-csc" inputmode="numeric">
+              </label>
+            </div>
+
+            <label class="mock-option">
+              <input type="radio" name="simulate" :value="true" v-model="simulateSucc">
+              <span>{{ $t('checkout.simulateSuccess') }}</span>
+            </label>
+            <label class="mock-option">
+              <input type="radio" name="simulate" :value="false" v-model="simulateSucc">
+              <span>{{ $t('checkout.simulateFailure') }}</span>
+            </label>
+          </template>
+
+          <p class="panel-hint" v-else>{{ $t('checkout.paypalHint') }}</p>
 
           <p class="form-error" v-if="error" :key="error">{{ error }}</p>
 
@@ -146,7 +161,7 @@
       <div v-else-if="step === 3" class="layout">
         <div class="panel">
           <h2 class="panel-title">{{ $t('ticketPurchase.confirmTitle') }}</h2>
-          <p class="panel-hint">{{ $t('ticketPurchase.confirmHint') }}</p>
+          <p class="panel-hint">{{ gateway === 'paypal' ? $t('checkout.confirmHintPaypal') : $t('ticketPurchase.confirmHint') }}</p>
 
           <div class="info-table">
             <div class="info-row">
@@ -158,8 +173,8 @@
               <span class="info-row__value">{{ form.email }}</span>
             </div>
             <div class="info-row">
-              <span class="info-row__label">{{ $t('ticketPurchase.cardNumber') }}</span>
-              <span class="info-row__value">&bull;&bull;&bull;&bull; {{ form.cardNumber.slice(-4) }}</span>
+              <span class="info-row__label">{{ $t('ticketPurchase.paymentMethod') }}</span>
+              <span class="info-row__value">{{ gateway === 'paypal' ? $t('checkout.gatewayPaypal') : $t('checkout.gatewayMock') }}<template v-if="gateway === 'mock'"> — &bull;&bull;&bull;&bull; {{ form.cardNumber.slice(-4) }}</template></span>
             </div>
           </div>
 
@@ -167,7 +182,7 @@
 
           <div class="form-actions">
             <button type="button" class="back-btn" :disabled="placing" @click="step = 2">&larr; {{ $t('ticketPurchase.back') }}</button>
-            <button type="button" class="place-order-btn" :disabled="placing" @click="placeOrder">{{ placing ? $t('checkout.placingOrder') : `${$t('ticketPurchase.placeOrder')} →` }}</button>
+            <button type="button" class="place-order-btn" :disabled="placing" @click="placeOrder">{{ placing ? (gateway === 'paypal' ? $t('checkout.paypalRedirecting') : $t('checkout.placingOrder')) : `${$t('ticketPurchase.placeOrder')} →` }}</button>
           </div>
         </div>
 
@@ -188,19 +203,27 @@
 
       <!-- Step 4: finish -->
       <div v-else class="confirmation" :class="{ 'confirmation--declined': outcome === 'declined' }">
-        <div class="confirmation__badge" :class="{ 'confirmation__badge--declined': outcome === 'declined' }">
+        <div class="confirmation__badge" :class="{ 'confirmation__badge--declined': outcome === 'declined', 'confirmation__badge--pending': outcome === 'redirecting' }">
           <template v-if="outcome === 'declined'">&times;</template>
+          <template v-else-if="outcome === 'redirecting'">→</template>
           <template v-else>&check;</template>
         </div>
         <template v-if="outcome === 'declined'">
           <h2 class="confirmation__title confirmation__title--declined">{{ $t('ticketPurchase.declinedTitle') }}</h2>
           <p class="confirmation__note">{{ $t('ticketPurchase.declinedNote') }}</p>
         </template>
+        <template v-else-if="outcome === 'redirecting'">
+          <h2 class="confirmation__title">{{ $t('checkout.paypalRedirectTitle') }}</h2>
+          <p class="confirmation__note">{{ $t('checkout.paypalRedirectNote') }}</p>
+          <div class="confirmation__actions">
+            <a v-if="paypalApprovalUrl" :href="paypalApprovalUrl" class="confirmation__btn">{{ $t('checkout.paypalContinue') }}</a>
+          </div>
+        </template>
         <template v-else>
           <h2 class="confirmation__title">{{ $t('ticketPurchase.wentTitle') }}</h2>
           <p class="confirmation__note">{{ $t('ticketPurchase.wentNote', { orderNumber, title: concert.title, date: dateLabel }) }}</p>
         </template>
-        <div class="confirmation__actions">
+        <div class="confirmation__actions" v-if="outcome !== 'redirecting'">
           <router-link to="/history" class="confirmation__btn">{{ $t('ticketPurchase.viewHistory') }}</router-link>
           <router-link to="/events" class="confirmation__link">{{ $t('ticketPurchase.backToEvents') }}</router-link>
         </div>
@@ -222,6 +245,7 @@ import { useToastStore } from '@/store/toast'
 import { ConcertsService } from '@/services/concerts.service'
 import { TicketTypesService } from '@/services/ticketTypes.service'
 import { TicketService } from '@/services/ticket.service'
+import { PaymentService } from '@/services/payment.service'
 import { paletteColorForId, contrastTextColor } from '@/utils/palette'
 import { formatDate, formatNumber } from '@/utils/format'
 import { withTax } from '@/utils/tax'
@@ -252,11 +276,13 @@ export default {
         cardExpiry: '',
         cardCvc: ''
       },
+      gateway: 'mock',
       simulateSucc: true,
       placing: false,
       error: '',
       orderNumber: '',
-      outcome: null
+      outcome: null,
+      paypalApprovalUrl: null
     }
   },
 
@@ -398,7 +424,7 @@ export default {
         this.error = this.$t('ticketPurchase.errorContactEmail')
         return
       }
-      if (!this.form.cardNumber.trim() || !this.form.cardExpiry.trim() || !this.form.cardCvc.trim()) {
+      if (this.gateway === 'mock' && (!this.form.cardNumber.trim() || !this.form.cardExpiry.trim() || !this.form.cardCvc.trim())) {
         this.error = this.$t('ticketPurchase.errorPayment')
         return
       }
@@ -416,12 +442,29 @@ export default {
         const response = await TicketService.checkout({
           ticket_type_id: this.selectedTier.id,
           amount: this.total,
-          gateway: 'mock',
-          simulate_succ: this.simulateSucc,
+          gateway: this.gateway,
+          simulate_succ: this.gateway === 'mock' ? this.simulateSucc : undefined,
           idempotency_key: crypto.randomUUID(),
         })
         const ticket = response.data
         useTicketsStore().add(ticket)
+
+        if (this.gateway === 'paypal') {
+          // docs/api-spec.md §6: checkout returns the ticket "pending" (not
+          // an error) — fetch the Payment row it created to read PayPal's
+          // buyer-facing approval link, then send the fan there with a full
+          // page redirect.
+          const paymentResponse = await PaymentService.getTicketStatus(ticket.id)
+          this.paypalApprovalUrl = paymentResponse.data.pg_approval_url
+          this.outcome = 'redirecting'
+          this.step = 4
+          if (this.paypalApprovalUrl) {
+            window.location.href = this.paypalApprovalUrl
+          } else {
+            this.error = this.$t('checkout.paypalError')
+          }
+          return
+        }
 
         this.orderNumber = ticket.id.slice(0, 8)
         this.outcome = ticket.status === 'paid' ? 'purchase' : 'declined'
@@ -800,6 +843,39 @@ export default {
   }
 }
 
+.gateway-choice {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.gateway-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1.5px solid $color-line;
+  border-radius: 12px;
+  padding: 11px 14px;
+  cursor: pointer;
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 13.5px;
+  color: $color-ink;
+  transition: border-color .15s ease, background .15s ease;
+
+  input {
+    accent-color: $color-brand;
+    width: 16px;
+    height: 16px;
+  }
+
+  &.is-selected {
+    border-color: $color-brand;
+    background: $color-brand-tint-2;
+  }
+}
+
 .form-error {
   margin-top: 14px;
   background: #fdeaf1;
@@ -955,6 +1031,10 @@ export default {
 
   &--declined {
     background: $color-error;
+  }
+
+  &--pending {
+    background: $color-brand;
   }
 }
 

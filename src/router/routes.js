@@ -10,6 +10,8 @@ import storePage from '../pages/StorePage.vue'
 import productDetailPage from '../pages/ProductDetailPage.vue'
 import cartPage from '../pages/CartPage.vue'
 import checkoutPage from '../pages/CheckoutPage.vue'
+import paypalReturnPage from '../pages/PaypalReturnPage.vue'
+import paypalCancelPage from '../pages/PaypalCancelPage.vue'
 import historyPage from '../pages/HistoryPage.vue'
 import notificationsPage from '../pages/NotificationsPage.vue'
 import orderDetailsPage from '../pages/OrderDetailsPage.vue'
@@ -131,6 +133,24 @@ export const routes = [
     name: 'checkout',
     component: checkoutPage,
     meta: { isAuth: true, title: `${DOMAIN_TITLE} | checkout` }
+  },
+  {
+    // PayPal's return_url (app/utils/paypal_client.py::create_order) —
+    // shared by both order and direct-sale ticket checkouts, see
+    // PaypalReturnPage.vue. isAuth so initCurrentUserStateMiddleware
+    // restores the session that this full-page redirect wiped before
+    // PaymentService.capturePaypal (auth: true) fires.
+    path: '/payment/paypal/return',
+    name: 'paypal-return',
+    component: paypalReturnPage,
+    meta: { isAuth: true, title: `${DOMAIN_TITLE} | payment` }
+  },
+  {
+    // PayPal's cancel_url — informational only, no capture call.
+    path: '/payment/paypal/cancel',
+    name: 'paypal-cancel',
+    component: paypalCancelPage,
+    meta: { isAuth: true, title: `${DOMAIN_TITLE} | payment cancelled` }
   },
   {
     path: '/history',

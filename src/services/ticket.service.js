@@ -23,6 +23,23 @@ export class TicketService extends BaseService {
     }
   }
 
+  // POST /tickets/{ticket_id}/checkout — pays for a ticket a lottery draw
+  // already created (status "pending_payment", lottery_entry_id set) — see
+  // LotteryPaymentPage.vue. Distinct from checkout() above, which creates a
+  // brand-new direct-sale ticket; here the ticket (and its type) already
+  // exist, so only amount/gateway/idempotency_key are sent, not a
+  // ticket_type_id. Same status convention as checkout(): a declined mock
+  // payment still comes back 200, with ticket.status "cancelled".
+  static async payForWonTicket (ticketId, data) {
+    try {
+      const response = await this.request({ auth: true }).post(`${this.entity}/${ticketId}/checkout`, data)
+      return this.responseWrapper(response, response.data)
+    } catch (error) {
+      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
+      throw this.errorWrapper(error, message)
+    }
+  }
+
   // GET /tickets/mine — every ticket this fan has ever bought or been
   // issued (each with ticket_type already populated). 404s on none yet —
   // treated as an empty list like every other list endpoint here.

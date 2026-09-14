@@ -64,33 +64,49 @@
             </label>
           </div>
 
-          <h2 class="panel-title panel-title--spaced">{{ $t('lotteryPayment.paymentMock') }}</h2>
-          <p class="panel-hint">{{ $t('lotteryPayment.mockNotice') }}</p>
+          <h2 class="panel-title panel-title--spaced">{{ $t('checkout.paymentMethod') }}</h2>
 
-          <label class="field">
-            <span class="field__label">{{ $t('lotteryPayment.cardNumber') }}</span>
-            <input type="text" v-model="form.cardNumber" placeholder="4242 4242 4242 4242" autocomplete="cc-number" inputmode="numeric">
-          </label>
-
-          <div class="field-grid">
-            <label class="field">
-              <span class="field__label">{{ $t('lotteryPayment.expiry') }}</span>
-              <input type="text" v-model="form.cardExpiry" placeholder="MM / YY" autocomplete="cc-exp">
+          <div class="gateway-choice">
+            <label class="gateway-option" :class="{ 'is-selected': gateway === 'mock' }">
+              <input type="radio" name="gateway" value="mock" v-model="gateway">
+              <span>{{ $t('checkout.gatewayMock') }}</span>
             </label>
-            <label class="field">
-              <span class="field__label">{{ $t('lotteryPayment.cvc') }}</span>
-              <input type="text" v-model="form.cardCvc" placeholder="123" autocomplete="cc-csc" inputmode="numeric">
+            <label class="gateway-option" :class="{ 'is-selected': gateway === 'paypal' }">
+              <input type="radio" name="gateway" value="paypal" v-model="gateway">
+              <span>{{ $t('checkout.gatewayPaypal') }}</span>
             </label>
           </div>
 
-          <label class="mock-option">
-            <input type="radio" name="simulate" :value="true" v-model="simulateSucc">
-            <span>{{ $t('checkout.simulateSuccess') }}</span>
-          </label>
-          <label class="mock-option">
-            <input type="radio" name="simulate" :value="false" v-model="simulateSucc">
-            <span>{{ $t('checkout.simulateFailure') }}</span>
-          </label>
+          <template v-if="gateway === 'mock'">
+            <p class="panel-hint">{{ $t('lotteryPayment.mockNotice') }}</p>
+
+            <label class="field">
+              <span class="field__label">{{ $t('lotteryPayment.cardNumber') }}</span>
+              <input type="text" v-model="form.cardNumber" placeholder="4242 4242 4242 4242" autocomplete="cc-number" inputmode="numeric">
+            </label>
+
+            <div class="field-grid">
+              <label class="field">
+                <span class="field__label">{{ $t('lotteryPayment.expiry') }}</span>
+                <input type="text" v-model="form.cardExpiry" placeholder="MM / YY" autocomplete="cc-exp">
+              </label>
+              <label class="field">
+                <span class="field__label">{{ $t('lotteryPayment.cvc') }}</span>
+                <input type="text" v-model="form.cardCvc" placeholder="123" autocomplete="cc-csc" inputmode="numeric">
+              </label>
+            </div>
+
+            <label class="mock-option">
+              <input type="radio" name="simulate" :value="true" v-model="simulateSucc">
+              <span>{{ $t('checkout.simulateSuccess') }}</span>
+            </label>
+            <label class="mock-option">
+              <input type="radio" name="simulate" :value="false" v-model="simulateSucc">
+              <span>{{ $t('checkout.simulateFailure') }}</span>
+            </label>
+          </template>
+
+          <p class="panel-hint" v-else>{{ $t('checkout.paypalHint') }}</p>
 
           <p class="form-error" v-if="error" :key="error">{{ error }}</p>
 
@@ -114,7 +130,7 @@
       <div v-else-if="step === 2" class="layout">
         <div class="panel">
           <h2 class="panel-title">{{ $t('lotteryPayment.confirmTitle') }}</h2>
-          <p class="panel-hint">{{ $t('lotteryPayment.confirmHint') }}</p>
+          <p class="panel-hint">{{ gateway === 'paypal' ? $t('checkout.confirmHintPaypal') : $t('lotteryPayment.confirmHint') }}</p>
 
           <div class="info-table">
             <div class="info-row">
@@ -126,8 +142,8 @@
               <span class="info-row__value">{{ form.email }}</span>
             </div>
             <div class="info-row">
-              <span class="info-row__label">{{ $t('lotteryPayment.cardNumber') }}</span>
-              <span class="info-row__value">&bull;&bull;&bull;&bull; {{ form.cardNumber.slice(-4) }}</span>
+              <span class="info-row__label">{{ $t('checkout.paymentMethod') }}</span>
+              <span class="info-row__value">{{ gateway === 'paypal' ? $t('checkout.gatewayPaypal') : $t('checkout.gatewayMock') }}<template v-if="gateway === 'mock'"> — &bull;&bull;&bull;&bull; {{ form.cardNumber.slice(-4) }}</template></span>
             </div>
           </div>
 
@@ -135,7 +151,7 @@
 
           <div class="form-actions">
             <button type="button" class="back-btn" :disabled="paying" @click="step = 1">&larr; {{ $t('ticketPurchase.back') }}</button>
-            <button type="button" class="place-order-btn" :disabled="paying" @click="confirmPayment">{{ paying ? $t('checkout.placingOrder') : `${$t('lotteryPayment.payNow')} →` }}</button>
+            <button type="button" class="place-order-btn" :disabled="paying" @click="confirmPayment">{{ paying ? (gateway === 'paypal' ? $t('checkout.paypalRedirecting') : $t('checkout.placingOrder')) : `${$t('lotteryPayment.payNow')} →` }}</button>
           </div>
         </div>
 
@@ -152,15 +168,23 @@
 
       <!-- Step 3: done -->
       <div v-else class="confirmation" :class="{ 'confirmation--declined': outcome === 'declined' }">
-        <div class="confirmation__badge" :class="{ 'confirmation__badge--declined': outcome === 'declined' }">
+        <div class="confirmation__badge" :class="{ 'confirmation__badge--declined': outcome === 'declined', 'confirmation__badge--pending': outcome === 'redirecting' }">
           <template v-if="outcome === 'declined'">&times;</template>
+          <template v-else-if="outcome === 'redirecting'">→</template>
           <template v-else>&check;</template>
         </div>
         <template v-if="outcome === 'declined'">
           <h2 class="confirmation__title confirmation__title--declined">{{ $t('lotteryPayment.declinedTitle') }}</h2>
           <p class="confirmation__note">{{ $t('lotteryPayment.declinedNote') }}</p>
           <div class="confirmation__actions">
-            <button type="button" class="confirmation__btn" @click="step = 1">{{ $t('lotteryPayment.tryAgain') }}</button>
+            <router-link to="/history" class="confirmation__btn">{{ $t('lotteryPayment.viewHistory') }}</router-link>
+          </div>
+        </template>
+        <template v-else-if="outcome === 'redirecting'">
+          <h2 class="confirmation__title">{{ $t('checkout.paypalRedirectTitle') }}</h2>
+          <p class="confirmation__note">{{ $t('checkout.paypalRedirectNote') }}</p>
+          <div class="confirmation__actions">
+            <a v-if="paypalApprovalUrl" :href="paypalApprovalUrl" class="confirmation__btn">{{ $t('checkout.paypalContinue') }}</a>
           </div>
         </template>
         <template v-else>
@@ -179,6 +203,8 @@
 import { useLotteryEntriesStore } from '@/store/lotteryEntries'
 import { useTicketsStore } from '@/store/tickets'
 import { useToastStore } from '@/store/toast'
+import { TicketService } from '@/services/ticket.service'
+import { PaymentService } from '@/services/payment.service'
 import { formatNumber } from '@/utils/format'
 import { withTax } from '@/utils/tax'
 
@@ -201,10 +227,12 @@ export default {
         cardExpiry: '',
         cardCvc: ''
       },
+      gateway: 'mock',
       simulateSucc: true,
       paying: false,
       error: '',
-      outcome: null
+      outcome: null,
+      paypalApprovalUrl: null
     }
   },
 
@@ -222,8 +250,15 @@ export default {
       return !!this.ticket && this.ticket.status === 'paid'
     },
     // A won entry whose ticket is still pending_payment — anything else
-    // (not won, no ticket yet, already paid/cancelled/expired) can't pay here.
+    // (not won, no ticket yet, already paid/cancelled/expired) can't pay
+    // here. Once this page's own confirmPayment() has produced a definitive
+    // outcome, stays true regardless of what the ticket's status becomes as
+    // a result (a declined mock payment sets it to "cancelled" server-side)
+    // — otherwise the declined-outcome screen below would never render,
+    // since this computed would flip false the instant that write lands in
+    // the store, right before step even advances to 3.
     eligible () {
+      if (this.outcome !== null) return true
       return !!this.entry && this.entry.status === 'won' && !!this.ticket && (this.ticket.status === 'pending_payment' || this.ticket.status === 'paid')
     },
     ineligibleMessage () {
@@ -275,34 +310,60 @@ export default {
         this.error = this.$t('ticketPurchase.errorContactEmail')
         return
       }
-      if (!this.form.cardNumber.trim() || !this.form.cardExpiry.trim() || !this.form.cardCvc.trim()) {
+      if (this.gateway === 'mock' && (!this.form.cardNumber.trim() || !this.form.cardExpiry.trim() || !this.form.cardCvc.trim())) {
         this.error = this.$t('ticketPurchase.errorPayment')
         return
       }
       this.error = ''
       this.step = 2
     },
-    // No backend endpoint exists yet for a fan to pay a lottery-won ticket
-    // (TicketUpdate/delete are still an admin-only stopgap — see
-    // ticket.py's router comment), so this mocks the charge entirely
-    // client-side, same spirit as CheckoutPage/TicketPurchasePage's mock
-    // gateway but with nothing sent to the backend at all.
+    // POST /tickets/{ticket_id}/checkout (ticket_service.checkout_won_ticket)
+    // — real charge through the same mock/paypal gateway choice as
+    // CheckoutPage/TicketPurchasePage, just for a ticket a lottery draw
+    // already created rather than a brand-new one.
     async confirmPayment () {
       this.error = ''
       this.paying = true
-      await new Promise(resolve => setTimeout(resolve, 600))
 
-      if (this.simulateSucc) {
-        useTicketsStore().add({ ...this.ticket, status: 'paid' })
-        this.outcome = 'purchase'
-        useToastStore().add({ type: 'success', message: this.$t('lotteryPayment.paidTitle') })
-      } else {
-        this.outcome = 'declined'
-        useToastStore().add({ type: 'error', message: this.$t('lotteryPayment.declinedTitle') })
+      try {
+        const response = await TicketService.payForWonTicket(this.ticket.id, {
+          amount: this.total,
+          gateway: this.gateway,
+          simulate_succ: this.gateway === 'mock' ? this.simulateSucc : undefined,
+          idempotency_key: crypto.randomUUID(),
+        })
+        const ticket = response.data
+        useTicketsStore().add(ticket)
+
+        if (this.gateway === 'paypal') {
+          // docs/api-spec.md §6: checkout returns the ticket still
+          // "pending_payment" — fetch the Payment row it created to read
+          // PayPal's buyer-facing approval link, then send the fan there
+          // with a full page redirect.
+          const paymentResponse = await PaymentService.getTicketStatus(ticket.id)
+          this.paypalApprovalUrl = paymentResponse.data.pg_approval_url
+          this.outcome = 'redirecting'
+          this.step = 3
+          if (this.paypalApprovalUrl) {
+            window.location.href = this.paypalApprovalUrl
+          } else {
+            this.error = this.$t('checkout.paypalError')
+          }
+          return
+        }
+
+        this.outcome = ticket.status === 'paid' ? 'purchase' : 'declined'
+        this.step = 3
+
+        useToastStore().add({
+          type: this.outcome === 'purchase' ? 'success' : 'error',
+          message: this.$t(this.outcome === 'purchase' ? 'lotteryPayment.paidTitle' : 'lotteryPayment.declinedTitle')
+        })
+      } catch (err) {
+        this.error = err.message
+      } finally {
+        this.paying = false
       }
-
-      this.step = 3
-      this.paying = false
     }
   }
 }
@@ -557,6 +618,39 @@ export default {
   }
 }
 
+.gateway-choice {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.gateway-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1.5px solid $color-line;
+  border-radius: 12px;
+  padding: 11px 14px;
+  cursor: pointer;
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 13.5px;
+  color: $color-ink;
+  transition: border-color .15s ease, background .15s ease;
+
+  input {
+    accent-color: $color-brand;
+    width: 16px;
+    height: 16px;
+  }
+
+  &.is-selected {
+    border-color: $color-brand;
+    background: $color-brand-tint-2;
+  }
+}
+
 .form-error {
   margin-top: 14px;
   background: #fdeaf1;
@@ -692,6 +786,10 @@ export default {
 
   &--declined {
     background: $color-error;
+  }
+
+  &--pending {
+    background: $color-brand;
   }
 }
 
