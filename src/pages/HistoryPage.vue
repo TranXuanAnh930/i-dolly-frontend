@@ -59,7 +59,6 @@
 <script>
 import { parseISO } from 'date-fns'
 
-import { useNotificationStore } from '@/store/notifications'
 import { useOrdersStore } from '@/store/orders'
 import { useTicketsStore } from '@/store/tickets'
 import { useLotteryEntriesStore } from '@/store/lotteryEntries'
@@ -152,8 +151,17 @@ export default {
         })
         .filter(Boolean)
     },
+    // Every current notification type (order/ticket/lottery-payment
+    // confirmation, lottery result) already has a richer equivalent row
+    // above sourced straight from its own domain store — so unlike
+    // NotificationsPage.vue/NotificationDropdown.vue, this page doesn't
+    // additionally merge in raw notification rows: doing so used to crash
+    // formatTimestamp() (a NotificationRead has no `timestamp` field) the
+    // first time this page ever rendered with a non-empty notification
+    // store, and even mapped correctly would just duplicate every entry
+    // already listed here under a second, less detailed title/message.
     items () {
-      return [...this.orderItems, ...this.ticketItems, ...this.lotteryItems, ...useNotificationStore().sorted]
+      return [...this.orderItems, ...this.ticketItems, ...this.lotteryItems]
         .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
     }
   },
