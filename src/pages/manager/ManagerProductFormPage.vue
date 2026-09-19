@@ -113,7 +113,7 @@
 </template>
 
 <script>
-import { ProductsService } from '@/services/products.service'
+import { ProductsService } from '@/services/store/products.service'
 import { useToastStore } from '@/store/toast'
 
 function emptyForm () {

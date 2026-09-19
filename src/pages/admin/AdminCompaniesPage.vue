@@ -34,7 +34,7 @@
 </template>
 
 <script>
-import { useCompaniesStore } from '@/store/companies'
+import { useCompaniesStore } from '@/store/members/companies'
 
 export default {
   name: 'AdminCompaniesPage',

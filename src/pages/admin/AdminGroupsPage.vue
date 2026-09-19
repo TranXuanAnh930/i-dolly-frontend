@@ -54,8 +54,8 @@
 </template>
 
 <script>
-import { GroupsService } from '@/services/groups.service'
-import { useCompaniesStore } from '@/store/companies'
+import { GroupsService } from '@/services/members/groups.service'
+import { useCompaniesStore } from '@/store/members/companies'
 
 export default {
   name: 'AdminGroupsPage',

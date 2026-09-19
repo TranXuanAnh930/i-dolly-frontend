@@ -43,7 +43,7 @@
 <script>
 import { format, parseISO } from 'date-fns'
 
-import { ConcertsService } from '@/services/concerts.service'
+import { ConcertsService } from '@/services/events/concerts.service'
 
 export default {
   name: 'ManagerEventsPage',

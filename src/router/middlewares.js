@@ -1,5 +1,5 @@
-import { useUserStore } from '@/store/user'
-import { AuthService } from '@/services/auth.service'
+import { useUserStore } from '@/store/auth/user'
+import { AuthService } from '@/services/auth/auth.service'
 
 /**
  * Current user state initialization

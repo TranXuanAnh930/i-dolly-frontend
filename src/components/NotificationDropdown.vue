@@ -57,8 +57,8 @@
 <script>
 import { parseISO } from 'date-fns'
 
-import { useNotificationStore } from '@/store/notifications'
-import { useLotteryEntriesStore } from '@/store/lotteryEntries'
+import { useNotificationStore } from '@/store/account/notifications'
+import { useLotteryEntriesStore } from '@/store/events/lotteryEntries'
 import { formatRelativeTime } from '@/utils/format'
 import { notificationIconType, notificationLink, notificationTitleKey, notificationMessageKey, isLotteryWin } from '@/utils/notification'
 import UiOnClickOutside from './UiOnClickOutside.vue'

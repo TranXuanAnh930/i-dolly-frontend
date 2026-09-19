@@ -52,7 +52,7 @@
 <script>
 import { format, parseISO } from 'date-fns'
 
-import { OrderService } from '@/services/order.service'
+import { OrderService } from '@/services/store/order.service'
 
 const PAGE_SIZE = 10
 

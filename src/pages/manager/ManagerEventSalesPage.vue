@@ -45,7 +45,7 @@
 <script>
 import { format, parseISO } from 'date-fns'
 
-import { TicketService } from '@/services/ticket.service'
+import { TicketService } from '@/services/events/ticket.service'
 
 const PAGE_SIZE = 10
 
