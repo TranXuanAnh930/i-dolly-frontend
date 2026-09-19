@@ -79,14 +79,15 @@ src/
 ├── i18n/              vue-i18n setup and locale files (en, ja)
 ├── layout/            App shell — index.vue (AppLayout), Header.vue, Footer.vue
 ├── mixins/            Global mixins (currentUser.js → this.$currentUser)
-├── pages/             Route-level page components — public storefront, fan account/history,
-│                      auth, plus manager/ and admin/ subfolders for staff-only CRUD
+├── pages/             Route-level page components, grouped into feature-area subfolders:
+│                      auth/, events/, members/, store/, payment/, account/, static/, plus
+│                      manager/ and admin/ for staff-only CRUD
 ├── plugins/           App-wide plugin registration (event bus via mitt)
 ├── router/            Router instance, routes and navigation middlewares
 ├── scss/              Global styles, variables and mixins
 ├── services/          API access layer — one *.service.js per backend resource, all extending
-│                      BaseService
-├── store/             Pinia stores, one per domain concern
+│                      BaseService, grouped into the same feature-area subfolders as pages/
+├── store/             Pinia stores, one per domain concern, same feature-area subfolders
 ├── utils/             Stateless helper functions (format, tax, notification, palette, ...)
 ├── env.js             Runtime environment config (API URL, domain title)
 └── main.js            App entry point
@@ -117,17 +118,21 @@ rules the frontend enforces or mirrors — see [`docs/business_logic.md`](docs/b
 
 ### Services
 
-API calls are grouped into one class per resource in `src/services/` (e.g. `concerts.service.js`,
-`ticket.service.js`, `lottery.service.js`, `order.service.js`, `payment.service.js`,
-`products.service.js`, `companies.service.js`, ...), all extending `base.service.js`.
-`http.init.js` sets up the shared Axios instance; `auth.service.js` handles login/refresh;
-`util.js` provides the `ResponseWrapper`/`ErrorWrapper` helpers used across every service.
+API calls are grouped into one class per resource in `src/services/`, all extending
+`base.service.js`. Like `pages/`, they're organized into the same feature-area subfolders:
+`auth/` (auth, users), `events/` (concerts, venues, ticketTypes, lottery, directSaleCampaign,
+ticket), `members/` (idols, groups, idolColors, companies), `store/` (products, albumDetails,
+cart, order), `payment/` (payment), `account/` (notification, shippingAddresses) — with
+`base.service.js`, `http.init.js` and `util.js` staying top-level as shared plumbing. `http.init.js`
+sets up the shared Axios instance; `auth.service.js` handles login/refresh; `util.js` provides the
+`ResponseWrapper`/`ErrorWrapper` helpers used across every service.
 
 ### Store
 
-Pinia stores under `src/store/` are split by domain: `auth`, `user`, `cart`, `catalog`,
-`concerts`, `idols`, `companies`, `orders`, `tickets`, `lotteryEntries`, `notifications`, `toast`,
-`dom`.
+Pinia stores under `src/store/` follow the same subfolder split: `auth/` (auth, user), `events/`
+(concerts, lotteryEntries, tickets), `members/` (idols, companies), `store/` (catalog, cart,
+orders), `account/` (notifications) — with `pinia.js`, `toast.js` and `dom.js` staying top-level as
+cross-cutting infra used app-wide.
 
 ### Router
 

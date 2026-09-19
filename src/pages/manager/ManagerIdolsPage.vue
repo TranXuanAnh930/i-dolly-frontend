@@ -47,7 +47,7 @@
 </template>
 
 <script>
-import { IdolsService } from '@/services/idols.service'
+import { IdolsService } from '@/services/members/idols.service'
 import { resolveMediaUrl } from '@/utils/media'
 
 export default {

@@ -70,8 +70,8 @@
 </template>
 
 <script>
-import { useCompaniesStore } from '@/store/companies'
-import { IdolsService } from '@/services/idols.service'
+import { useCompaniesStore } from '@/store/members/companies'
+import { IdolsService } from '@/services/members/idols.service'
 import { useToastStore } from '@/store/toast'
 
 function emptyForm () {

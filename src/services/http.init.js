@@ -23,7 +23,7 @@ export class Http {
       this.instance.interceptors.request.use(async request => {
         // dynamic import breaks the http.init <-> auth.service module cycle
         // (auth.service -> store/user -> users.service -> base.service -> http.init)
-        const { AuthService } = await import('@/services/auth.service')
+        const { AuthService } = await import('@/services/auth/auth.service')
 
         request.headers.authorization = AuthService.getBearer()
         // if access token expired and refreshToken is exist >> go to API and get new access token

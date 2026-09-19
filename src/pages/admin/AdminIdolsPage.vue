@@ -59,8 +59,8 @@
 </template>
 
 <script>
-import { IdolsService } from '@/services/idols.service'
-import { useCompaniesStore } from '@/store/companies'
+import { IdolsService } from '@/services/members/idols.service'
+import { useCompaniesStore } from '@/store/members/companies'
 import { resolveMediaUrl } from '@/utils/media'
 
 export default {

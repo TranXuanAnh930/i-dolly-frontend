@@ -47,7 +47,7 @@
 <script>
 import { format, parseISO } from 'date-fns'
 
-import { ProductsService } from '@/services/products.service'
+import { ProductsService } from '@/services/store/products.service'
 
 const PAGE_SIZE = 10
 

@@ -42,7 +42,7 @@
 </template>
 
 <script>
-import { GroupsService } from '@/services/groups.service'
+import { GroupsService } from '@/services/members/groups.service'
 
 export default {
   name: 'ManagerGroupsPage',

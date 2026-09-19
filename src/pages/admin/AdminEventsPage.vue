@@ -56,8 +56,8 @@
 <script>
 import { format, parseISO } from 'date-fns'
 
-import { ConcertsService } from '@/services/concerts.service'
-import { useCompaniesStore } from '@/store/companies'
+import { ConcertsService } from '@/services/events/concerts.service'
+import { useCompaniesStore } from '@/store/members/companies'
 import { useToastStore } from '@/store/toast'
 
 export default {

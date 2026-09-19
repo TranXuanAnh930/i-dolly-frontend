@@ -171,10 +171,10 @@
 <script>
 import { format, parseISO } from 'date-fns'
 
-import { ConcertsService } from '@/services/concerts.service'
-import { TicketTypesService } from '@/services/ticketTypes.service'
-import { LotteryService } from '@/services/lottery.service'
-import { DirectSaleCampaignService } from '@/services/directSaleCampaign.service'
+import { ConcertsService } from '@/services/events/concerts.service'
+import { TicketTypesService } from '@/services/events/ticketTypes.service'
+import { LotteryService } from '@/services/events/lottery.service'
+import { DirectSaleCampaignService } from '@/services/events/directSaleCampaign.service'
 import { useToastStore } from '@/store/toast'
 import { formatNumber } from '@/utils/format'
 
