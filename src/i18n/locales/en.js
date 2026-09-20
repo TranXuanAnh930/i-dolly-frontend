@@ -344,10 +344,10 @@ export default {
   forgotPassword: {
     eyebrow: 'One account, six fandoms',
     title: 'Reset your password',
-    subtitle: 'Enter your email and we\'ll send you a reset token.',
-    submit: 'Send reset token',
-    sentMessage: 'If {email} is registered, a reset token has been sent — it\'s valid for 15 minutes.',
-    haveToken: 'I have a token',
+    subtitle: 'Enter your email and we\'ll send you a link to reset your password.',
+    submit: 'Send reset link',
+    sentMessage: 'If {email} is registered, we\'ve sent a password reset link — it\'s valid for 15 minutes.',
+    haveToken: 'Enter a reset token manually',
     backToLogin: 'Back to login'
   },
 
@@ -355,6 +355,7 @@ export default {
     eyebrow: 'One account, six fandoms',
     title: 'Choose a new password',
     subtitle: 'Paste the token from your email and set a new password.',
+    subtitleFromLink: 'Choose a new password below to finish resetting it.',
     token: 'Reset token',
     tokenPlaceholder: 'Paste the token from your email',
     newPassword: 'New password',

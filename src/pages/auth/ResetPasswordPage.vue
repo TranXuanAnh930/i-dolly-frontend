@@ -7,10 +7,10 @@
 
       <p class="eyebrow">{{ $t('resetPassword.eyebrow') }}</p>
       <h1 class="title">{{ $t('resetPassword.title') }}</h1>
-      <p class="subtitle">{{ $t('resetPassword.subtitle') }}</p>
+      <p class="subtitle">{{ tokenFromLink ? $t('resetPassword.subtitleFromLink') : $t('resetPassword.subtitle') }}</p>
 
       <form v-if="!done" class="form" @submit.prevent="submit">
-        <label class="field">
+        <label class="field" v-if="!tokenFromLink">
           <span class="field__label">{{ $t('resetPassword.token') }}</span>
           <div class="field__control">
             <svg class="field__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
@@ -85,12 +85,25 @@ export default {
   data () {
     return {
       token: '',
+      tokenFromLink: false,
       password: '',
       confirmPassword: '',
       showPassword: false,
       saving: false,
       done: false,
       error: ''
+    }
+  },
+
+  // Arriving from the emailed reset link (?token=...) skips the manual
+  // copy-paste step entirely — the token field only shows up as a fallback
+  // for a fan who reached this page some other way (e.g. the
+  // "I have a token" link on ForgotPasswordPage).
+  created () {
+    const queryToken = this.$route.query.token
+    if (typeof queryToken === 'string' && queryToken) {
+      this.token = queryToken
+      this.tokenFromLink = true
     }
   },
 

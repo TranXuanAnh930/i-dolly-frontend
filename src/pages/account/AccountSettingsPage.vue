@@ -54,7 +54,7 @@
 
         <p class="form-error" v-if="passwordError" :key="passwordError">{{ passwordError }}</p>
 
-        <button type="submit" class="save-btn">{{ $t('account.changePassword') }}</button>
+        <button type="submit" class="save-btn" :disabled="passwordSaving">{{ passwordSaving ? $t('common.save') + '…' : $t('account.changePassword') }}</button>
       </form>
 
       <form class="panel" @submit.prevent="saveAddress">
@@ -100,6 +100,7 @@
 import { useUserStore } from '@/store/auth/user'
 import { useToastStore } from '@/store/toast'
 import { ShippingAddressesService } from '@/services/account/shippingAddresses.service'
+import { UsersService } from '@/services/auth/users.service'
 
 function emptyAddress () {
   return { id: null, street: '', street2: '', city: '', state: '', country: '', postalCode: '' }
@@ -121,6 +122,7 @@ export default {
       },
       showPasswords: false,
       passwordError: '',
+      passwordSaving: false,
       address: emptyAddress(),
       addressError: '',
       addressSaving: false
@@ -140,7 +142,7 @@ export default {
       useUserStore().setCurrentUser({ ...this.$currentUser, ...this.profile })
       useToastStore().add({ type: 'success', message: this.$t('account.profileSaved') })
     },
-    changePassword () {
+    async changePassword () {
       if (!this.password.current.trim()) {
         this.passwordError = this.$t('account.errorCurrentPassword')
         return
@@ -154,11 +156,19 @@ export default {
         return
       }
 
-      // No real "change password" endpoint yet — mocked, same as the rest
-      // of this page.
       this.passwordError = ''
-      this.password = { current: '', next: '', confirm: '' }
-      useToastStore().add({ type: 'success', message: this.$t('account.passwordChanged') })
+      this.passwordSaving = true
+      try {
+        await UsersService.changePassword(this.password.current, this.password.next)
+        this.password = { current: '', next: '', confirm: '' }
+        useToastStore().add({ type: 'success', message: this.$t('account.passwordChanged') })
+      } catch (error) {
+        // Backend 400s with "Incorrect old password" — surface that
+        // directly rather than a generic message.
+        this.passwordError = error.message
+      } finally {
+        this.passwordSaving = false
+      }
     },
     // Backend only stores one shipping address per user (no "default" flag
     // or multiple-address support) — this page manages that single row,
@@ -175,7 +185,7 @@ export default {
           city: existing.city,
           state: existing.state,
           country: existing.country,
-          postalCode: String(existing.postal_code)
+          postalCode: existing.postal_code
         }
       } catch (error) {
         this.addressError = error.message
@@ -187,15 +197,6 @@ export default {
         this.addressError = this.$t('account.errorAddress')
         return
       }
-      // postal_code is stored as a plain integer server-side (no
-      // hyphenated/alphanumeric formats yet) — strip everything but digits
-      // rather than reject a "150-0001"-style postal code outright.
-      const postalDigits = this.address.postalCode.replace(/\D/g, '')
-      if (!postalDigits) {
-        this.addressError = this.$t('account.errorAddress')
-        return
-      }
-
       this.addressError = ''
       this.addressSaving = true
       const fields = {
@@ -204,7 +205,10 @@ export default {
         city: this.address.city,
         state: this.address.state,
         country: this.address.country,
-        postal_code: Number(postalDigits)
+        // postal_code is a plain string server-side (shipping.py's
+        // ShippingAddressBase) — no digit-only coercion needed, so a
+        // hyphenated format like "150-0001" round-trips as typed.
+        postal_code: this.address.postalCode.trim()
       }
       try {
         if (this.address.id) {

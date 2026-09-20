@@ -19,6 +19,19 @@ export class UsersService extends BaseService {
     }
   }
 
+  // PUT /profile/change-password — auth required. 400s with "Incorrect old
+  // password" when oldPassword doesn't match — callers should surface that
+  // detail directly rather than a generic error.
+  static async changePassword (oldPassword, newPassword) {
+    try {
+      const response = await this.request({ auth: true }).put(`${this.entity}/change-password`, { old_password: oldPassword, new_password: newPassword })
+      return new ResponseWrapper(response, response.data)
+    } catch (error) {
+      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
+      throw new ErrorWrapper(error, message)
+    }
+  }
+
   // POST /profile/forgot-password — no auth. Always resolves with the same
   // generic message server-side, whether or not the email is registered
   // (see reset_password_process), so this never reveals account existence.
