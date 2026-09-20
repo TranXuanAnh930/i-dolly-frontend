@@ -4,8 +4,8 @@ import { BaseService } from '../base.service'
 // — all require auth (any logged-in role), and already match BaseService's
 // generic create/update/remove exactly, so only the list read is
 // overridden here. ShippingAddress: id, user_id, address_line1,
-// address_line2, city, postal_code (an int — no hyphenated/alphanumeric
-// postal formats yet), state, country.
+// address_line2, city, postal_code (a plain string, 1-20 chars — hyphenated
+// formats like "150-0001" are fine), state, country.
 export class ShippingAddressesService extends BaseService {
   static get entity () {
     return 'shipping_addresses'
