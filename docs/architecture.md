@@ -34,8 +34,12 @@ repo's docs (or the running API itself) are the source of truth, not this one.
 
 ```
 src/
-  pages/              one file per route (see routes.js) — public storefront, fan account/
-                       history, auth, plus manager/ and admin/ subfolders for staff-only CRUD
+  pages/              one file per route (see routes.js), grouped into feature-area subfolders:
+                       auth/ (login/register/password reset), events/ (browse + ticket/lottery
+                       purchase), members/ (idols/groups), store/ (catalog/cart/checkout),
+                       payment/ (PayPal return/cancel landing pages), account/ (history,
+                       notifications, order/ticket/lottery detail, settings), static/ (about/
+                       contact/guidelines/404), plus manager/ and admin/ for staff-only CRUD
   layout/              index.vue (AppLayout, mounted once for the whole session), Header.vue,
                        Footer.vue
   components/          shared UI — cards, form primitives (Ui*), icons/, progress-loaders/
@@ -92,6 +96,14 @@ hanging forever. See §5 for why this only matters when the frontend and backend
 
 ## 4. State management (Pinia, `src/store/`)
 
+Stores are grouped into the same feature-area subfolders as `pages/` (§2) — `auth/` (auth, user),
+`events/` (concerts, lotteryEntries, tickets), `members/` (idols, companies), `store/` (catalog,
+cart, orders), `account/` (notifications) — with `pinia.js`, `toast.js` and `dom.js` staying at the
+top level as cross-cutting infra used everywhere, not owned by any one feature. A store's module is
+chosen by the backend resource it wraps (e.g. `tickets.js` → `events/`, since a ticket is bought
+either direct-sale or via lottery), not by which page happens to render it — most stores are
+consumed from several different page modules regardless of where the store itself lives.
+
 Most stores that fetch a collection from the backend follow the same shape:
 
 ```js
@@ -138,6 +150,15 @@ actions: {
 - `toast.js` — a plain queue (`toastsList`), not a fetch-backed store at all.
 
 ## 5. Service layer (`src/services/`)
+
+Services are grouped into the same feature-area subfolders as `pages/`/`store/` (§2/§4) — e.g.
+`concerts.service.js`/`ticketTypes.service.js`/`ticket.service.js` under `events/`,
+`idols.service.js`/`companies.service.js` under `members/` — with `base.service.js`, `http.init.js`
+and `util.js` staying at the top level (shared plumbing every service imports, regardless of its
+own module). Every moved file imports these three via `'../base.service'`/`'../http.init'`/
+`'../util'`; cross-module references (e.g. `auth.service.js` reaching `store/auth/user.js`) go
+through the `@/` absolute alias instead of a relative path, so they don't break if either side
+moves again.
 
 Every service extends `BaseService` (`base.service.js`), which provides:
 - `static get entity()` — the REST resource name, e.g. `'concerts'`.

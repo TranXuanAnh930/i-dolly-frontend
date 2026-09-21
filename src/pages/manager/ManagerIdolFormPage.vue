@@ -60,7 +60,7 @@
 </template>
 
 <script>
-import { IdolsService } from '@/services/idols.service'
+import { IdolsService } from '@/services/members/idols.service'
 import { useToastStore } from '@/store/toast'
 
 function emptyForm () {

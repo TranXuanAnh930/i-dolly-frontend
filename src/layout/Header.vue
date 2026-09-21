@@ -133,7 +133,7 @@
 </template>
 
 <script>
-import { AuthService } from '../services/auth.service'
+import { AuthService } from '@/services/auth/auth.service'
 
 import UiHeaderDropdownMenu from '@/components/UiHeaderDropdownMenu.vue'
 import UiToastList from '@/components/UiToastList'
@@ -141,13 +141,13 @@ import UiOnClickOutside from '@/components/UiOnClickOutside.vue'
 import BowIcon from '@/components/icons/BowIcon.vue'
 import NotificationDropdown from '@/components/NotificationDropdown.vue'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
-import { useCartStore } from '@/store/cart'
-import { useCatalogStore } from '@/store/catalog'
-import { useNotificationStore } from '@/store/notifications'
-import { useOrdersStore } from '@/store/orders'
-import { useTicketsStore } from '@/store/tickets'
+import { useCartStore } from '@/store/store/cart'
+import { useCatalogStore } from '@/store/store/catalog'
+import { useNotificationStore } from '@/store/account/notifications'
+import { useOrdersStore } from '@/store/store/orders'
+import { useTicketsStore } from '@/store/events/tickets'
 import { useToastStore } from '@/store/toast'
-import { useLotteryEntriesStore } from '@/store/lotteryEntries'
+import { useLotteryEntriesStore } from '@/store/events/lotteryEntries'
 
 export default {
   name: 'Header',

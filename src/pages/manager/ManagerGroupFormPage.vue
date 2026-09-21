@@ -34,7 +34,7 @@
 </template>
 
 <script>
-import { GroupsService } from '@/services/groups.service'
+import { GroupsService } from '@/services/members/groups.service'
 import { useToastStore } from '@/store/toast'
 
 function emptyForm () {

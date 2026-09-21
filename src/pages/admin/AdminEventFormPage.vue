@@ -65,8 +65,8 @@
 </template>
 
 <script>
-import { ConcertsService } from '@/services/concerts.service'
-import { useCompaniesStore } from '@/store/companies'
+import { ConcertsService } from '@/services/events/concerts.service'
+import { useCompaniesStore } from '@/store/members/companies'
 import { useToastStore } from '@/store/toast'
 
 const STATUS_OPTIONS = ['scheduled', 'on_sale', 'sold_out', 'completed', 'cancelled']

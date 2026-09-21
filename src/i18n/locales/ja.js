@@ -344,10 +344,10 @@ export default {
   forgotPassword: {
     eyebrow: 'アカウント1つで6ユニット分',
     title: 'パスワードをリセット',
-    subtitle: 'メールアドレスを入力すると、リセット用トークンをお送りします。',
-    submit: 'リセットトークンを送信',
-    sentMessage: '{email} が登録されている場合、リセットトークンを送信しました。有効期限は15分間です。',
-    haveToken: 'トークンをお持ちの方はこちら',
+    subtitle: 'メールアドレスを入力すると、パスワードリセット用のリンクをお送りします。',
+    submit: 'リセットリンクを送信',
+    sentMessage: '{email} が登録されている場合、パスワードリセット用のリンクを送信しました。有効期限は15分間です。',
+    haveToken: 'トークンを手動で入力する',
     backToLogin: 'ログインに戻る'
   },
 
@@ -355,6 +355,7 @@ export default {
     eyebrow: 'アカウント1つで6ユニット分',
     title: '新しいパスワードを設定',
     subtitle: 'メールに届いたトークンを入力し、新しいパスワードを設定してください。',
+    subtitleFromLink: '新しいパスワードを設定してください。',
     token: 'リセットトークン',
     tokenPlaceholder: 'メールに記載のトークンを貼り付け',
     newPassword: '新しいパスワード',
