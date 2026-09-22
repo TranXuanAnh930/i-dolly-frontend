@@ -159,9 +159,10 @@
 
       <h3 class="form-card__title">{{ $t('managerEventForm.lotteryDrawTitle') }}</h3>
       <div class="form-card">
-        <p class="field__hint">{{ canDrawLottery ? $t('managerEventForm.lotteryDrawReady') : $t('managerEventForm.lotteryDrawNotReady') }}</p>
+        <p class="field__hint">{{ drawHint }}</p>
+        <p class="form-error" v-if="drawFailed">{{ $t('managerEvents.lotteryDrawFailed') }}</p>
         <div class="form-actions">
-          <button type="button" class="save-btn" :disabled="!canDrawLottery || drawing" @click="runLotteryDraw">{{ drawing ? $t('common.saving') : $t('managerEvents.runLotteryDraw') }}</button>
+          <button type="button" class="save-btn" :disabled="!canDrawLottery || drawInProgress" @click="runLotteryDraw">{{ drawInProgress ? $t('managerEvents.lotteryDrawRunning') : $t('managerEvents.runLotteryDraw') }}</button>
         </div>
       </div>
     </div>
@@ -176,6 +177,7 @@ import { TicketTypesService } from '@/services/events/ticketTypes.service'
 import { LotteryService } from '@/services/events/lottery.service'
 import { DirectSaleCampaignService } from '@/services/events/directSaleCampaign.service'
 import { useToastStore } from '@/store/toast'
+import { useLotteryDrawStore } from '@/store/events/lotteryDraw'
 import { formatNumber } from '@/utils/format'
 
 const STATUS_OPTIONS = ['scheduled', 'on_sale', 'sold_out', 'completed', 'cancelled']
@@ -243,8 +245,7 @@ export default {
       campaignFormTierId: null,
       newCampaign: emptyCampaignForm('direct'),
       campaignError: '',
-      savingCampaign: false,
-      drawing: false
+      savingCampaign: false
     }
   },
 
@@ -285,10 +286,34 @@ export default {
       if (!this.openLotteryCampaigns.length) return false
       const now = new Date()
       return this.openLotteryCampaigns.every(campaign => new Date(campaign.entry_end_at) < now)
+    },
+    // Owned by the store, not this page, so the state survives navigating
+    // between here and the admin events table mid-draw — see store/events/
+    // lotteryDraw.js for how the outcome is actually detected.
+    drawInProgress () {
+      return useLotteryDrawStore().isDrawing(this.id)
+    },
+    drawFailed () {
+      return useLotteryDrawStore().hasFailed(this.id)
+    },
+    drawHint () {
+      if (this.drawInProgress) return this.$t('managerEventForm.lotteryDrawRunningHint')
+      return this.canDrawLottery ? this.$t('managerEventForm.lotteryDrawReady') : this.$t('managerEventForm.lotteryDrawNotReady')
     }
   },
 
   watch: {
+    // The store's poll loop is the only thing that knows when the worker
+    // finished. When it lets go of this concert without having flagged a
+    // failure, every campaign it was watching has flipped to drawn — so
+    // re-read them, which also flips canDrawLottery off (no open campaigns
+    // left) and repaints each tier's campaign row with its new status.
+    drawInProgress (running, wasRunning) {
+      if (!wasRunning || running) return
+      if (this.drawFailed) return
+      this.fetchTicketData()
+      useToastStore().add({ type: 'success', message: this.$t('managerEvents.lotteryDrawComplete') })
+    },
     concert: {
       immediate: true,
       handler (concert) {
@@ -427,21 +452,22 @@ export default {
         this.savingCampaign = false
       }
     },
-    // Enqueues the backend's async draw job (see concerts.service.js) —
-    // this call only confirms the job was scheduled, not its outcome, so
-    // there's nothing here to refetch immediately after. canDrawLottery
-    // already keeps this disabled until every open campaign's entry window
-    // has ended, mirroring the job's own gate (see that computed).
+    // Enqueues the backend's async draw job and hands the wait off to
+    // lotteryDraw's poll loop — the PUT only confirms the job was scheduled,
+    // so this toast means "queued", never "done". An error here is the
+    // enqueue itself failing (403 out of company scope, 404, network), which
+    // is a different thing from the draw failing later: nothing ran, so the
+    // page never enters the in-progress state.
+    //
+    // canDrawLottery keeps this disabled until every open campaign's entry
+    // window has ended, mirroring the job's own gate (see that computed).
     async runLotteryDraw () {
       if (!window.confirm(this.$t('managerEvents.confirmLotteryDraw', { title: this.concert.title }))) return
-      this.drawing = true
       try {
-        await ConcertsService.drawLottery(this.id)
+        await useLotteryDrawStore().trigger(this.id)
         useToastStore().add({ type: 'success', message: this.$t('managerEvents.lotteryDrawQueued') })
       } catch (error) {
         useToastStore().add({ type: 'error', message: error.message })
-      } finally {
-        this.drawing = false
       }
     },
     statusLabel (status) {

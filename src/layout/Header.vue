@@ -148,6 +148,7 @@ import { useOrdersStore } from '@/store/store/orders'
 import { useTicketsStore } from '@/store/events/tickets'
 import { useToastStore } from '@/store/toast'
 import { useLotteryEntriesStore } from '@/store/events/lotteryEntries'
+import { useLotteryDrawStore } from '@/store/events/lotteryDraw'
 
 export default {
   name: 'Header',
@@ -207,6 +208,11 @@ export default {
         useOrdersStore().clearOnLogout()
         useTicketsStore().clearOnLogout()
         useLotteryEntriesStore().clearOnLogout()
+        // Manager/admin state rather than a fan's, but it polls on a timer
+        // and every one of those requests is authenticated — so it has to
+        // stop here too, or a logged-out tab keeps calling /notifications
+        // with a dead session until the page is reloaded.
+        useLotteryDrawStore().clearOnLogout()
       }
     }
   },
