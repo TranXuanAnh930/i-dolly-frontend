@@ -71,7 +71,7 @@ export const useLotteryEntriesStore = defineStore('lotteryEntries', {
       const { ticket_type: ticketType } = campaign
 
       const concertsStore = useConcertsStore()
-      await concertsStore.fetchAll()
+      await concertsStore.ensureConcert(ticketType.concert_id)
       const concert = concertsStore.concertById(ticketType.concert_id)
 
       return { campaign, ticketType, concert }

@@ -97,7 +97,7 @@ export default {
   },
 
   events: {
-    eyebrow: '6ユニット、ひとつのステージ',
+    eyebrow: '全ユニット、ひとつのステージ',
     title: '推し活、次のステージへ',
     sub: '先着販売も抽選も、待つのはここだけ。あとはチケットを取るだけ。',
     searchPlaceholder: 'イベント・ユニット・会場を検索…',
@@ -125,7 +125,7 @@ export default {
   members: {
     eyebrow: '全員集合',
     title: '推しは、この中にいる',
-    sub: '18人のアイドル、6ユニット、正解しかない選択。気になる顔をタップしてどうぞ。',
+    sub: '全ユニットのアイドルが勢ぞろい、正解しかない選択。気になる顔をタップしてどうぞ。',
     filterByUnit: 'ユニットで絞り込む',
     resultCount: '{count}人のメンバー',
     noResults: 'そのユニットのメンバーはまだいません。'
@@ -299,8 +299,8 @@ export default {
   about: {
     eyebrow: '誕生の理由',
     title: 'なぜI-Dollyが生まれたのか',
-    sub: 'アカウント1つで、6ユニット分のアプリを行き来する手間ゼロに。',
-    intro: 'I-Dollyは、6つの異なるファンクラブ、6つのチケット窓口、6つのリリースカレンダーを一本化するために生まれました。Starlight Ariaのアリーナツアーから、デビューしたばかりのMint Paradeまで、すべてのユニットのチケット購入・抽選応募・アルバム購入を1つのアカウントで行えます。',
+    sub: 'アカウント1つで、ユニットごとにアプリを行き来する手間ゼロに。',
+    intro: 'I-Dollyは、ユニットごとにばらばらだったファンクラブ・チケット窓口・リリースカレンダーを一本化するために生まれました。Starlight Ariaのアリーナツアーから、デビューしたばかりのMint Paradeまで、すべてのユニットのチケット購入・抽選応募・アルバム購入を1つのアカウントで行えます。',
     statUnits: 'ユニット',
     statIdols: 'アイドル',
     statShows: '年間公演数',
@@ -330,7 +330,7 @@ export default {
   },
 
   login: {
-    eyebrow: 'アカウント1つで6ユニット分',
+    eyebrow: 'アカウント1つで全ユニット',
     title: 'おかえりなさい',
     subtitle: 'ログインして、座席の確保も抽選応募も、心置きなく。',
     submit: 'ログイン',
@@ -342,7 +342,7 @@ export default {
   },
 
   forgotPassword: {
-    eyebrow: 'アカウント1つで6ユニット分',
+    eyebrow: 'アカウント1つで全ユニット',
     title: 'パスワードをリセット',
     subtitle: 'メールアドレスを入力すると、パスワードリセット用のリンクをお送りします。',
     submit: 'リセットリンクを送信',
@@ -352,7 +352,7 @@ export default {
   },
 
   resetPassword: {
-    eyebrow: 'アカウント1つで6ユニット分',
+    eyebrow: 'アカウント1つで全ユニット',
     title: '新しいパスワードを設定',
     subtitle: 'メールに届いたトークンを入力し、新しいパスワードを設定してください。',
     subtitleFromLink: '新しいパスワードを設定してください。',
@@ -370,7 +370,7 @@ export default {
   },
 
   register: {
-    eyebrow: 'アカウント1つで6ユニット分',
+    eyebrow: 'アカウント1つで全ユニット',
     title: 'ようこそ',
     subtitle: '登録は一度だけ。あとは思う存分、推し活を。',
     submit: 'アカウントを作成',
@@ -396,6 +396,10 @@ export default {
     leftSuffix: '{count}枠',
     lotteryStatusOpen: '応募受付中',
     saleStatusOpen: '販売中',
+    lotteryStatusUpcoming: '受付開始前',
+    saleStatusUpcoming: '販売開始前',
+    lotteryStatusClosed: '受付終了',
+    saleStatusClosed: '販売終了',
     lotteryStatusDrawn: '抽選済み',
     lotteryStatusCompleted: '終了',
     lotteryStatusCancelled: '中止',
@@ -636,7 +640,7 @@ export default {
   groupsPage: {
     eyebrow: '推しユニットを選ぼう',
     title: 'どのユニットに沼る?',
-    sub: '6ユニット、それぞれの個性。気になるユニットをタップしてメンバー・公演・リリースをチェック。',
+    sub: 'ユニットごとに違う個性。気になるユニットをタップしてメンバー・公演・リリースをチェック。',
     resultCount: '{count}ユニット',
     noResults: 'ユニットはまだありません。'
   },

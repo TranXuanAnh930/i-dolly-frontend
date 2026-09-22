@@ -11,7 +11,7 @@ export async function initCurrentUserStateMiddleware (to, from, next) {
 
   if (AuthService.hasRefreshToken() && !currentUserId) {
     try {
-      await AuthService.debounceRefreshTokens()
+      await AuthService.refreshTokensOnce()
       await userStore.getCurrent()
     } catch (e) {
       // A cold/slow backend (or a genuinely expired token) rejects here —
