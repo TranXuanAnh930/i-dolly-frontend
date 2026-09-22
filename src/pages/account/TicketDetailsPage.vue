@@ -107,10 +107,17 @@ export default {
   },
 
   created () {
-    this.concertsStore.fetchAll()
-    Promise.all([this.ticketsStore.fetchAll()]).finally(() => {
-      this.loading = false
-    })
+    // The concert can only be resolved once the ticket is loaded (its id comes
+    // off ticket.ticket_type), so this chains rather than running alongside —
+    // one concert by id, not the whole table.
+    Promise.all([this.ticketsStore.fetchAll()])
+      .then(() => {
+        const concertId = this.ticket && this.ticket.ticket_type.concert_id
+        if (concertId) return this.concertsStore.ensureConcert(concertId)
+      })
+      .finally(() => {
+        this.loading = false
+      })
   },
 
   methods: {

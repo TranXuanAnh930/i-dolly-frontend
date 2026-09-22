@@ -64,7 +64,7 @@
 
             <div class="tier__campaign">
               <template v-if="campaignFor(tier)">
-                <span class="tier__campaign-badge" :class="`tier__campaign-badge--${campaignFor(tier).status}`">{{ campaignStatusLabel(campaignFor(tier)) }}</span>
+                <span class="tier__campaign-badge" :class="`tier__campaign-badge--${campaignPhase(campaignFor(tier))}`">{{ campaignStatusLabel(campaignFor(tier)) }}</span>
 
                 <ol class="campaign-timeline">
                   <template v-for="(step, i) in timelineSteps(campaignFor(tier))" :key="step.key">
@@ -337,9 +337,22 @@ export default {
     campaignFor (tier) {
       return this.campaignsByTierId[tier.id] || null
     },
-    isCampaignActive (campaign) {
+    // campaign.status is a *lifecycle* flag a manager sets, not a live
+    // reflection of the clock: nothing ever flips an 'open' row once its
+    // end date passes (no sweep job exists — see payment_service's own note
+    // on the same gap), so a campaign that stopped accepting entries days
+    // ago still reads 'open' in the database. Every gate here derives the
+    // real phase from the window instead, so the badge, the timeline and
+    // the CTA can't disagree with each other.
+    campaignPhase (campaign) {
+      if (campaign.status !== 'open') return campaign.status
       const now = new Date()
-      return campaign.status === 'open' && now >= new Date(campaign.start_at) && now <= new Date(campaign.end_at)
+      if (now < new Date(campaign.start_at)) return 'upcoming'
+      if (now > new Date(campaign.end_at)) return 'closed'
+      return 'open'
+    },
+    isCampaignActive (campaign) {
+      return this.campaignPhase(campaign) === 'open'
     },
     // A tier is only "on sale" while its campaign is actually open and
     // inside its window — for direct-sale that's on top of still having
@@ -352,11 +365,14 @@ export default {
       return tier.sale_method === 'direct' ? this.remaining(tier) > 0 : true
     },
     campaignStatusLabel (campaign) {
-      if (campaign.status === 'open') {
-        return campaign.sale_method === 'direct' ? this.$t('eventDetail.saleStatusOpen') : this.$t('eventDetail.lotteryStatusOpen')
-      }
-      const key = campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1)
-      return this.$t(`eventDetail.lotteryStatus${key}`)
+      const phase = this.campaignPhase(campaign)
+      const key = phase.charAt(0).toUpperCase() + phase.slice(1)
+      // The three clock-derived phases read differently for a lottery tier
+      // (entries) and a direct-sale one (a sale); 'drawn'/'completed'/
+      // 'cancelled' come straight off the lifecycle and are worded once.
+      const scoped = ['open', 'upcoming', 'closed'].includes(phase)
+      const prefix = scoped && campaign.sale_method === 'direct' ? 'sale' : 'lottery'
+      return this.$t(`eventDetail.${prefix}Status${key}`)
     },
     // Two fixed nodes (opens → closes) — a lottery campaign's draw_at is
     // only ever set retroactively by the draw job itself (NULL until
@@ -684,6 +700,18 @@ export default {
   &--open {
     background: #e9f2fb;
     color: #2a6fa8;
+  }
+
+  &--upcoming {
+    background: #fdf1dd;
+    color: #8a5a11;
+  }
+
+  // Same muted treatment as a completed campaign — the window is over
+  // either way, the only difference is whether a manager has said so yet.
+  &--closed {
+    background: $color-gray-100;
+    color: $color-gray-500;
   }
 
   &--drawn {

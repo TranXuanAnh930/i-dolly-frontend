@@ -33,13 +33,18 @@ export class LotteryService extends BaseService {
     }
   }
 
-  // POST /lottery_entries/apply — auth required, fan-account-only
-  // server-side. One call per campaign (= per tier) the fan wants to enter;
-  // ranking across the tiers they entered is read off their
-  // LotteryPreference rows by the draw, not passed here.
-  static async applyToEntry (campaignId) {
+  // POST /lottery_entries/apply-batch — auth required, fan-account-only
+  // server-side. Enters every tier the fan picked in one request: one
+  // transaction and one rate-limit slot, so they either get all of them or
+  // none. This replaced a per-tier loop over the single POST
+  // /lottery_entries/apply — that endpoint still exists server-side, but it
+  // costs a slot per call against a 3/60s budget, so a concert with more tiers
+  // than that would 429 the tail of a submission with the earlier tiers
+  // already committed. Ranking comes from setPreferences, not from the order
+  // of this array.
+  static async applyToEntries (campaignIds) {
     try {
-      const response = await this.request({ auth: true }).post('lottery_entries/apply', { campaign_id: campaignId })
+      const response = await this.request({ auth: true }).post('lottery_entries/apply-batch', { campaign_ids: campaignIds })
       return this.responseWrapper(response, response.data)
     } catch (error) {
       const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText

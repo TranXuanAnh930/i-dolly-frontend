@@ -195,6 +195,7 @@ export default {
     '$currentUser.id' (id) {
       const cart = useCartStore()
       if (id) {
+        useCatalogStore().fetchAll()
         cart.fetchCart()
         useOrdersStore().fetchAll()
         useTicketsStore().fetchAll()
@@ -210,13 +211,15 @@ export default {
     }
   },
   created () {
-    // cartStore.itemCount resolves each line against the catalog (to skip
-    // stale entries whose product no longer exists) — Header is mounted on
-    // every page, including ones that never load the catalog themselves,
-    // so the badge needs its own load rather than depending on whichever
-    // other page happened to trigger it. fetchAll() is a no-op once loaded.
-    useCatalogStore().fetchAll()
     if (this.$currentUser.id) {
+      // cartStore.itemCount resolves each line against the catalog (to skip
+      // stale entries whose product no longer exists) — Header is mounted on
+      // every page, including ones that never load the catalog themselves,
+      // so the badge needs its own load rather than depending on whichever
+      // other page happened to trigger it. Scoped to a logged-in fan: a guest
+      // never calls fetchCart(), so their badge is 0 regardless and the two
+      // full-table reads this costs would be pure waste. No-op once loaded.
+      useCatalogStore().fetchAll()
       useCartStore().fetchCart()
       useOrdersStore().fetchAll()
       useTicketsStore().fetchAll()
