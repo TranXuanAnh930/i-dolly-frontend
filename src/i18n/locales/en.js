@@ -702,7 +702,10 @@ export default {
     confirmCancel: 'Cancel "{title}"? Ticket holders won\'t be notified automatically — you can change its status back from Edit.',
     runLotteryDraw: 'Run lottery draw',
     confirmLotteryDraw: 'Run the lottery draw for "{title}"? This picks winners for every open campaign on this event and can\'t be undone.',
-    lotteryDrawQueued: 'Lottery draw queued — results will appear once it finishes.'
+    lotteryDrawQueued: 'Lottery draw queued — results will appear once it finishes.',
+    lotteryDrawRunning: 'Drawing…',
+    lotteryDrawComplete: 'Lottery draw complete — winners have been picked.',
+    lotteryDrawFailed: 'Draw failed — try again, or check with support if it keeps happening.'
   },
 
   managerEventForm: {
@@ -743,7 +746,8 @@ export default {
     campaignAdded: 'Campaign added.',
     lotteryDrawTitle: 'Lottery Draw',
     lotteryDrawReady: 'Every open lottery campaign\'s entry window has closed — ready to draw.',
-    lotteryDrawNotReady: 'The draw unlocks once every open lottery campaign\'s entry window has closed.'
+    lotteryDrawNotReady: 'The draw unlocks once every open lottery campaign\'s entry window has closed.',
+    lotteryDrawRunningHint: 'Draw running — this page is watching for the result and will update on its own.'
   },
 
   managerProducts: {

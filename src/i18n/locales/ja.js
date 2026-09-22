@@ -702,7 +702,10 @@ export default {
     confirmCancel: '「{title}」を中止しますか？チケット購入者には自動で通知されません — ステータスは編集画面からいつでも戻せます。',
     runLotteryDraw: '抽選を実行',
     confirmLotteryDraw: '「{title}」の抽選を実行しますか？このイベントの開催中の全キャンペーンの当選者が決定され、取り消せません。',
-    lotteryDrawQueued: '抽選処理をキューに登録しました — 完了すると結果が反映されます。'
+    lotteryDrawQueued: '抽選処理をキューに登録しました — 完了すると結果が反映されます。',
+    lotteryDrawRunning: '抽選中…',
+    lotteryDrawComplete: '抽選が完了しました — 当選者が決定しました。',
+    lotteryDrawFailed: '抽選に失敗しました — もう一度お試しください。繰り返し発生する場合はサポートにご連絡ください。'
   },
 
   managerEventForm: {
@@ -743,7 +746,8 @@ export default {
     campaignAdded: 'キャンペーンを追加しました。',
     lotteryDrawTitle: '抽選',
     lotteryDrawReady: '開催中の全キャンペーンの応募期間が終了しました — 抽選を実行できます。',
-    lotteryDrawNotReady: '開催中の全キャンペーンの応募期間が終了すると抽選を実行できるようになります。'
+    lotteryDrawNotReady: '開催中の全キャンペーンの応募期間が終了すると抽選を実行できるようになります。',
+    lotteryDrawRunningHint: '抽選を実行中です — 結果は自動で反映されます。'
   },
 
   managerProducts: {
