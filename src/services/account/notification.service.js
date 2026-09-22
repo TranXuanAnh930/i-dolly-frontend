@@ -10,7 +10,10 @@ export class NotificationService extends BaseService {
     return 'notifications'
   }
 
-  // GET /notifications/unread-count — auth required, fan-only server-side.
+  // GET /notifications/unread-count — auth required, any role. (The fan-only
+  // restriction is a frontend product choice living in store/notifications.js,
+  // not a server rule: managers get lottery_draw_triggered/_failed rows too,
+  // which is what store/events/lotteryDraw.js polls for.)
   // Cheap, meant to be polled; rate-limited at 30 req/60s per user — a 429
   // here means this client (or another tab) is polling too aggressively,
   // not a real error, so callers shouldn't surface it to the user.

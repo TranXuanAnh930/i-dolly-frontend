@@ -60,6 +60,10 @@ export class ConcertsService extends BaseService {
   // actual results — winners/losers show up once the worker finishes by
   // re-fetching the campaign(s) (status flips open → drawn) or the
   // affected fans' own lottery entries, not from this call's response.
+  // store/events/lotteryDraw.js owns that wait: it polls the concert detail
+  // for the status flip and the caller's notifications for a
+  // lottery_draw_failed row, so callers should go through its trigger()
+  // rather than calling this directly.
   static async drawLottery (id) {
     try {
       const response = await this.request({ auth: true }).put(`${this.entity}/lottery-draw/${id}`)

@@ -39,8 +39,14 @@
               </td>
               <td class="actions">
                 <router-link :to="{ name: 'admin-events-edit', params: { id: concert.id } }">{{ $t('common.edit') }}</router-link>
-                <button v-if="concert.status !== 'cancelled'" type="button" @click="runLotteryDraw(concert)">{{ $t('managerEvents.runLotteryDraw') }}</button>
+                <button v-if="concert.status !== 'cancelled'" type="button" :disabled="drawStore.isDrawing(concert.id)" @click="runLotteryDraw(concert)">
+                  {{ drawStore.isDrawing(concert.id) ? $t('managerEvents.lotteryDrawRunning') : $t('managerEvents.runLotteryDraw') }}
+                </button>
                 <button v-if="concert.status !== 'cancelled'" type="button" class="danger" @click="cancelEvent(concert)">{{ $t('managerEvents.cancelEvent') }}</button>
+                <!-- Inline rather than a toast: by the time a draw fails the
+                     admin may well have clicked into another row, and this
+                     keeps the failure attached to the event it belongs to. -->
+                <span v-if="drawStore.hasFailed(concert.id)" class="draw-error">{{ $t('managerEvents.lotteryDrawFailed') }}</span>
               </td>
             </tr>
           </tbody>
@@ -59,6 +65,7 @@ import { format, parseISO } from 'date-fns'
 import { ConcertsService } from '@/services/events/concerts.service'
 import { useCompaniesStore } from '@/store/members/companies'
 import { useToastStore } from '@/store/toast'
+import { useLotteryDrawStore } from '@/store/events/lotteryDraw'
 
 export default {
   name: 'AdminEventsPage',
@@ -75,6 +82,14 @@ export default {
   computed: {
     companiesStore () {
       return useCompaniesStore()
+    },
+    // Per-concert draw state lives in the store so it survives this table
+    // being re-fetched or the admin navigating into an event and back — see
+    // store/events/lotteryDraw.js. This table shows no campaign data of its
+    // own, so unlike the manager form there's nothing here to refetch when a
+    // draw lands; the button re-enabling is the whole visible change.
+    drawStore () {
+      return useLotteryDrawStore()
     },
     // Unlike a manager (always scoped to their own company — see
     // ManagerEventsPage), an admin isn't tied to any single company and
@@ -127,13 +142,15 @@ export default {
         this.error = error.message
       }
     },
-    // Enqueues the backend's async draw job (see concerts.service.js) —
-    // this call only confirms the job was scheduled, not its outcome, so
-    // there's nothing here to refetch immediately after.
+    // Enqueues the backend's async draw job and hands the wait off to
+    // lotteryDraw's poll loop — this toast means "queued", never "done". An
+    // error here is the enqueue itself failing (404, network), which is a
+    // different thing from the draw failing later in the worker: nothing
+    // ran, so this row never enters the in-progress state.
     async runLotteryDraw (concert) {
       if (!window.confirm(this.$t('managerEvents.confirmLotteryDraw', { title: concert.title }))) return
       try {
-        await ConcertsService.drawLottery(concert.id)
+        await this.drawStore.trigger(concert.id)
         useToastStore().add({ type: 'success', message: this.$t('managerEvents.lotteryDrawQueued') })
       } catch (error) {
         useToastStore().add({ type: 'error', message: error.message })
@@ -155,6 +172,14 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.draw-error {
+  display: block;
+  font-family: $font-content;
+  font-size: 12px;
+  color: $color-error;
+  max-width: 34ch;
 }
 
 .page-head__title {
