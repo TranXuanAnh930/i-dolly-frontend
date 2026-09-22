@@ -314,15 +314,20 @@ export default {
         const idsInOrder = this.filledChoices
         await LotteryService.setPreferences(this.concert.id, idsInOrder)
 
-        // Only apply for tiers that don't already have an entry — calling
-        // apply() again for one that does would just hit "cap_reached"
+        // Only apply for tiers that don't already have an entry — applying
+        // again for one that does would just hit "cap_reached"
         // (max_entries_per_user), since setPreferences above only touches
         // the ranking, never the entries themselves.
+        //
+        // One batch call rather than one per tier: the apply endpoint allows
+        // 3/60s per fan, so a per-tier loop would 429 the tail of a submission
+        // on a concert with more tiers than that — and leave the earlier tiers
+        // already committed. The batch is all-or-nothing for one slot.
         const newTierIds = idsInOrder.filter(tierId => !this.lockedTierIds.includes(tierId))
-        for (const tierId of newTierIds) {
-          const campaign = this.campaignById(tierId)
-          const entryResponse = await LotteryService.applyToEntry(campaign.id)
-          useLotteryEntriesStore().add(entryResponse.data)
+        if (newTierIds.length) {
+          const campaignIds = newTierIds.map(tierId => this.campaignById(tierId).id)
+          const entriesResponse = await LotteryService.applyToEntries(campaignIds)
+          entriesResponse.data.forEach(entry => useLotteryEntriesStore().add(entry))
         }
 
         const successKey = this.isEditing ? 'lotteryEntry.updatedTitle' : 'ticketPurchase.appliedTitle'

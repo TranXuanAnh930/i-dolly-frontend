@@ -9,6 +9,10 @@ import $router from '@/router'
 import { API_URL } from '@/env'
 
 let BEARER = ''
+// The one refresh currently in flight, shared by every caller until it
+// settles — see refreshTokensOnce(). Module-level rather than store state: a
+// promise isn't reactive data, and there's only ever one session per app.
+let refreshInFlight = null
 
 export class AuthService {
   /**
@@ -89,9 +93,22 @@ export class AuthService {
     }
   }
 
-  static debounceRefreshTokens = this._debounce(() => {
-    return this.refreshTokens()
-  }, 100)
+  // Single-flight, deliberately NOT a debounce. The backend rotates refresh
+  // tokens on every use — create_tokens revokes every outstanding one for the
+  // user before issuing the replacement — so two overlapping refreshes mean
+  // the second presents a cookie the first already revoked, gets a 401, and
+  // refreshTokens()' catch logs the fan out mid-session with a perfectly valid
+  // session. A debounce couldn't prevent that: it released its waiters when
+  // the refresh was DISPATCHED, so any request arriving while one was still in
+  // flight started a second one. Sharing the promise until it settles means
+  // exactly one refresh per expiry no matter how many requests pile up behind
+  // it, and no artificial delay on the first one.
+  static refreshTokensOnce () {
+    if (!refreshInFlight) {
+      refreshInFlight = this.refreshTokens().finally(() => { refreshInFlight = null })
+    }
+    return refreshInFlight
+  }
 
   /**
    ******************************
@@ -126,28 +143,6 @@ export class AuthService {
     BEARER = `Bearer ${accessToken}`
   }
 
-  /**
-   * https://stackoverflow.com/questions/35228052/debounce-function-implemented-with-promises
-   * @param inner
-   * @param ms
-   * @returns {function(...[*]): Promise<unknown>}
-   * @private
-   */
-  static _debounce (inner, ms = 0) {
-    let timer = null
-    let resolves = []
-
-    return function () {
-      clearTimeout(timer)
-      timer = setTimeout(() => {
-        const result = inner()
-        resolves.forEach(r => r(result))
-        resolves = []
-      }, ms)
-
-      return new Promise(resolve => resolves.push(resolve))
-    }
-  }
 }
 
 /**

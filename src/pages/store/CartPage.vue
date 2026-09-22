@@ -69,7 +69,6 @@
 <script>
 import { useCartStore } from '@/store/store/cart'
 import { useCatalogStore } from '@/store/store/catalog'
-import { useIdolsStore } from '@/store/members/idols'
 import { resolveMediaUrl } from '@/utils/media'
 import { formatNumber } from '@/utils/format'
 import { withTax } from '@/utils/tax'
@@ -97,9 +96,6 @@ export default {
 
   created () {
     this.catalogStore.fetchAll()
-    // catalogStore.artistForAlbum/colorForRelease resolve against the idols
-    // store's idols/groups — never loaded on this page otherwise.
-    useIdolsStore().fetchAll()
     // Refreshes a logged-in fan's real cart — a no-op for guests/non-fan
     // roles (see cartStore.isServerBacked), who already have their local
     // cart loaded.

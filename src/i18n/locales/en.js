@@ -97,7 +97,7 @@ export default {
   },
 
   events: {
-    eyebrow: 'Six units, one stage',
+    eyebrow: 'Every unit, one stage',
     title: 'Your next bias era starts here',
     sub: 'Grab direct-sale seats or shoot your shot in the lottery — no waiting rooms, just tickets.',
     searchPlaceholder: 'Search events, units, venues…',
@@ -125,7 +125,7 @@ export default {
   members: {
     eyebrow: 'The full roster',
     title: 'Meet your next bias',
-    sub: 'Eighteen idols, six units, zero wrong answers. Tap a face and fall down the rabbit hole.',
+    sub: 'Every idol from every unit, zero wrong answers. Tap a face and fall down the rabbit hole.',
     filterByUnit: 'Filter by unit',
     resultCount: '{count} members',
     noResults: 'No members in that unit yet.'
@@ -299,8 +299,8 @@ export default {
   about: {
     eyebrow: 'The origin story',
     title: 'Why I-Dolly exists',
-    sub: 'One login, six units, zero juggling six different fan club apps.',
-    intro: 'I-Dolly started as a way to stop juggling six different fan clubs, six different ticket queues, and six different release calendars. Now every unit — from Starlight Aria\'s arena tours to Mint Parade\'s first steps — sells tickets, runs lotteries, and ships albums through one account.',
+    sub: 'One login, every unit, zero juggling a separate fan club app for each.',
+    intro: 'I-Dolly started as a way to stop juggling a separate fan club, a separate ticket queue, and a separate release calendar for every unit. Now every unit — from Starlight Aria\'s arena tours to Mint Parade\'s first steps — sells tickets, runs lotteries, and ships albums through one account.',
     statUnits: 'Units',
     statIdols: 'Idols',
     statShows: 'Shows a year',
@@ -330,7 +330,7 @@ export default {
   },
 
   login: {
-    eyebrow: 'One account, six fandoms',
+    eyebrow: 'One account, every fandom',
     title: 'Welcome back',
     subtitle: 'Log in and let the chaos — tickets, lotteries, all of it — begin.',
     submit: 'Log in',
@@ -342,7 +342,7 @@ export default {
   },
 
   forgotPassword: {
-    eyebrow: 'One account, six fandoms',
+    eyebrow: 'One account, every fandom',
     title: 'Reset your password',
     subtitle: 'Enter your email and we\'ll send you a link to reset your password.',
     submit: 'Send reset link',
@@ -352,7 +352,7 @@ export default {
   },
 
   resetPassword: {
-    eyebrow: 'One account, six fandoms',
+    eyebrow: 'One account, every fandom',
     title: 'Choose a new password',
     subtitle: 'Paste the token from your email and set a new password.',
     subtitleFromLink: 'Choose a new password below to finish resetting it.',
@@ -370,7 +370,7 @@ export default {
   },
 
   register: {
-    eyebrow: 'One account, six fandoms',
+    eyebrow: 'One account, every fandom',
     title: 'Join the club',
     subtitle: 'Sign up once, stan responsibly forever.',
     submit: 'Create account',
@@ -396,6 +396,10 @@ export default {
     leftSuffix: '{count} slots',
     lotteryStatusOpen: 'Entries open',
     saleStatusOpen: 'On sale',
+    lotteryStatusUpcoming: 'Entries soon',
+    saleStatusUpcoming: 'On sale soon',
+    lotteryStatusClosed: 'Entries closed',
+    saleStatusClosed: 'Sale ended',
     lotteryStatusDrawn: 'Drawn',
     lotteryStatusCompleted: 'Completed',
     lotteryStatusCancelled: 'Cancelled',
@@ -636,7 +640,7 @@ export default {
   groupsPage: {
     eyebrow: 'Pick your favorite chaos',
     title: 'Which unit are you falling for?',
-    sub: 'Six units, six personalities. Tap one to see its members, shows, and releases.',
+    sub: 'Every unit, its own personality. Tap one to see its members, shows, and releases.',
     resultCount: '{count} units',
     noResults: 'No units yet.'
   },

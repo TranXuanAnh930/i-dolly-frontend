@@ -28,12 +28,18 @@ export class Http {
         request.headers.authorization = AuthService.getBearer()
         // if access token expired and refreshToken is exist >> go to API and get new access token
         if (AuthService.isAccessTokenExpired() && AuthService.hasRefreshToken()) {
-          return AuthService.debounceRefreshTokens()
-            .then(response => {
-              AuthService.setBearer(response.data.access_token)
+          // Every request that lands here while a refresh is already running
+          // waits on that same one (refreshTokensOnce) instead of starting its
+          // own — the backend revokes the old refresh token as soon as the
+          // first one succeeds, so a second concurrent refresh would 401 and
+          // bounce the fan to /login mid-session.
+          return AuthService.refreshTokensOnce()
+            .then(() => {
+              // refreshTokens() already stored the new bearer via
+              // _setAuthData; just read it back onto this request.
               request.headers.authorization = AuthService.getBearer()
               return request
-            }).catch(error => Promise.reject(error))
+            })
         } else {
           return request
         }
