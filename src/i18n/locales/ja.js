@@ -76,6 +76,12 @@ export default {
     lotteryLostMessage: '抽選が行われました — タップして結果を確認してください。',
     passwordResetTitle: 'パスワードが変更されました',
     passwordResetMessage: 'パスワードがリセットされました。心当たりがない場合はサポートにご連絡ください。',
+    lotteryDrawTriggeredTitle: '抽選を開始しました',
+    lotteryDrawTriggeredMessage: '担当イベントの抽選処理を実行中です — タップして確認してください。',
+    lotteryDrawFailedTitle: '抽選に失敗しました',
+    lotteryDrawFailedMessage: '担当イベントの抽選に失敗しました — タップして確認し、再実行してください。',
+    lotteryDrawCompletedTitle: '抽選が完了しました',
+    lotteryDrawCompletedMessage: '担当イベントの抽選が完了しました — タップして結果を確認してください。',
     genericTitle: '通知',
     genericMessage: 'タップして詳細を確認してください。'
   },
@@ -747,7 +753,8 @@ export default {
     lotteryDrawTitle: '抽選',
     lotteryDrawReady: '開催中の全キャンペーンの応募期間が終了しました — 抽選を実行できます。',
     lotteryDrawNotReady: '開催中の全キャンペーンの応募期間が終了すると抽選を実行できるようになります。',
-    lotteryDrawRunningHint: '抽選を実行中です — 結果は自動で反映されます。'
+    lotteryDrawRunningHint: '抽選を実行中です — 結果は自動で反映されます。',
+    viewLotteryResults: '抽選結果を見る'
   },
 
   managerProducts: {
@@ -808,6 +815,22 @@ export default {
     sourceDirect: '直接購入',
     price: '価格',
     noResults: 'このイベントの販売履歴はまだありません。'
+  },
+
+  managerLotteryResults: {
+    backToEvents: 'イベント一覧へ戻る',
+    title: '抽選結果 — {title}',
+    tier: '種別',
+    filterAllTiers: 'すべての種別',
+    email: 'メールアドレス',
+    status: 'ステータス',
+    statusWon: '当選',
+    statusLost: '落選',
+    paymentStatus: '支払い状況',
+    paymentDeadline: '支払い期限',
+    noResults: 'このイベントの抽選結果はまだありません。',
+    drawInProgress: '抽選を実行中です — 完了すると結果がここに表示されます。',
+    drawFailedHint: '前回の抽選は結果が出る前に失敗しました — イベントページに戻ってもう一度実行してください。'
   },
 
   managerOrders: {

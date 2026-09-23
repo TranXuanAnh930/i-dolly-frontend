@@ -136,10 +136,11 @@ export default {
       const hex = artistHex || paletteColorForId(this.product.id)
       return { hex, text: contrastTextColor(hex) }
     },
+    // One source of truth for a release's cover — see ReleaseCard.vue's
+    // coverPhoto for why album.cover_image_url isn't used here anymore.
     coverPhoto () {
       if (!this.product) return null
-      const album = this.product.album || {}
-      return resolveMediaUrl(album.cover_image_url || this.product.image_url)
+      return resolveMediaUrl(this.product.image_url)
     },
     metaLine () {
       if (!this.product) return ''

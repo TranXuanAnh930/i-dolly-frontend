@@ -111,9 +111,10 @@ export default {
     colorFor (product) {
       return this.catalogStore.colorForRelease(product)
     },
+    // One source of truth for a release's cover — see ReleaseCard.vue's
+    // coverPhoto for why album.cover_image_url isn't used here anymore.
     coverFor (product) {
-      const album = product.album || {}
-      return resolveMediaUrl(album.cover_image_url || product.image_url)
+      return resolveMediaUrl(product.image_url)
     },
     updateQty (productId, qty) {
       this.cart.updateQty(productId, qty).catch(() => {})

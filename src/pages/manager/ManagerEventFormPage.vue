@@ -163,6 +163,7 @@
         <p class="form-error" v-if="drawFailed">{{ $t('managerEvents.lotteryDrawFailed') }}</p>
         <div class="form-actions">
           <button type="button" class="save-btn" :disabled="!canDrawLottery || drawInProgress" @click="runLotteryDraw">{{ drawInProgress ? $t('managerEvents.lotteryDrawRunning') : $t('managerEvents.runLotteryDraw') }}</button>
+          <router-link v-if="isEditing" :to="{ name: 'manager-events-lottery-results', params: { id }, query: { title: form.title } }" class="cancel-btn">{{ $t('managerEventForm.viewLotteryResults') }}</router-link>
         </div>
       </div>
     </div>

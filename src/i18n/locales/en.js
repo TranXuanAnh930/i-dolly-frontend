@@ -76,6 +76,12 @@ export default {
     lotteryLostMessage: 'This lottery has been drawn — tap to see the result.',
     passwordResetTitle: 'Password changed',
     passwordResetMessage: 'Your password was reset. If this wasn\'t you, contact support.',
+    lotteryDrawTriggeredTitle: 'Lottery draw started',
+    lotteryDrawTriggeredMessage: 'A lottery draw is now running for one of your events — tap to check on it.',
+    lotteryDrawFailedTitle: 'Lottery draw failed',
+    lotteryDrawFailedMessage: 'A lottery draw failed for one of your events — tap to review it and try again.',
+    lotteryDrawCompletedTitle: 'Lottery draw complete',
+    lotteryDrawCompletedMessage: 'A lottery draw finished for one of your events — tap to see the results.',
     genericTitle: 'Notification',
     genericMessage: 'Tap to view details.'
   },
@@ -747,7 +753,8 @@ export default {
     lotteryDrawTitle: 'Lottery Draw',
     lotteryDrawReady: 'Every open lottery campaign\'s entry window has closed — ready to draw.',
     lotteryDrawNotReady: 'The draw unlocks once every open lottery campaign\'s entry window has closed.',
-    lotteryDrawRunningHint: 'Draw running — this page is watching for the result and will update on its own.'
+    lotteryDrawRunningHint: 'Draw running — this page is watching for the result and will update on its own.',
+    viewLotteryResults: 'View lottery results'
   },
 
   managerProducts: {
@@ -808,6 +815,22 @@ export default {
     sourceDirect: 'Direct sale',
     price: 'Price',
     noResults: 'No sales yet for this event.'
+  },
+
+  managerLotteryResults: {
+    backToEvents: 'Back to events',
+    title: 'Lottery Results — {title}',
+    tier: 'Tier',
+    filterAllTiers: 'All tiers',
+    email: 'Email',
+    status: 'Status',
+    statusWon: 'Won',
+    statusLost: 'Lost',
+    paymentStatus: 'Payment status',
+    paymentDeadline: 'Payment deadline',
+    noResults: 'No lottery results yet for this event.',
+    drawInProgress: 'The draw is still running — results will appear here once it finishes.',
+    drawFailedHint: 'The last draw attempt failed before producing any results — go back to the event to try again.'
   },
 
   managerOrders: {
