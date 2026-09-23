@@ -12,11 +12,13 @@ const POLL_INTERVAL_MS = 20000
 let pollTimer = null
 let visibilityHandler = null
 
-// Real notifications, fan-account-only server-side (see api-spec.md §7) —
-// short-polling since there's no WebSocket/SSE layer. Only
-// GET /notifications/unread-count is actually polled; the heavier
-// GET /notifications/mine is fetched only when that count goes up, never
-// on every tick.
+// Real notifications — short-polling since there's no WebSocket/SSE layer.
+// Not actually fan-only server-side: managers get lottery_draw_triggered/
+// _failed rows too (concert_service.notify_managers_of_draw_trigger/
+// _failure), so this polls for manager/admin sessions as well, not just
+// fan ones. Only GET /notifications/unread-count is actually polled; the
+// heavier GET /notifications/mine is fetched only when that count goes up,
+// never on every tick.
 export const useNotificationStore = defineStore('notifications', {
   state: () => ({
     items: [],
@@ -37,7 +39,7 @@ export const useNotificationStore = defineStore('notifications', {
     // the heavier endpoint when the count goes up."
     async pollUnreadCount () {
       const user = useUserStore().currentUser
-      if (!user.id || user.role !== 'fan') return
+      if (!user.id) return
       try {
         const previous = this.unreadCount
         const response = await NotificationService.getUnreadCount()
@@ -93,7 +95,7 @@ export const useNotificationStore = defineStore('notifications', {
     // still hitting the server every 20s (api-spec.md §7).
     startPolling () {
       const user = useUserStore().currentUser
-      if (!user.id || user.role !== 'fan') return
+      if (!user.id) return
       this.stopPolling()
       this.pollUnreadCount()
       pollTimer = setInterval(() => this.pollUnreadCount(), POLL_INTERVAL_MS)

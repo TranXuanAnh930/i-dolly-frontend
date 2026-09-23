@@ -46,7 +46,7 @@
 
         <router-link to="/forgot-password" class="forgot-link">{{ $t('login.forgotPassword') }}</router-link>
 
-        <button type="submit" class="submit-btn">{{ $t('login.submit') }}</button>
+        <button type="submit" class="submit-btn" :disabled="loading">{{ loading ? $t('login.loggingIn') : $t('login.submit') }}</button>
       </form>
 
       <p class="register-link">
@@ -72,7 +72,8 @@ export default {
       email: '',
       password: '',
       showPassword: false,
-      error: ''
+      error: '',
+      loading: false
     }
   },
 
@@ -85,6 +86,8 @@ export default {
 
   methods: {
     async makeLogin () {
+      if (this.loading) return
+      this.loading = true
       try {
         await AuthService.makeLogin({ username: this.email, password: this.password })
         this.error = ''
@@ -94,6 +97,8 @@ export default {
       } catch (error) {
         useToastStore().add({ type: 'error', message: error.message })
         this.error = error.status === 404 ? this.$t('login.errorUserNotFound') : error.message
+      } finally {
+        this.loading = false
       }
     },
     // Managers/admins land straight in their own working area rather than
@@ -340,6 +345,12 @@ export default {
 
   &:active {
     transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: .65;
+    cursor: not-allowed;
+    transform: none;
   }
 }
 

@@ -67,4 +67,24 @@ export class LotteryService extends BaseService {
       throw this.errorWrapper(error, message)
     }
   }
+
+  // GET /lottery_entries/concert/{id}/results — manager/admin, company-
+  // scoped. One row per decided entry (won or lost) once draw_lottery has
+  // committed. 404s on none — same "no rows yet" treatment as getMyEntries,
+  // but here it's ambiguous on its own: it covers both "draw hasn't been
+  // triggered at all" and "draw hasn't finished yet". Callers distinguish
+  // those against store/events/lotteryDraw.js's isDrawing/hasFailed state,
+  // not from this response.
+  static async getResults (concertId) {
+    try {
+      const response = await this.request({ auth: true }).get(`lottery_entries/concert/${concertId}/results`)
+      return this.responseWrapper(response, response.data)
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
+        return this.responseWrapper(error.response, [])
+      }
+      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
+      throw this.errorWrapper(error, message)
+    }
+  }
 }
