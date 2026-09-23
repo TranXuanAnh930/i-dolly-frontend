@@ -78,7 +78,7 @@ import { parseISO } from 'date-fns'
 import { useNotificationStore } from '@/store/account/notifications'
 import { useLotteryEntriesStore } from '@/store/events/lotteryEntries'
 import { formatDate } from '@/utils/format'
-import { notificationIconType, notificationLink, notificationTitleKey, notificationMessageKey, isLotteryWin } from '@/utils/notification'
+import { notificationIconType, notificationLink, notificationTitleKey, notificationMessageKey, isLotteryWin, lotteryResultTier } from '@/utils/notification'
 
 export default {
   name: 'NotificationsPage',
@@ -116,10 +116,10 @@ export default {
       return notificationLink(item)
     },
     notificationTitle (item) {
-      return this.$t(notificationTitleKey(item, isLotteryWin(item, useLotteryEntriesStore())))
+      return this.$t(notificationTitleKey(item, isLotteryWin(item, useLotteryEntriesStore())), { tier: lotteryResultTier(item, useLotteryEntriesStore()) })
     },
     notificationMessage (item) {
-      return this.$t(notificationMessageKey(item, isLotteryWin(item, useLotteryEntriesStore())))
+      return this.$t(notificationMessageKey(item, isLotteryWin(item, useLotteryEntriesStore())), { tier: lotteryResultTier(item, useLotteryEntriesStore()) })
     }
   }
 }

@@ -8,7 +8,7 @@
 // rather than a fresh fetch just for this.
 export function notificationIconType (item, isWin) {
   if (item.type === 'order_confirmation') return 'order'
-  if (item.type === 'ticket_confirmation' || item.type === 'lottery_payment_confirmation') return 'ticket'
+  if (item.type === 'ticket_confirmation' || item.type === 'lottery_payment_confirmation' || item.type === 'lottery_registered' || item.type === 'lottery_payment_reminder') return 'ticket'
   if (item.type === 'lottery_result') return isWin ? 'lottery-won' : 'lottery-lost'
   if (item.type === 'lottery_draw_triggered') return 'lottery-draw'
   if (item.type === 'lottery_draw_failed') return 'lottery-draw-failed'
@@ -27,8 +27,13 @@ export function notificationIconType (item, isWin) {
 // nothing left to watch or retry, only winners/losers to review.
 export function notificationLink (item) {
   if (item.type === 'order_confirmation') return `/history/orders/${item.order_id}`
-  if (item.type === 'ticket_confirmation' || item.type === 'lottery_payment_confirmation') return `/history/tickets/${item.ticket_id}`
-  if (item.type === 'lottery_result') return `/history/lottery/${item.lottery_entry_id}`
+  // A lottery_payment_reminder fired by a draw that ran before the backend's
+  // new_ticket.id-population fix will have ticket_id: null forever — falls
+  // back to the notifications list instead of a dead /history/tickets/null.
+  if (item.type === 'ticket_confirmation' || item.type === 'lottery_payment_confirmation' || item.type === 'lottery_payment_reminder') {
+    return item.ticket_id ? `/history/tickets/${item.ticket_id}` : '/notifications'
+  }
+  if (item.type === 'lottery_result' || item.type === 'lottery_registered') return `/history/lottery/${item.lottery_entry_id}`
   if (['lottery_draw_triggered', 'lottery_draw_failed'].includes(item.type)) {
     return { name: 'manager-events-edit', params: { id: item.concert_id } }
   }
@@ -42,6 +47,8 @@ export function notificationTitleKey (item, isWin) {
   if (item.type === 'order_confirmation') return 'notifications.orderConfirmationTitle'
   if (item.type === 'ticket_confirmation') return 'notifications.ticketConfirmationTitle'
   if (item.type === 'lottery_payment_confirmation') return 'notifications.lotteryPaymentConfirmationTitle'
+  if (item.type === 'lottery_registered') return 'notifications.lotteryRegisteredTitle'
+  if (item.type === 'lottery_payment_reminder') return 'notifications.lotteryPaymentReminderTitle'
   if (item.type === 'lottery_result') return isWin ? 'notifications.lotteryWonTitle' : 'notifications.lotteryLostTitle'
   if (item.type === 'lottery_draw_triggered') return 'notifications.lotteryDrawTriggeredTitle'
   if (item.type === 'lottery_draw_failed') return 'notifications.lotteryDrawFailedTitle'
@@ -54,6 +61,8 @@ export function notificationMessageKey (item, isWin) {
   if (item.type === 'order_confirmation') return 'notifications.orderConfirmationMessage'
   if (item.type === 'ticket_confirmation') return 'notifications.ticketConfirmationMessage'
   if (item.type === 'lottery_payment_confirmation') return 'notifications.lotteryPaymentConfirmationMessage'
+  if (item.type === 'lottery_registered') return 'notifications.lotteryRegisteredMessage'
+  if (item.type === 'lottery_payment_reminder') return 'notifications.lotteryPaymentReminderMessage'
   if (item.type === 'lottery_result') return isWin ? 'notifications.lotteryWonMessage' : 'notifications.lotteryLostMessage'
   if (item.type === 'lottery_draw_triggered') return 'notifications.lotteryDrawTriggeredMessage'
   if (item.type === 'lottery_draw_failed') return 'notifications.lotteryDrawFailedMessage'
@@ -68,4 +77,19 @@ export function isLotteryWin (item, lotteryEntriesStore) {
   if (item.type !== 'lottery_result') return false
   const entry = lotteryEntriesStore.byId(item.lottery_entry_id)
   return !!entry && entry.status === 'won'
+}
+
+// draw_lottery processes every open campaign on a concert in one pass (see
+// lottery_draw_service.py), so a fan who entered more than one tier for the
+// same event gets one lottery_result row per tier — won on one, lost on
+// another is the normal, correct outcome, not a conflicting pair of
+// notifications for "the same" draw. Without the tier in the title/message,
+// though, "You won!" and "Lottery result" sitting next to each other in the
+// list read exactly like a contradiction, so this resolves which tier each
+// row is actually about.
+export function lotteryResultTier (item, lotteryEntriesStore) {
+  if (item.type !== 'lottery_result') return ''
+  const entry = lotteryEntriesStore.byId(item.lottery_entry_id)
+  const tier = entry && entry.campaign && entry.campaign.ticket_type && entry.campaign.ticket_type.tier
+  return tier ? tier.charAt(0).toUpperCase() + tier.slice(1) : ''
 }
