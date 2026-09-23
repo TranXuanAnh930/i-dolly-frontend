@@ -3,14 +3,17 @@
     <section class="hero">
       <div class="wrapper hero__inner">
         <router-link to="/history" class="back-link">&larr; {{ $t('ticketDetails.backToHistory') }}</router-link>
-        <p class="hero__eyebrow">{{ $t('ticketDetails.title') }}</p>
-        <h1 class="hero__title">{{ ticket.id.slice(0, 8) }}</h1>
+        <h1 class="hero__title">{{ $t('ticketDetails.title') }}</h1>
         <p class="hero__meta">{{ formatTimestamp(ticket.created_at) }}</p>
       </div>
     </section>
 
     <div class="wrapper content">
       <div class="info-table">
+        <div class="info-row">
+          <span class="info-row__label">{{ $t('ticketDetails.ticketId') }}</span>
+          <span class="info-row__value">{{ ticket.id.slice(0, 8) }}</span>
+        </div>
         <div class="info-row">
           <span class="info-row__label">{{ $t('ticketDetails.event') }}</span>
           <span class="info-row__value">
@@ -153,16 +156,6 @@ export default {
   &:hover {
     color: $color-brand;
   }
-}
-
-.hero__eyebrow {
-  margin-top: 16px;
-  font-family: $font-content;
-  font-weight: 700;
-  font-size: 12px;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: $color-gray-400;
 }
 
 .hero__title {

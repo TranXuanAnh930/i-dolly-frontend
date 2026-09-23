@@ -70,12 +70,22 @@ export default {
     ticketConfirmationMessage: 'Your ticket purchase has been confirmed — tap to view it.',
     lotteryPaymentConfirmationTitle: 'Ticket payment confirmed',
     lotteryPaymentConfirmationMessage: 'Your payment for a lottery-won ticket has been confirmed — tap to view it.',
-    lotteryWonTitle: 'You won!',
-    lotteryWonMessage: 'Congratulations — you won the lottery. Tap to complete payment.',
-    lotteryLostTitle: 'Lottery result',
-    lotteryLostMessage: 'This lottery has been drawn — tap to see the result.',
+    lotteryRegisteredTitle: 'Entry confirmed',
+    lotteryRegisteredMessage: 'Your lottery entry is in — winners are announced once entries close.',
+    lotteryPaymentReminderTitle: 'Complete your payment',
+    lotteryPaymentReminderMessage: 'You won a lottery ticket — pay before the deadline to keep it.',
+    lotteryWonTitle: 'You won the {tier} lottery!',
+    lotteryWonMessage: 'Congratulations — you won a {tier} ticket. Tap to complete payment.',
+    lotteryLostTitle: '{tier} lottery result',
+    lotteryLostMessage: 'Your {tier} lottery entry wasn\'t selected this time — tap to see the details.',
     passwordResetTitle: 'Password changed',
     passwordResetMessage: 'Your password was reset. If this wasn\'t you, contact support.',
+    lotteryDrawTriggeredTitle: 'Lottery draw started',
+    lotteryDrawTriggeredMessage: 'A lottery draw is now running for one of your events — tap to check on it.',
+    lotteryDrawFailedTitle: 'Lottery draw failed',
+    lotteryDrawFailedMessage: 'A lottery draw failed for one of your events — tap to review it and try again.',
+    lotteryDrawCompletedTitle: 'Lottery draw complete',
+    lotteryDrawCompletedMessage: 'A lottery draw finished for one of your events — tap to see the results.',
     genericTitle: 'Notification',
     genericMessage: 'Tap to view details.'
   },
@@ -300,11 +310,15 @@ export default {
     eyebrow: 'The origin story',
     title: 'Why I-Dolly exists',
     sub: 'One login, every unit, zero juggling a separate fan club app for each.',
-    intro: 'I-Dolly started as a way to stop juggling a separate fan club, a separate ticket queue, and a separate release calendar for every unit. Now every unit — from Starlight Aria\'s arena tours to Mint Parade\'s first steps — sells tickets, runs lotteries, and ships albums through one account.',
-    statUnits: 'Units',
-    statIdols: 'Idols',
-    statShows: 'Shows a year',
-    statVenues: 'Venues',
+    intro: 'I-Dolly started as a way to stop juggling a separate fan club, a separate ticket queue, and a separate release calendar for every unit. Now every unit — from arena headliners to acts just getting started — sells tickets, runs lotteries, and ships albums through one account.',
+    featureMarketplaceTitle: 'Marketplace',
+    featureMarketplaceBody: 'Browse and buy albums, singles, and merch — all shipped through one storefront.',
+    featureTicketsTitle: 'Tickets',
+    featureTicketsBody: 'Direct-sale seats or lottery entries, per tier, for every show.',
+    featurePaypalTitle: 'PayPal',
+    featurePaypalBody: 'Real PayPal checkout alongside a mock gateway, for both orders and tickets.',
+    featureEmailTitle: 'Email',
+    featureEmailBody: 'Confirmations, password resets, and reminders land straight in your inbox.',
     noteTitle: 'A note on this build',
     noteBody: 'I-Dolly is a demo booking site — the units, idols, venues, and releases are all fictional, and checkout is mocked (nothing is ever actually charged). Login is the one connection to a real backend; everything else runs on data stored right in your browser.'
   },
@@ -334,6 +348,7 @@ export default {
     title: 'Welcome back',
     subtitle: 'Log in and let the chaos — tickets, lotteries, all of it — begin.',
     submit: 'Log in',
+    loggingIn: 'Logging in…',
     noAccount: 'Don\'t have an account?',
     register: 'Register',
     errorUserNotFound: 'User with same email not found',
@@ -559,6 +574,7 @@ export default {
   ticketDetails: {
     backToHistory: 'History',
     title: 'Ticket details',
+    ticketId: 'Ticket ID',
     event: 'Event',
     tier: 'Tier',
     total: 'Total',
@@ -747,7 +763,8 @@ export default {
     lotteryDrawTitle: 'Lottery Draw',
     lotteryDrawReady: 'Every open lottery campaign\'s entry window has closed — ready to draw.',
     lotteryDrawNotReady: 'The draw unlocks once every open lottery campaign\'s entry window has closed.',
-    lotteryDrawRunningHint: 'Draw running — this page is watching for the result and will update on its own.'
+    lotteryDrawRunningHint: 'Draw running — this page is watching for the result and will update on its own.',
+    viewLotteryResults: 'View lottery results'
   },
 
   managerProducts: {
@@ -808,6 +825,22 @@ export default {
     sourceDirect: 'Direct sale',
     price: 'Price',
     noResults: 'No sales yet for this event.'
+  },
+
+  managerLotteryResults: {
+    backToEvents: 'Back to events',
+    title: 'Lottery Results — {title}',
+    tier: 'Tier',
+    filterAllTiers: 'All tiers',
+    email: 'Email',
+    status: 'Status',
+    statusWon: 'Won',
+    statusLost: 'Lost',
+    paymentStatus: 'Payment status',
+    paymentDeadline: 'Payment deadline',
+    noResults: 'No lottery results yet for this event.',
+    drawInProgress: 'The draw is still running — results will appear here once it finishes.',
+    drawFailedHint: 'The last draw attempt failed before producing any results — go back to the event to try again.'
   },
 
   managerOrders: {

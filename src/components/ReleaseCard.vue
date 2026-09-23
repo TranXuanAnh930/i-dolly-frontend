@@ -60,9 +60,16 @@ export default {
       const hex = artistHex || paletteColorForId(this.release.id)
       return { hex, text: contrastTextColor(hex) }
     },
+    // One source of truth for a release's cover: the product's own
+    // image_url. album.cover_image_url used to take priority here, but
+    // nothing in this app ever lets the two differ intentionally — they're
+    // set from the same upload at creation (scripts/seed.py) — and nothing
+    // keeps them in sync after a product's image is replaced, so preferring
+    // the album copy meant a re-uploaded cover could look fine on the
+    // manager's own product table (reads image_url directly) while still
+    // showing the old file everywhere a fan actually sees it.
     coverPhoto () {
-      const album = this.release.album || {}
-      return resolveMediaUrl(album.cover_image_url || this.release.image_url)
+      return resolveMediaUrl(this.release.image_url)
     },
     metaLine () {
       const album = this.release.album || {}

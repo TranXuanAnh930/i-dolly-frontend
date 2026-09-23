@@ -70,12 +70,22 @@ export default {
     ticketConfirmationMessage: 'チケットのご購入が確定しました — タップして詳細を確認してください。',
     lotteryPaymentConfirmationTitle: 'チケットのお支払いが確定しました',
     lotteryPaymentConfirmationMessage: '当選チケットのお支払いが確定しました — タップして詳細を確認してください。',
-    lotteryWonTitle: '当選しました！',
-    lotteryWonMessage: 'おめでとうございます、抽選に当選しました。タップしてお支払いを完了してください。',
-    lotteryLostTitle: '抽選結果',
-    lotteryLostMessage: '抽選が行われました — タップして結果を確認してください。',
+    lotteryRegisteredTitle: '応募が完了しました',
+    lotteryRegisteredMessage: '抽選への応募を受け付けました — 応募期間が終了すると当選者が発表されます。',
+    lotteryPaymentReminderTitle: 'お支払いを完了してください',
+    lotteryPaymentReminderMessage: '抽選に当選しました — 期限までにお支払いください。',
+    lotteryWonTitle: '{tier}抽選に当選しました！',
+    lotteryWonMessage: 'おめでとうございます、{tier}チケットに当選しました。タップしてお支払いを完了してください。',
+    lotteryLostTitle: '{tier}抽選結果',
+    lotteryLostMessage: '{tier}の抽選が行われました — 今回は落選でした。タップして詳細を確認してください。',
     passwordResetTitle: 'パスワードが変更されました',
     passwordResetMessage: 'パスワードがリセットされました。心当たりがない場合はサポートにご連絡ください。',
+    lotteryDrawTriggeredTitle: '抽選を開始しました',
+    lotteryDrawTriggeredMessage: '担当イベントの抽選処理を実行中です — タップして確認してください。',
+    lotteryDrawFailedTitle: '抽選に失敗しました',
+    lotteryDrawFailedMessage: '担当イベントの抽選に失敗しました — タップして確認し、再実行してください。',
+    lotteryDrawCompletedTitle: '抽選が完了しました',
+    lotteryDrawCompletedMessage: '担当イベントの抽選が完了しました — タップして結果を確認してください。',
     genericTitle: '通知',
     genericMessage: 'タップして詳細を確認してください。'
   },
@@ -300,11 +310,15 @@ export default {
     eyebrow: '誕生の理由',
     title: 'なぜI-Dollyが生まれたのか',
     sub: 'アカウント1つで、ユニットごとにアプリを行き来する手間ゼロに。',
-    intro: 'I-Dollyは、ユニットごとにばらばらだったファンクラブ・チケット窓口・リリースカレンダーを一本化するために生まれました。Starlight Ariaのアリーナツアーから、デビューしたばかりのMint Paradeまで、すべてのユニットのチケット購入・抽選応募・アルバム購入を1つのアカウントで行えます。',
-    statUnits: 'ユニット',
-    statIdols: 'アイドル',
-    statShows: '年間公演数',
-    statVenues: '会場',
+    intro: 'I-Dollyは、ユニットごとにばらばらだったファンクラブ・チケット窓口・リリースカレンダーを一本化するために生まれました。アリーナを埋める人気ユニットから、デビューしたばかりの新人ユニットまで、すべてのユニットのチケット購入・抽選応募・アルバム購入を1つのアカウントで行えます。',
+    featureMarketplaceTitle: 'マーケットプレイス',
+    featureMarketplaceBody: 'アルバム・シングル・グッズをひとつのストアでまとめて購入できます。',
+    featureTicketsTitle: 'チケット',
+    featureTicketsBody: '各公演・各種別で、直接購入または抽選応募からチケットを確保できます。',
+    featurePaypalTitle: 'PayPal',
+    featurePaypalBody: 'モック決済に加えて、注文・チケットどちらも実際のPayPal決済に対応しています。',
+    featureEmailTitle: 'メール',
+    featureEmailBody: '確認メール・パスワード再設定・お支払いリマインダーが直接メールで届きます。',
     noteTitle: 'このデモについて',
     noteBody: 'I-Dollyはデモ用の予約サイトです。登場するユニット・アイドル・会場・リリースはすべて架空のもので、チェックアウトもモックのため実際の請求は発生しません。実際のバックエンドと接続しているのはログインのみで、それ以外はすべてお使いのブラウザ内にデータを保存しています。'
   },
@@ -334,6 +348,7 @@ export default {
     title: 'おかえりなさい',
     subtitle: 'ログインして、座席の確保も抽選応募も、心置きなく。',
     submit: 'ログイン',
+    loggingIn: 'ログイン中…',
     noAccount: 'アカウントをお持ちでない方は',
     register: '新規登録',
     errorUserNotFound: '同じメールアドレスのユーザーが見つかりません',
@@ -559,6 +574,7 @@ export default {
   ticketDetails: {
     backToHistory: '履歴',
     title: 'チケット詳細',
+    ticketId: 'チケットID',
     event: 'イベント',
     tier: '種別',
     total: '合計',
@@ -747,7 +763,8 @@ export default {
     lotteryDrawTitle: '抽選',
     lotteryDrawReady: '開催中の全キャンペーンの応募期間が終了しました — 抽選を実行できます。',
     lotteryDrawNotReady: '開催中の全キャンペーンの応募期間が終了すると抽選を実行できるようになります。',
-    lotteryDrawRunningHint: '抽選を実行中です — 結果は自動で反映されます。'
+    lotteryDrawRunningHint: '抽選を実行中です — 結果は自動で反映されます。',
+    viewLotteryResults: '抽選結果を見る'
   },
 
   managerProducts: {
@@ -808,6 +825,22 @@ export default {
     sourceDirect: '直接購入',
     price: '価格',
     noResults: 'このイベントの販売履歴はまだありません。'
+  },
+
+  managerLotteryResults: {
+    backToEvents: 'イベント一覧へ戻る',
+    title: '抽選結果 — {title}',
+    tier: '種別',
+    filterAllTiers: 'すべての種別',
+    email: 'メールアドレス',
+    status: 'ステータス',
+    statusWon: '当選',
+    statusLost: '落選',
+    paymentStatus: '支払い状況',
+    paymentDeadline: '支払い期限',
+    noResults: 'このイベントの抽選結果はまだありません。',
+    drawInProgress: '抽選を実行中です — 完了すると結果がここに表示されます。',
+    drawFailedHint: '前回の抽選は結果が出る前に失敗しました — イベントページに戻ってもう一度実行してください。'
   },
 
   managerOrders: {

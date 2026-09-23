@@ -35,6 +35,19 @@
               <svg v-else-if="iconType(item) === 'lottery-won'" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                 <path fill="currentColor" d="M10 2 11.9 7.1 17.5 7.5 13.2 11 14.5 16.5 10 13.3 5.5 16.5 6.8 11 2.5 7.5 8.1 7.1 10 2Z"/>
               </svg>
+              <svg v-else-if="iconType(item) === 'lottery-draw'" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <path d="M16 6a6 6 0 1 0 .9 8.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M16 3v3.5h-3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <svg v-else-if="iconType(item) === 'lottery-draw-failed'" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <path d="M10 3 17.5 16H2.5L10 3Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                <path d="M10 8.2v3.3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                <circle cx="10" cy="13.7" r=".9" fill="currentColor"/>
+              </svg>
+              <svg v-else-if="iconType(item) === 'lottery-draw-done'" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M6.8 10.2 8.9 12.3 13.2 7.9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
               <svg v-else viewBox="0 0 20 20" fill="none" aria-hidden="true">
                 <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="1.5"/>
               </svg>
@@ -65,7 +78,7 @@ import { parseISO } from 'date-fns'
 import { useNotificationStore } from '@/store/account/notifications'
 import { useLotteryEntriesStore } from '@/store/events/lotteryEntries'
 import { formatDate } from '@/utils/format'
-import { notificationIconType, notificationLink, notificationTitleKey, notificationMessageKey, isLotteryWin } from '@/utils/notification'
+import { notificationIconType, notificationLink, notificationTitleKey, notificationMessageKey, isLotteryWin, lotteryResultTier } from '@/utils/notification'
 
 export default {
   name: 'NotificationsPage',
@@ -103,10 +116,10 @@ export default {
       return notificationLink(item)
     },
     notificationTitle (item) {
-      return this.$t(notificationTitleKey(item, isLotteryWin(item, useLotteryEntriesStore())))
+      return this.$t(notificationTitleKey(item, isLotteryWin(item, useLotteryEntriesStore())), { tier: lotteryResultTier(item, useLotteryEntriesStore()) })
     },
     notificationMessage (item) {
-      return this.$t(notificationMessageKey(item, isLotteryWin(item, useLotteryEntriesStore())))
+      return this.$t(notificationMessageKey(item, isLotteryWin(item, useLotteryEntriesStore())), { tier: lotteryResultTier(item, useLotteryEntriesStore()) })
     }
   }
 }
@@ -245,6 +258,21 @@ export default {
   &--lottery-lost {
     background: $color-gray-50;
     color: $color-gray-400;
+  }
+
+  &--lottery-draw {
+    background: $color-brand-tint;
+    color: $color-brand;
+  }
+
+  &--lottery-draw-failed {
+    background: #fdeceb;
+    color: $color-error;
+  }
+
+  &--lottery-draw-done {
+    background: #e6f7ef;
+    color: #147a52;
   }
 }
 

@@ -13,22 +13,47 @@
         <p class="panel__text">{{ $t('about.intro') }}</p>
       </div>
 
-      <div class="stats">
-        <div class="stat">
-          <span class="stat__value">6</span>
-          <span class="stat__label">{{ $t('about.statUnits') }}</span>
+      <div class="features">
+        <div class="feature">
+          <span class="feature__icon">
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path d="M5 6.5h10l-.8 8.5a1.5 1.5 0 0 1-1.5 1.4H7.3a1.5 1.5 0 0 1-1.5-1.4L5 6.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+              <path d="M7 6.5V5a3 3 0 0 1 6 0v1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <h3 class="feature__title">{{ $t('about.featureMarketplaceTitle') }}</h3>
+          <p class="feature__body">{{ $t('about.featureMarketplaceBody') }}</p>
         </div>
-        <div class="stat">
-          <span class="stat__value">18</span>
-          <span class="stat__label">{{ $t('about.statIdols') }}</span>
+        <div class="feature">
+          <span class="feature__icon">
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path d="M3 7.5V6a1.5 1.5 0 0 1 1.5-1.5h11A1.5 1.5 0 0 1 17 6v1.5a1.5 1.5 0 0 0 0 3V14a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 14v-3.5a1.5 1.5 0 0 0 0-3Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+              <path d="M11 5v10" stroke="currentColor" stroke-width="1.5" stroke-dasharray="1.6 1.6" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <h3 class="feature__title">{{ $t('about.featureTicketsTitle') }}</h3>
+          <p class="feature__body">{{ $t('about.featureTicketsBody') }}</p>
         </div>
-        <div class="stat">
-          <span class="stat__value">12+</span>
-          <span class="stat__label">{{ $t('about.statShows') }}</span>
+        <div class="feature">
+          <span class="feature__icon">
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <rect x="2" y="5" width="16" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M2 8.5h16" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M5 12.5h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <h3 class="feature__title">{{ $t('about.featurePaypalTitle') }}</h3>
+          <p class="feature__body">{{ $t('about.featurePaypalBody') }}</p>
         </div>
-        <div class="stat">
-          <span class="stat__value">7</span>
-          <span class="stat__label">{{ $t('about.statVenues') }}</span>
+        <div class="feature">
+          <span class="feature__icon">
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <rect x="2" y="4.5" width="16" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M2.5 5.5 10 11 17.5 5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <h3 class="feature__title">{{ $t('about.featureEmailTitle') }}</h3>
+          <p class="feature__body">{{ $t('about.featureEmailBody') }}</p>
         </div>
       </div>
 
@@ -121,7 +146,7 @@ export default {
   color: $color-font-main;
 }
 
-.stats {
+.features {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 1px;
@@ -136,30 +161,43 @@ export default {
   }
 }
 
-.stat {
+.feature {
   background: $color-white;
-  padding: 22px 12px;
+  padding: 24px 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
   text-align: center;
 }
 
-.stat__value {
-  font-family: $font-title;
-  font-weight: 900;
-  font-style: italic;
-  font-size: 30px;
+.feature__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: $color-brand-tint;
   color: $color-brand;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
 }
 
-.stat__label {
+.feature__title {
   font-family: $font-content;
   font-weight: 700;
-  font-size: 11.5px;
-  text-transform: uppercase;
-  letter-spacing: .04em;
+  font-size: 13px;
+  color: $color-ink;
+}
+
+.feature__body {
+  font-family: $font-content;
+  font-size: 12px;
+  line-height: 1.5;
   color: $color-gray-500;
 }
 </style>

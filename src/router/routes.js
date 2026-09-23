@@ -35,6 +35,7 @@ import managerGroupFormPage from '../pages/manager/ManagerGroupFormPage.vue'
 import managerEventsPage from '../pages/manager/ManagerEventsPage.vue'
 import managerEventFormPage from '../pages/manager/ManagerEventFormPage.vue'
 import managerEventSalesPage from '../pages/manager/ManagerEventSalesPage.vue'
+import managerLotteryResultsPage from '../pages/manager/ManagerLotteryResultsPage.vue'
 import managerProductsPage from '../pages/manager/ManagerProductsPage.vue'
 import managerProductFormPage from '../pages/manager/ManagerProductFormPage.vue'
 import managerProductSalesPage from '../pages/manager/ManagerProductSalesPage.vue'
@@ -314,6 +315,13 @@ export const routes = [
     component: managerEventSalesPage,
     props: true,
     meta: { isAuth: true, roles: ['manager'], title: `${DOMAIN_TITLE} | manager · event sales` }
+  },
+  {
+    path: '/manager/events/:id/lottery-results',
+    name: 'manager-events-lottery-results',
+    component: managerLotteryResultsPage,
+    props: true,
+    meta: { isAuth: true, roles: ['manager'], title: `${DOMAIN_TITLE} | manager · lottery results` }
   },
   {
     path: '/manager/products',
