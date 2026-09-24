@@ -8,6 +8,7 @@
 // rather than a fresh fetch just for this.
 export function notificationIconType (item, isWin) {
   if (item.type === 'order_confirmation') return 'order'
+  if (item.type === 'order_shipped') return 'order-shipped'
   if (item.type === 'ticket_confirmation' || item.type === 'lottery_payment_confirmation' || item.type === 'lottery_registered' || item.type === 'lottery_payment_reminder') return 'ticket'
   if (item.type === 'lottery_result') return isWin ? 'lottery-won' : 'lottery-lost'
   if (item.type === 'lottery_draw_triggered') return 'lottery-draw'
@@ -26,7 +27,7 @@ export function notificationIconType (item, isWin) {
 // completed instead goes straight to the results table — by then there's
 // nothing left to watch or retry, only winners/losers to review.
 export function notificationLink (item) {
-  if (item.type === 'order_confirmation') return `/history/orders/${item.order_id}`
+  if (item.type === 'order_confirmation' || item.type === 'order_shipped') return `/history/orders/${item.order_id}`
   // A lottery_payment_reminder fired by a draw that ran before the backend's
   // new_ticket.id-population fix will have ticket_id: null forever — falls
   // back to the notifications list instead of a dead /history/tickets/null.
@@ -45,6 +46,7 @@ export function notificationLink (item) {
 
 export function notificationTitleKey (item, isWin) {
   if (item.type === 'order_confirmation') return 'notifications.orderConfirmationTitle'
+  if (item.type === 'order_shipped') return 'notifications.orderShippedTitle'
   if (item.type === 'ticket_confirmation') return 'notifications.ticketConfirmationTitle'
   if (item.type === 'lottery_payment_confirmation') return 'notifications.lotteryPaymentConfirmationTitle'
   if (item.type === 'lottery_registered') return 'notifications.lotteryRegisteredTitle'
@@ -59,6 +61,7 @@ export function notificationTitleKey (item, isWin) {
 
 export function notificationMessageKey (item, isWin) {
   if (item.type === 'order_confirmation') return 'notifications.orderConfirmationMessage'
+  if (item.type === 'order_shipped') return 'notifications.orderShippedMessage'
   if (item.type === 'ticket_confirmation') return 'notifications.ticketConfirmationMessage'
   if (item.type === 'lottery_payment_confirmation') return 'notifications.lotteryPaymentConfirmationMessage'
   if (item.type === 'lottery_registered') return 'notifications.lotteryRegisteredMessage'

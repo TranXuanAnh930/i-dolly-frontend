@@ -13,6 +13,8 @@
             <th>{{ $t('managerOrders.items') }}</th>
             <th>{{ $t('managerOrders.total') }}</th>
             <th>{{ $t('managerOrders.status') }}</th>
+            <th>{{ $t('managerOrders.shippingStatus') }}</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -32,6 +34,19 @@
             <td>&yen;{{ order.company_total.toLocaleString('en-US') }}</td>
             <td>
               <span class="status-badge" :class="`status-badge--${order.status}`">{{ statusLabel(order.status) }}</span>
+            </td>
+            <td>
+              <span v-if="order.shippingstatus" class="status-badge" :class="`status-badge--ship-${order.shippingstatus.status}`">{{ shippingStatusLabel(order.shippingstatus.status) }}</span>
+              <span v-else>&mdash;</span>
+            </td>
+            <td class="actions">
+              <button
+                v-if="canShip(order)"
+                type="button"
+                :disabled="shippingId === order.id"
+                @click="shipOrder(order)">
+                {{ shippingId === order.id ? $t('common.saving') : $t('managerOrders.shipAction') }}
+              </button>
             </td>
           </tr>
         </tbody>
@@ -53,8 +68,10 @@
 import { format, parseISO } from 'date-fns'
 
 import { OrderService } from '@/services/store/order.service'
+import { useToastStore } from '@/store/toast'
 
 const PAGE_SIZE = 10
+const SHIPPABLE_STATUSES = ['pending', 'processing']
 
 export default {
   name: 'ManagerOrdersPage',
@@ -65,6 +82,9 @@ export default {
       page: 1,
       limit: PAGE_SIZE,
       loading: false,
+      // The order.id currently mid-ship — disables just that row's button
+      // rather than every row's, and doubles as a double-click guard.
+      shippingId: null,
       error: ''
     }
   },
@@ -106,6 +126,34 @@ export default {
     statusLabel (status) {
       const key = 'status' + status.charAt(0).toUpperCase() + status.slice(1)
       return this.$t(`managerOrders.${key}`)
+    },
+    shippingStatusLabel (status) {
+      const key = 'shipping' + status.charAt(0).toUpperCase() + status.slice(1)
+      return this.$t(`managerOrders.${key}`)
+    },
+    // The list itself is already company-scoped (every order shown here
+    // has at least one of this company's products in it), so the only real
+    // gate left is shipping status — a 403 from the endpoint's own scope
+    // check would only fire on some genuine edge case, handled defensively
+    // in shipOrder's catch rather than pre-checked here.
+    canShip (order) {
+      return !!order.shippingstatus && SHIPPABLE_STATUSES.includes(order.shippingstatus.status)
+    },
+    async shipOrder (order) {
+      if (!window.confirm(this.$t('managerOrders.confirmShip'))) return
+      this.shippingId = order.id
+      try {
+        const response = await OrderService.ship(order.id)
+        // Patched straight from the response, matching every other
+        // "the write already returns the full row" endpoint in this app —
+        // no need to refetch the whole page just to see the new status.
+        order.shippingstatus = response.data.shippingstatus
+        useToastStore().add({ type: 'success', message: this.$t('managerOrders.shipSuccess') })
+      } catch (error) {
+        useToastStore().add({ type: 'error', message: error.message })
+      } finally {
+        this.shippingId = null
+      }
     }
   }
 }
@@ -228,6 +276,50 @@ export default {
   &--cancelled {
     background: #fdeaf1;
     color: $color-error;
+  }
+
+  &--ship-pending {
+    background: #fff4e0;
+    color: #9a6400;
+  }
+
+  &--ship-processing {
+    background: #e9f2fb;
+    color: #2a6fa8;
+  }
+
+  &--ship-shipped,
+  &--ship-delivered {
+    background: #e6f7ef;
+    color: #147a52;
+  }
+
+  &--ship-cancelled {
+    background: #fdeaf1;
+    color: $color-error;
+  }
+}
+
+.actions button {
+  border: 1.5px solid $color-line;
+  background: $color-white;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  color: $color-ink;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    border-color: $color-brand;
+    color: $color-brand;
+  }
+
+  &:disabled {
+    opacity: .6;
+    cursor: default;
   }
 }
 

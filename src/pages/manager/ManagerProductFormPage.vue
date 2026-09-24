@@ -29,7 +29,9 @@
           </label>
           <label class="field">
             <span class="field__label">{{ $t('common.photo') }}</span>
+            <img v-if="imagePreviewUrl" :src="imagePreviewUrl" class="image-preview" alt="">
             <input type="file" accept="image/*" @change="onImageChange">
+            <span class="field__hint" v-if="isEditing && !imageFile">{{ $t('common.imageKeptHint') }}</span>
           </label>
         </div>
 
@@ -38,31 +40,36 @@
           <textarea v-model="form.description" rows="4" required></textarea>
         </label>
 
-        <!-- Only for a brand-new product — a product is always created
-             together with its album/merch detail row now (see
-             product_service.add_product_with_detail), so this only ever
-             makes sense while there isn't a product yet to attach to. -->
-        <template v-if="!isEditing && form.category_id">
-          <h4 class="section-title">{{ $t('managerProductForm.attachToTitle') }}</h4>
+        <!-- A product is always created together with its album/merch
+             detail row (see product_service.add_product_with_detail), so
+             this also shows while editing — release_date/track_count/format
+             (album) or edition/color_id (merch) bundle into the same save
+             as the base product fields, just like creation bundles them
+             into one request. Ownership (idol/group) is immutable once set
+             (AlbumDetailUpdate/MerchDetailUpdate both exclude it server-side)
+             so those two fields lock the same way price does above. -->
+        <template v-if="form.category_id">
+          <h4 class="section-title">{{ $t(isEditing ? 'managerProductForm.detailsTitle' : 'managerProductForm.attachToTitle') }}</h4>
 
           <div class="field-grid">
             <label class="field">
               <span class="field__label">{{ $t('managerProductForm.ownerType') }}</span>
-              <select v-model="detail.ownerType">
+              <select v-model="detail.ownerType" :disabled="isEditing">
                 <option value="idol">{{ $t('managerProductForm.ownerTypeIdol') }}</option>
                 <option value="group">{{ $t('managerProductForm.ownerTypeGroup') }}</option>
               </select>
+              <span class="field__hint" v-if="isEditing">{{ $t('managerProductForm.ownerLocked') }}</span>
             </label>
             <label class="field" v-if="detail.ownerType === 'idol'">
               <span class="field__label">{{ $t('managerProductForm.idol') }}</span>
-              <select v-model="detail.idol_id" required>
+              <select v-model="detail.idol_id" required :disabled="isEditing">
                 <option value="" disabled>{{ $t('managerProductForm.selectIdolPlaceholder') }}</option>
                 <option v-for="idol in myIdols" :key="idol.id" :value="idol.id">{{ idol.name }}</option>
               </select>
             </label>
             <label class="field" v-else>
               <span class="field__label">{{ $t('managerProductForm.group') }}</span>
-              <select v-model="detail.group_id" required>
+              <select v-model="detail.group_id" required :disabled="isEditing">
                 <option value="" disabled>{{ $t('managerProductForm.selectGroupPlaceholder') }}</option>
                 <option v-for="group in myGroups" :key="group.id" :value="group.id">{{ group.name }}</option>
               </select>
@@ -114,7 +121,10 @@
 
 <script>
 import { ProductsService } from '@/services/store/products.service'
+import { AlbumDetailsService } from '@/services/store/albumDetails.service'
+import { MerchDetailsService } from '@/services/store/merchDetails.service'
 import { useToastStore } from '@/store/toast'
+import { resolveMediaUrl } from '@/utils/media'
 
 function emptyForm () {
   return { name: '', category_id: '', price: '', quantity: '', description: '' }
@@ -149,7 +159,16 @@ export default {
       colors: [],
       form: emptyForm(),
       detail: emptyDetailForm(),
+      // True once loadDetail() has actually found a row to edit — gates
+      // save() sending an album/merch detail update at all, since a product
+      // with no matching row (shouldn't happen, but the GET 404s if it
+      // does) has nothing there to update.
+      detailLoaded: false,
       imageFile: null,
+      // A local objectURL for imageFile, kept separate from it so it can be
+      // revoked (onImageChange, unmounted) without re-deriving it from the
+      // file on every read.
+      newImagePreviewUrl: null,
       error: '',
       saving: false
     }
@@ -183,13 +202,21 @@ export default {
     },
     myGroups () {
       return this.groups.filter(group => group.company_id === this.companyId)
+    },
+    // A freshly picked file previews over the product's existing image —
+    // so a manager editing can see what's currently set without having to
+    // pick a new file just to find out, and picking one immediately shows
+    // what's about to replace it.
+    imagePreviewUrl () {
+      if (this.newImagePreviewUrl) return this.newImagePreviewUrl
+      return this.product ? resolveMediaUrl(this.product.image_url) : null
     }
   },
 
   watch: {
     product: {
       immediate: true,
-      handler (product) {
+      async handler (product) {
         if (!product) return
         // ProductRead exposes the category *name*, not its id — the write
         // endpoints need category_id, so map back via the categories list.
@@ -201,12 +228,17 @@ export default {
           quantity: product.quantity,
           description: product.description
         }
+        if (this.isEditing && category) await this.loadDetail(category)
       }
     }
   },
 
   created () {
     this.fetchPage()
+  },
+
+  unmounted () {
+    if (this.newImagePreviewUrl) URL.revokeObjectURL(this.newImagePreviewUrl)
   },
 
   methods: {
@@ -222,8 +254,36 @@ export default {
         this.error = error.message
       }
     },
+    // Prefills detail with the product's existing album/merch row so
+    // editing starts from real values instead of emptyDetailForm()'s
+    // defaults. A 404 here (no matching row) is left unhandled by design —
+    // detailLoaded stays false, so save() below just skips the detail
+    // update rather than erroring the whole save over it.
+    async loadDetail (category) {
+      const isAlbum = category.name !== 'Merch'
+      try {
+        const service = isAlbum ? AlbumDetailsService : MerchDetailsService
+        const response = await service.getByIdPublic(this.id)
+        const detail = response.data
+        this.detail = {
+          ownerType: detail.idol_id ? 'idol' : 'group',
+          idol_id: detail.idol_id || '',
+          group_id: detail.group_id || '',
+          release_date: isAlbum ? (detail.release_date || '') : '',
+          track_count: isAlbum ? (detail.track_count || '') : '',
+          format: isAlbum ? (detail.format || 'physical') : 'physical',
+          edition: !isAlbum ? (detail.edition || '') : '',
+          color_id: !isAlbum ? (detail.color_id || '') : ''
+        }
+        this.detailLoaded = true
+      } catch {
+        this.detailLoaded = false
+      }
+    },
     onImageChange (event) {
+      if (this.newImagePreviewUrl) URL.revokeObjectURL(this.newImagePreviewUrl)
       this.imageFile = event.target.files[0] || null
+      this.newImagePreviewUrl = this.imageFile ? URL.createObjectURL(this.imageFile) : null
     },
     async save () {
       if (!this.form.name.trim() || !this.form.category_id || !this.form.description.trim()) {
@@ -247,6 +307,21 @@ export default {
       try {
         if (this.isEditing) {
           await ProductsService.update(this.id, fields)
+          if (this.detailLoaded) {
+            const isAlbum = this.detailKind === 'album'
+            if (isAlbum) {
+              await AlbumDetailsService.update(this.id, {
+                release_date: this.detail.release_date || null,
+                track_count: this.detail.track_count || null,
+                format: this.detail.format
+              })
+            } else {
+              await MerchDetailsService.update(this.id, {
+                edition: this.detail.edition || null,
+                color_id: this.detail.color_id || null
+              })
+            }
+          }
           if (this.imageFile) await ProductsService.uploadImage(this.id, this.imageFile)
           useToastStore().add({ type: 'success', message: this.$t('managerProductForm.updateSuccess') })
         } else {
@@ -392,6 +467,15 @@ export default {
   font-family: $font-content;
   font-size: 12px;
   color: $color-gray-500;
+}
+
+.image-preview {
+  width: 100%;
+  max-width: 140px;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1.5px solid $color-line;
 }
 
 .form-error {

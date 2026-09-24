@@ -5,7 +5,15 @@
       <router-link :to="{ name: 'manager-products-new' }" class="add-btn">{{ $t('managerProducts.addProduct') }}</router-link>
     </div>
 
-    <div class="table-card" v-if="products.length">
+    <div class="search-field">
+      <svg class="search-field__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="2"/>
+        <line x1="13.5" y1="13.5" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <input type="text" class="search-field__input" v-model="search" :placeholder="$t('managerProducts.searchPlaceholder')">
+    </div>
+
+    <div class="table-card" v-if="filteredProducts.length">
       <table class="table">
         <thead>
           <tr>
@@ -18,7 +26,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="product in products" :key="product.id">
+          <tr v-for="product in filteredProducts" :key="product.id">
             <td class="thumb-cell">
               <img v-if="resolveMediaUrl(product.image_url)" :src="resolveMediaUrl(product.image_url)" :alt="product.name" class="thumb">
               <span v-else class="thumb thumb--empty" aria-hidden="true"></span>
@@ -35,7 +43,10 @@
         </tbody>
       </table>
     </div>
-    <p class="empty-note" v-else>{{ $t('managerProducts.noResults') }}</p>
+    <div class="empty-state" v-else>
+      <p class="empty-note">{{ products.length ? $t('managerProducts.noSearchResults') : $t('managerProducts.noResults') }}</p>
+      <button v-if="products.length && search" type="button" class="clear-search-btn" @click="search = ''">{{ $t('common.clearSearch') }}</button>
+    </div>
 
     <p class="form-error" v-if="error">{{ error }}</p>
   </div>
@@ -51,6 +62,7 @@ export default {
   data () {
     return {
       products: [],
+      search: '',
       error: ''
     }
   },
@@ -63,6 +75,11 @@ export default {
     // the unscoped admin equivalent.
     companyId () {
       return this.$currentUser.company_id
+    },
+    filteredProducts () {
+      const query = this.search.trim().toLowerCase()
+      if (!query) return this.products
+      return this.products.filter(product => `${product.name} ${product.category}`.toLowerCase().includes(query))
     }
   },
 
@@ -122,11 +139,70 @@ export default {
   }
 }
 
+.search-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  max-width: 320px;
+}
+
+.search-field__icon {
+  position: absolute;
+  left: 14px;
+  width: 16px;
+  height: 16px;
+  color: $color-gray-400;
+  pointer-events: none;
+}
+
+.search-field__input {
+  width: 100%;
+  border: 1.5px solid $color-line;
+  border-radius: 999px;
+  padding: 10px 14px 10px 38px;
+  font-family: $font-content;
+  font-size: 14px;
+  color: $color-ink;
+  outline: none;
+  background: $color-white;
+  transition: border-color .15s ease;
+
+  &::placeholder {
+    color: $color-gray-300;
+  }
+
+  &:focus {
+    border-color: $color-brand;
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 20px 0;
+}
+
 .empty-note {
   font-family: $font-content;
   font-size: 14px;
   color: $color-gray-500;
-  padding: 20px 0;
+}
+
+.clear-search-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 13px;
+  color: $color-brand;
+
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
 .table-card {

@@ -92,10 +92,6 @@
                   <input type="datetime-local" v-model="newCampaign.entry_end_at" required>
                 </label>
                 <label class="field">
-                  <span class="field__label">{{ $t('managerEventForm.maxEntriesPerUser') }}</span>
-                  <input type="number" min="1" v-model.number="newCampaign.max_entries_per_user">
-                </label>
-                <label class="field">
                   <span class="field__label">{{ $t('managerEventForm.paymentDeadlineHours') }}</span>
                   <input type="number" min="1" v-model.number="newCampaign.payment_deadline_hours">
                 </label>
@@ -210,12 +206,14 @@ function emptyTicketTypeForm () {
 }
 
 // Shape depends on which tier's "add campaign" form is open — lottery
-// needs an entry window + per-fan cap + payment deadline, direct-sale
-// just needs a sale window (see LotteryCampaignCreate/DirectSaleCampaignCreate
-// in the backend repo's app/schema/).
+// needs an entry window + payment deadline, direct-sale just needs a sale
+// window (see LotteryCampaignCreate/DirectSaleCampaignCreate in the backend
+// repo's app/schema/). max_entries_per_user isn't settable client-side
+// (docs/bugs.md #6 in the backend repo) — every campaign stays at 1 entry
+// per fan, so there's nothing to collect here.
 function emptyCampaignForm (saleMethod) {
   return saleMethod === 'lottery'
-    ? { entry_start_at: '', entry_end_at: '', max_entries_per_user: 1, payment_deadline_hours: 48 }
+    ? { entry_start_at: '', entry_end_at: '', payment_deadline_hours: 48 }
     : { sale_start_at: '', sale_end_at: '' }
 }
 
@@ -434,7 +432,6 @@ export default {
             ticket_type_id: tier.id,
             entry_start_at: fromDatetimeLocal(this.newCampaign.entry_start_at),
             entry_end_at: fromDatetimeLocal(this.newCampaign.entry_end_at),
-            max_entries_per_user: this.newCampaign.max_entries_per_user,
             payment_deadline_hours: this.newCampaign.payment_deadline_hours
           })
         } else {

@@ -5,7 +5,15 @@
       <router-link :to="{ name: 'manager-events-new' }" class="add-btn">{{ $t('managerEvents.addEvent') }}</router-link>
     </div>
 
-    <div class="table-card" v-if="myEvents.length">
+    <div class="search-field">
+      <svg class="search-field__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="2"/>
+        <line x1="13.5" y1="13.5" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <input type="text" class="search-field__input" v-model="search" :placeholder="$t('managerEvents.searchPlaceholder')">
+    </div>
+
+    <div class="table-card" v-if="filteredEvents.length">
       <table class="table">
         <thead>
           <tr>
@@ -17,7 +25,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="concert in myEvents" :key="concert.id" :class="{ 'is-cancelled': concert.status === 'cancelled' }">
+          <tr v-for="concert in filteredEvents" :key="concert.id" :class="{ 'is-cancelled': concert.status === 'cancelled' }">
             <td>{{ concert.title }}</td>
             <td>{{ venueName(concert.venue_id) }}</td>
             <td>{{ formatDate(concert.event_datetime) }}</td>
@@ -34,7 +42,10 @@
         </tbody>
       </table>
     </div>
-    <p class="empty-note" v-else>{{ $t('managerEvents.noResults') }}</p>
+    <div class="empty-state" v-else>
+      <p class="empty-note">{{ myEvents.length ? $t('managerEvents.noSearchResults') : $t('managerEvents.noResults') }}</p>
+      <button v-if="myEvents.length && search" type="button" class="clear-search-btn" @click="search = ''">{{ $t('common.clearSearch') }}</button>
+    </div>
 
     <p class="form-error" v-if="error">{{ error }}</p>
   </div>
@@ -52,6 +63,7 @@ export default {
     return {
       concerts: [],
       venues: [],
+      search: '',
       error: ''
     }
   },
@@ -64,6 +76,11 @@ export default {
     },
     myEvents () {
       return this.concerts.filter(concert => concert.company_id === this.companyId)
+    },
+    filteredEvents () {
+      const query = this.search.trim().toLowerCase()
+      if (!query) return this.myEvents
+      return this.myEvents.filter(concert => `${concert.title} ${this.venueName(concert.venue_id)}`.toLowerCase().includes(query))
     }
   },
 
@@ -134,11 +151,70 @@ export default {
   }
 }
 
+.search-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  max-width: 320px;
+}
+
+.search-field__icon {
+  position: absolute;
+  left: 14px;
+  width: 16px;
+  height: 16px;
+  color: $color-gray-400;
+  pointer-events: none;
+}
+
+.search-field__input {
+  width: 100%;
+  border: 1.5px solid $color-line;
+  border-radius: 999px;
+  padding: 10px 14px 10px 38px;
+  font-family: $font-content;
+  font-size: 14px;
+  color: $color-ink;
+  outline: none;
+  background: $color-white;
+  transition: border-color .15s ease;
+
+  &::placeholder {
+    color: $color-gray-300;
+  }
+
+  &:focus {
+    border-color: $color-brand;
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 20px 0;
+}
+
 .empty-note {
   font-family: $font-content;
   font-size: 14px;
   color: $color-gray-500;
-  padding: 20px 0;
+}
+
+.clear-search-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 13px;
+  color: $color-brand;
+
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
 .table-card {

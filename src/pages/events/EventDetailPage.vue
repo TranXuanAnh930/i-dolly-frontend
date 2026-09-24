@@ -164,7 +164,7 @@ import { ConcertsService } from '@/services/events/concerts.service'
 import { paletteColorForId, contrastTextColor } from '@/utils/palette'
 import { resolveMediaUrl } from '@/utils/media'
 import { fallbackPortraitFor } from '@/utils/idolPortrait'
-import { formatDate, formatNumber } from '@/utils/format'
+import { formatDate, formatEventDateTime, formatNumber } from '@/utils/format'
 import { withTax } from '@/utils/tax'
 import UnitPill from '@/components/UnitPill.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
@@ -215,7 +215,7 @@ export default {
       return this.performingGroups.map(group => group.name).join(', ')
     },
     dateLabel () {
-      return this.concert ? formatDate(parseISO(this.concert.event_datetime), 'EEE, MMM d, yyyy · h:mm a') : ''
+      return this.concert ? formatEventDateTime(parseISO(this.concert.event_datetime)) : ''
     },
     doorsLabel () {
       return this.concert && this.concert.doors_open_at ? formatDate(parseISO(this.concert.doors_open_at), 'h:mm a') : null

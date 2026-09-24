@@ -22,6 +22,12 @@
           <div class="section-rule"></div>
           <p class="address-line" :class="`status-line--${order.status}`">{{ $t(`orderDetails.status${statusLabel}`) }}</p>
 
+          <template v-if="order.shippingstatus">
+            <h2 class="block__title block__title--spaced">{{ $t('orderDetails.shippingStatus') }}</h2>
+            <div class="section-rule"></div>
+            <p class="address-line" :class="`status-line--ship-${order.shippingstatus.status}`">{{ shippingStatusLine }}</p>
+          </template>
+
           <template v-if="order.shippingaddress">
             <h2 class="block__title block__title--spaced">{{ $t('orderDetails.shippingAddress') }}</h2>
             <div class="section-rule"></div>
@@ -91,6 +97,17 @@ export default {
     },
     statusLabel () {
       return this.order.status.charAt(0).toUpperCase() + this.order.status.slice(1)
+    },
+    // "Shipped on {date}"/"Delivered on {date}" for the two states with a
+    // meaningful date to show; the other three are just the bare label —
+    // "Pending since {date}" reads odd for a status that hasn't happened yet.
+    shippingStatusLine () {
+      const { status, updated_at } = this.order.shippingstatus
+      const date = this.formatTimestamp(updated_at)
+      if (status === 'shipped') return this.$t('orderDetails.shippedOn', { date })
+      if (status === 'delivered') return this.$t('orderDetails.deliveredOn', { date })
+      const key = 'shipping' + status.charAt(0).toUpperCase() + status.slice(1)
+      return this.$t(`orderDetails.${key}`)
     },
     // order.items only carries product_id/quantity/price (see
     // app/schema/order.py OrderItem) — the name is resolved against the
@@ -207,6 +224,22 @@ export default {
   &.status-line--pending {
     font-weight: 700;
     color: $color-brand;
+  }
+
+  &.status-line--ship-shipped,
+  &.status-line--ship-delivered {
+    font-weight: 700;
+    color: #1fa876;
+  }
+
+  &.status-line--ship-processing {
+    font-weight: 700;
+    color: #2a6fa8;
+  }
+
+  &.status-line--ship-cancelled {
+    font-weight: 700;
+    color: $color-error;
   }
 }
 
