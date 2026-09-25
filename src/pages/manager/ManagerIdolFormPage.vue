@@ -6,6 +6,13 @@
       <h3 class="form-card__title">{{ isEditing ? $t('managerIdolForm.editTitle') : $t('managerIdolForm.addTitle') }}</h3>
 
       <form class="form-card" @submit.prevent="save">
+        <label class="field field--image">
+          <span class="field__label">{{ $t('common.photo') }}</span>
+          <img v-if="imagePreviewUrl" :src="imagePreviewUrl" class="image-preview" alt="">
+          <input type="file" accept="image/*" @change="onImageChange">
+          <span class="field__hint" v-if="isEditing && !imageFile">{{ $t('common.imageKeptHint') }}</span>
+        </label>
+
         <div class="field-grid">
           <label class="field">
             <span class="field__label">{{ $t('common.name') }}</span>
@@ -32,12 +39,6 @@
               <option value="">{{ $t('common.none') }}</option>
               <option v-for="color in colors" :key="color.id" :value="color.id">{{ color.name }}</option>
             </select>
-          </label>
-          <label class="field">
-            <span class="field__label">{{ $t('common.photo') }}</span>
-            <img v-if="imagePreviewUrl" :src="imagePreviewUrl" class="image-preview" alt="">
-            <input type="file" accept="image/*" @change="onImageChange">
-            <span class="field__hint" v-if="isEditing && !imageFile">{{ $t('common.imageKeptHint') }}</span>
           </label>
         </div>
 
@@ -313,6 +314,15 @@ export default {
   font-family: $font-content;
   font-size: 12px;
   color: $color-gray-500;
+}
+
+.field--image {
+  align-items: center;
+  text-align: center;
+
+  input[type="file"] {
+    max-width: 280px;
+  }
 }
 
 .image-preview {

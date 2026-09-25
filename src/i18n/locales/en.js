@@ -800,7 +800,6 @@ export default {
     updateSuccess: 'Product updated successfully.',
     attachToTitle: 'Attach to',
     detailsTitle: 'Release details',
-    ownerLocked: 'Ownership is set when a product is created and can\'t be changed — ask an admin if this needs to move to a different idol or group.',
     ownerType: 'Owner',
     ownerTypeIdol: 'An idol',
     ownerTypeGroup: 'A group',

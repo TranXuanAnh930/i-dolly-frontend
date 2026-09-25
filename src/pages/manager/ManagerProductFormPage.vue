@@ -6,6 +6,13 @@
       <h3 class="form-card__title">{{ isEditing ? $t('managerProductForm.editTitle') : $t('managerProductForm.addTitle') }}</h3>
 
       <form class="form-card" @submit.prevent="save">
+        <label class="field field--image">
+          <span class="field__label">{{ $t('common.photo') }}</span>
+          <img v-if="imagePreviewUrl" :src="imagePreviewUrl" class="image-preview" alt="">
+          <input type="file" accept="image/*" @change="onImageChange">
+          <span class="field__hint" v-if="isEditing && !imageFile">{{ $t('common.imageKeptHint') }}</span>
+        </label>
+
         <div class="field-grid">
           <label class="field">
             <span class="field__label">{{ $t('common.name') }}</span>
@@ -27,12 +34,6 @@
             <span class="field__label">{{ $t('managerProducts.quantity') }}</span>
             <input type="number" min="0" v-model.number="form.quantity" required>
           </label>
-          <label class="field">
-            <span class="field__label">{{ $t('common.photo') }}</span>
-            <img v-if="imagePreviewUrl" :src="imagePreviewUrl" class="image-preview" alt="">
-            <input type="file" accept="image/*" @change="onImageChange">
-            <span class="field__hint" v-if="isEditing && !imageFile">{{ $t('common.imageKeptHint') }}</span>
-          </label>
         </div>
 
         <label class="field">
@@ -52,28 +53,33 @@
           <h4 class="section-title">{{ $t(isEditing ? 'managerProductForm.detailsTitle' : 'managerProductForm.attachToTitle') }}</h4>
 
           <div class="field-grid">
-            <label class="field">
-              <span class="field__label">{{ $t('managerProductForm.ownerType') }}</span>
-              <select v-model="detail.ownerType" :disabled="isEditing">
-                <option value="idol">{{ $t('managerProductForm.ownerTypeIdol') }}</option>
-                <option value="group">{{ $t('managerProductForm.ownerTypeGroup') }}</option>
-              </select>
-              <span class="field__hint" v-if="isEditing">{{ $t('managerProductForm.ownerLocked') }}</span>
-            </label>
-            <label class="field" v-if="detail.ownerType === 'idol'">
-              <span class="field__label">{{ $t('managerProductForm.idol') }}</span>
-              <select v-model="detail.idol_id" required :disabled="isEditing">
-                <option value="" disabled>{{ $t('managerProductForm.selectIdolPlaceholder') }}</option>
-                <option v-for="idol in myIdols" :key="idol.id" :value="idol.id">{{ idol.name }}</option>
-              </select>
-            </label>
-            <label class="field" v-else>
-              <span class="field__label">{{ $t('managerProductForm.group') }}</span>
-              <select v-model="detail.group_id" required :disabled="isEditing">
-                <option value="" disabled>{{ $t('managerProductForm.selectGroupPlaceholder') }}</option>
-                <option v-for="group in myGroups" :key="group.id" :value="group.id">{{ group.name }}</option>
-              </select>
-            </label>
+            <!-- Ownership is immutable once set (AlbumDetailUpdate/
+                 MerchDetailUpdate both exclude it server-side), so on edit
+                 there's nothing to show here — a disabled select duplicating
+                 a value the manager can't change is just clutter. -->
+            <template v-if="!isEditing">
+              <label class="field">
+                <span class="field__label">{{ $t('managerProductForm.ownerType') }}</span>
+                <select v-model="detail.ownerType">
+                  <option value="idol">{{ $t('managerProductForm.ownerTypeIdol') }}</option>
+                  <option value="group">{{ $t('managerProductForm.ownerTypeGroup') }}</option>
+                </select>
+              </label>
+              <label class="field" v-if="detail.ownerType === 'idol'">
+                <span class="field__label">{{ $t('managerProductForm.idol') }}</span>
+                <select v-model="detail.idol_id" required>
+                  <option value="" disabled>{{ $t('managerProductForm.selectIdolPlaceholder') }}</option>
+                  <option v-for="idol in myIdols" :key="idol.id" :value="idol.id">{{ idol.name }}</option>
+                </select>
+              </label>
+              <label class="field" v-else>
+                <span class="field__label">{{ $t('managerProductForm.group') }}</span>
+                <select v-model="detail.group_id" required>
+                  <option value="" disabled>{{ $t('managerProductForm.selectGroupPlaceholder') }}</option>
+                  <option v-for="group in myGroups" :key="group.id" :value="group.id">{{ group.name }}</option>
+                </select>
+              </label>
+            </template>
 
             <template v-if="detailKind === 'album'">
               <label class="field">
@@ -467,6 +473,15 @@ export default {
   font-family: $font-content;
   font-size: 12px;
   color: $color-gray-500;
+}
+
+.field--image {
+  align-items: center;
+  text-align: center;
+
+  input[type="file"] {
+    max-width: 280px;
+  }
 }
 
 .image-preview {

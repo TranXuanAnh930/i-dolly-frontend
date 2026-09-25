@@ -800,7 +800,6 @@ export default {
     updateSuccess: '商品情報を更新しました。',
     attachToTitle: '関連付け',
     detailsTitle: 'リリース詳細',
-    ownerLocked: '関連付けは商品作成時に設定され、変更できません — 別のアイドル・グループに変更したい場合は管理者に依頼してください。',
     ownerType: '種別',
     ownerTypeIdol: 'アイドル',
     ownerTypeGroup: 'グループ',
