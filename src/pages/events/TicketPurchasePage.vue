@@ -63,7 +63,7 @@
         <div class="summary">
           <h2 class="summary__title">{{ $t('ticketPurchase.orderSummary') }}</h2>
           <p class="summary__event">{{ concert.title }}</p>
-          <p class="summary__meta">{{ dateLabel }}<template v-if="doorsLabel"> &middot; {{ $t('events.doorsAt', { time: doorsLabel }) }}</template></p>
+          <p class="summary__meta">{{ dateLabel }}<template v-if="doorsLabel"> &middot; <span class="nowrap">{{ $t('events.doorsAt', { time: doorsLabel }) }}</span></template></p>
           <div class="summary__row">
             <span>{{ tierLabel(selectedTier) }}</span>
             <span>&yen;{{ formatNumber(total) }}</span>
@@ -145,7 +145,7 @@
         <div class="summary">
           <h2 class="summary__title">{{ $t('ticketPurchase.orderSummary') }}</h2>
           <p class="summary__event">{{ concert.title }}</p>
-          <p class="summary__meta">{{ dateLabel }}<template v-if="doorsLabel"> &middot; {{ $t('events.doorsAt', { time: doorsLabel }) }}</template></p>
+          <p class="summary__meta">{{ dateLabel }}<template v-if="doorsLabel"> &middot; <span class="nowrap">{{ $t('events.doorsAt', { time: doorsLabel }) }}</span></template></p>
           <div class="summary__row">
             <span>{{ tierLabel(selectedTier) }}</span>
             <span>&yen;{{ formatNumber(total) }}</span>
@@ -189,7 +189,7 @@
         <div class="summary">
           <h2 class="summary__title">{{ $t('ticketPurchase.orderSummary') }}</h2>
           <p class="summary__event">{{ concert.title }}</p>
-          <p class="summary__meta">{{ dateLabel }}<template v-if="doorsLabel"> &middot; {{ $t('events.doorsAt', { time: doorsLabel }) }}</template></p>
+          <p class="summary__meta">{{ dateLabel }}<template v-if="doorsLabel"> &middot; <span class="nowrap">{{ $t('events.doorsAt', { time: doorsLabel }) }}</span></template></p>
           <div class="summary__row">
             <span>{{ tierLabel(selectedTier) }}</span>
             <span>&yen;{{ formatNumber(total) }}</span>
@@ -247,7 +247,7 @@ import { TicketTypesService } from '@/services/events/ticketTypes.service'
 import { TicketService } from '@/services/events/ticket.service'
 import { PaymentService } from '@/services/payment/payment.service'
 import { paletteColorForId, contrastTextColor } from '@/utils/palette'
-import { formatDate, formatNumber } from '@/utils/format'
+import { formatDate, formatEventDateTime, formatNumber } from '@/utils/format'
 import { withTax } from '@/utils/tax'
 import VenueSeatMap from '@/components/VenueSeatMap.vue'
 import UiPageLoader from '@/components/progress-loaders/UiPageLoader.vue'
@@ -319,7 +319,7 @@ export default {
       return this.selectedTier ? withTax(this.selectedTier.price) : 0
     },
     dateLabel () {
-      return this.concert ? formatDate(parseISO(this.concert.event_datetime), 'EEE, MMM d, yyyy · h:mm a') : ''
+      return this.concert ? formatEventDateTime(parseISO(this.concert.event_datetime)) : ''
     },
     doorsLabel () {
       return this.concert && this.concert.doors_open_at ? formatDate(parseISO(this.concert.doors_open_at), 'h:mm a') : null
@@ -966,6 +966,13 @@ export default {
   font-size: 12.5px;
   color: $color-gray-500;
   margin-bottom: 6px;
+}
+
+// Keeps a time value and its am/pm marker ("9:25 午後") from splitting
+// across a line break in the narrow sidebar — the line can still wrap
+// earlier, before this segment, just not inside it.
+.nowrap {
+  white-space: nowrap;
 }
 
 .summary__row {
