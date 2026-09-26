@@ -18,6 +18,23 @@ export function formatDate (date, formatStr) {
   return format(date, formatStr, { locale: DATE_FNS_LOCALES[currentLocale()] })
 }
 
+// date-fns only swaps token TEXT for a locale (weekday/month names, the
+// am/pm marker) — it never reorders the tokens themselves. Reusing the
+// English "EEE, MMM d, yyyy · h:mm a" pattern under the ja locale used to
+// just translate the words in place ("水, 10月 7, 2026 · ...", comma-joined
+// like English but with Japanese tokens dropped in) instead of reading like
+// an actual Japanese date. This picks a genuinely different pattern per
+// locale for the one "event date + start time" format used on event/ticket
+// pages, rather than one pattern translated in place.
+const EVENT_DATE_TIME_FORMAT = {
+  en: 'EEE, MMM d, yyyy · h:mm a',
+  ja: 'yyyy年M月d日(E) · h:mm a'
+}
+
+export function formatEventDateTime (date) {
+  return format(date, EVENT_DATE_TIME_FORMAT[currentLocale()], { locale: DATE_FNS_LOCALES[currentLocale()] })
+}
+
 export function formatNumber (value, options) {
   return new Intl.NumberFormat(INTL_LOCALES[currentLocale()], options).format(value)
 }

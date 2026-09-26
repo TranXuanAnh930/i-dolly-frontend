@@ -38,7 +38,21 @@ export async function initCurrentUserStateMiddleware (to, from, next) {
 export function redirectSettingsRootMiddleware (to, from, next) {
   if (to.name === 'settings-root') {
     const role = useUserStore().currentUser.role
-    return next({ name: role === 'admin' ? 'admin-companies' : 'manager-idols' })
+    return next({ name: role === 'admin' ? 'admin-companies' : 'manager-events' })
+  }
+  next()
+}
+
+/**
+ * A manager landing on the fan-facing events page — a fresh tab reopening
+ * the site (root "/" is an alias for it), a bookmark, or the header logo —
+ * lands on their own events page instead. Scoped to this one route rather
+ * than the whole fan-facing site, so a manager can still browse Members/
+ * Groups/Store like any other visitor if they navigate there directly.
+ */
+export function redirectManagerHomeMiddleware (to, from, next) {
+  if (to.name === 'events' && useUserStore().currentUser.role === 'manager') {
+    return next({ name: 'manager-events' })
   }
   next()
 }

@@ -315,9 +315,11 @@ export default {
         await LotteryService.setPreferences(this.concert.id, idsInOrder)
 
         // Only apply for tiers that don't already have an entry — applying
-        // again for one that does would just hit "cap_reached"
-        // (max_entries_per_user), since setPreferences above only touches
-        // the ranking, never the entries themselves.
+        // again for one that does would just hit "cap_reached" (one entry
+        // per fan per campaign — max_entries_per_user isn't settable
+        // client-side and always stays 1, see docs/bugs.md #6 in the
+        // backend repo), since setPreferences above only touches the
+        // ranking, never the entries themselves.
         //
         // One batch call rather than one per tier: the apply endpoint allows
         // 3/60s per fan, so a per-tier loop would 429 the tail of a submission

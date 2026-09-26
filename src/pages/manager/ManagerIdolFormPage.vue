@@ -6,6 +6,13 @@
       <h3 class="form-card__title">{{ isEditing ? $t('managerIdolForm.editTitle') : $t('managerIdolForm.addTitle') }}</h3>
 
       <form class="form-card" @submit.prevent="save">
+        <label class="field field--image">
+          <span class="field__label">{{ $t('common.photo') }}</span>
+          <img v-if="imagePreviewUrl" :src="imagePreviewUrl" class="image-preview" alt="">
+          <input type="file" accept="image/*" @change="onImageChange">
+          <span class="field__hint" v-if="isEditing && !imageFile">{{ $t('common.imageKeptHint') }}</span>
+        </label>
+
         <div class="field-grid">
           <label class="field">
             <span class="field__label">{{ $t('common.name') }}</span>
@@ -33,10 +40,6 @@
               <option v-for="color in colors" :key="color.id" :value="color.id">{{ color.name }}</option>
             </select>
           </label>
-          <label class="field">
-            <span class="field__label">{{ $t('common.photo') }}</span>
-            <input type="file" accept="image/*" @change="onImageChange">
-          </label>
         </div>
 
         <label class="field">
@@ -62,6 +65,7 @@
 <script>
 import { IdolsService } from '@/services/members/idols.service'
 import { useToastStore } from '@/store/toast'
+import { resolveMediaUrl } from '@/utils/media'
 
 function emptyForm () {
   return {
@@ -89,6 +93,10 @@ export default {
       colors: [],
       form: emptyForm(),
       imageFile: null,
+      // A local objectURL for imageFile, kept separate from it so it can be
+      // revoked (onImageChange, unmounted) without re-deriving it from the
+      // file on every read.
+      newImagePreviewUrl: null,
       error: '',
       saving: false
     }
@@ -117,6 +125,14 @@ export default {
         group.company_id === this.companyId &&
         (group.is_active || (this.idol && group.id === this.idol.group_id))
       )
+    },
+    // A freshly picked file previews over the idol's existing photo — so a
+    // manager editing can see what's currently set without picking a new
+    // file just to find out, and picking one immediately shows what's about
+    // to replace it.
+    imagePreviewUrl () {
+      if (this.newImagePreviewUrl) return this.newImagePreviewUrl
+      return this.idol ? resolveMediaUrl(this.idol.profile_image_url) : null
     }
   },
 
@@ -142,6 +158,10 @@ export default {
     this.fetchPage()
   },
 
+  unmounted () {
+    if (this.newImagePreviewUrl) URL.revokeObjectURL(this.newImagePreviewUrl)
+  },
+
   methods: {
     async fetchPage () {
       try {
@@ -154,7 +174,9 @@ export default {
       }
     },
     onImageChange (event) {
+      if (this.newImagePreviewUrl) URL.revokeObjectURL(this.newImagePreviewUrl)
       this.imageFile = event.target.files[0] || null
+      this.newImagePreviewUrl = this.imageFile ? URL.createObjectURL(this.imageFile) : null
     },
     async save () {
       if (!this.form.name.trim()) {
@@ -286,6 +308,30 @@ export default {
 
 .field textarea {
   resize: vertical;
+}
+
+.field__hint {
+  font-family: $font-content;
+  font-size: 12px;
+  color: $color-gray-500;
+}
+
+.field--image {
+  align-items: center;
+  text-align: center;
+
+  input[type="file"] {
+    max-width: 280px;
+  }
+}
+
+.image-preview {
+  width: 100%;
+  max-width: 140px;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1.5px solid $color-line;
 }
 
 .form-error {

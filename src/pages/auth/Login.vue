@@ -105,7 +105,7 @@ export default {
     // the public storefront, since that's what they log in to do.
     landingRouteFor (role) {
       if (role === 'admin') return { name: 'admin-companies' }
-      if (role === 'manager') return { name: 'manager-groups' }
+      if (role === 'manager') return { name: 'manager-events' }
       return '/'
     }
   }

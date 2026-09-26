@@ -57,4 +57,20 @@ export class OrderService extends BaseService {
       throw this.errorWrapper(error, message)
     }
   }
+
+  // PATCH /order/{id}/ship — manager/admin only, no request body. One
+  // direction only (pending/processing -> shipped), company-scoped
+  // server-side — 403s a manager whose company has no product in the
+  // order, 400s an order that's already shipped/delivered/cancelled.
+  // Returns the full updated Order; callers patch their own row's
+  // shippingstatus straight from the response rather than refetching.
+  static async ship (orderId) {
+    try {
+      const response = await this.request({ auth: true }).patch(`${this.entity}/${orderId}/ship`)
+      return this.responseWrapper(response, response.data)
+    } catch (error) {
+      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
+      throw this.errorWrapper(error, message)
+    }
+  }
 }

@@ -28,6 +28,10 @@
                 <path d="M5 6.5h10l-.8 8.5a1.5 1.5 0 0 1-1.5 1.4H7.3a1.5 1.5 0 0 1-1.5-1.4L5 6.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
                 <path d="M7 6.5V5a3 3 0 0 1 6 0v1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
               </svg>
+              <svg v-else-if="iconType(item) === 'order-shipped'" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <path d="M3 6.5 10 3l7 3.5v7L10 17l-7-3.5v-7Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                <path d="M3 6.5 10 10l7-3.5M10 10v7" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+              </svg>
               <svg v-else-if="iconType(item) === 'ticket'" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                 <path d="M3 7.5V6a1.5 1.5 0 0 1 1.5-1.5h11A1.5 1.5 0 0 1 17 6v1.5a1.5 1.5 0 0 0 0 3V14a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 14v-3.5a1.5 1.5 0 0 0 0-3Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
                 <path d="M11 5v10" stroke="currentColor" stroke-width="1.5" stroke-dasharray="1.6 1.6" stroke-linecap="round"/>
@@ -248,6 +252,11 @@ export default {
   &--ticket {
     background: $color-brand-tint;
     color: $color-brand;
+  }
+
+  &--order-shipped {
+    background: #e6f7ef;
+    color: #147a52;
   }
 
   &--lottery-won {
