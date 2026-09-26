@@ -301,6 +301,10 @@ export default {
 }
 
 .actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
   border: 1.5px solid $color-line;
   background: $color-white;
   border-radius: 8px;

@@ -2,15 +2,17 @@
   <div class="wrapper crud-page">
     <div class="page-head">
       <h2 class="page-head__title">{{ $t('managerEvents.title') }}</h2>
-      <router-link :to="{ name: 'manager-events-new' }" class="add-btn">{{ $t('managerEvents.addEvent') }}</router-link>
     </div>
 
-    <div class="search-field">
-      <svg class="search-field__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-        <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="2"/>
-        <line x1="13.5" y1="13.5" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-      <input type="text" class="search-field__input" v-model="search" :placeholder="$t('managerEvents.searchPlaceholder')">
+    <div class="toolbar">
+      <div class="search-field">
+        <svg class="search-field__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="2"/>
+          <line x1="13.5" y1="13.5" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <input type="text" class="search-field__input" v-model="search" :placeholder="$t('managerEvents.searchPlaceholder')">
+      </div>
+      <router-link :to="{ name: 'manager-events-new' }" class="add-btn">{{ $t('managerEvents.addEvent') }}</router-link>
     </div>
 
     <div class="table-card" v-if="filteredEvents.length">
@@ -134,7 +136,16 @@ export default {
   color: $color-ink;
 }
 
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .add-btn {
+  flex: none;
   border: none;
   border-radius: 999px;
   padding: 10px 20px;
@@ -145,6 +156,7 @@ export default {
   font-weight: 700;
   font-size: 13px;
   cursor: pointer;
+  white-space: nowrap;
 
   &:hover {
     background: $color-brand-deep;
@@ -155,6 +167,8 @@ export default {
   position: relative;
   display: flex;
   align-items: center;
+  flex: 1;
+  min-width: 200px;
   max-width: 320px;
 }
 
@@ -234,6 +248,7 @@ export default {
     padding: 12px 16px;
     text-align: left;
     white-space: nowrap;
+    vertical-align: middle;
   }
 
   th {
@@ -245,7 +260,11 @@ export default {
     border-bottom: 1px solid $color-line;
   }
 
+  // Fixed row height regardless of content — keeps every row the same
+  // size instead of one cell's content nudging its row taller than its
+  // neighbors.
   tbody tr {
+    height: 64px;
     border-bottom: 1px solid $color-line;
 
     &:last-child {
@@ -279,9 +298,15 @@ export default {
 
 .actions {
   display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 8px;
 
   a, button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
     border: 1.5px solid $color-line;
     background: $color-white;
     border-radius: 8px;
