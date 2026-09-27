@@ -1,4 +1,54 @@
 export default {
+  // Browser tab titles — route meta.titleKey points here (see utils/pageTitle.js).
+  pageTitle: {
+    events: 'Events',
+    event: 'Event',
+    tickets: 'Tickets',
+    lotteryEntry: 'Lottery entry',
+    members: 'Members',
+    member: 'Member',
+    groups: 'Groups',
+    group: 'Group',
+    store: 'Store',
+    product: 'Product',
+    cart: 'Cart',
+    checkout: 'Checkout',
+    payment: 'Payment',
+    paymentCancelled: 'Payment cancelled',
+    history: 'History',
+    notifications: 'Notifications',
+    orderDetails: 'Order details',
+    ticketDetails: 'Ticket details',
+    lotteryDetails: 'Lottery result',
+    lotteryPayment: 'Pay for ticket',
+    accountSettings: 'Account settings',
+    guidelines: 'Guidelines',
+    about: 'About',
+    contact: 'Contact',
+    login: 'Log in',
+    register: 'Register',
+    forgotPassword: 'Forgot password',
+    resetPassword: 'Reset password',
+    notFound: 'Page not found',
+    idols: 'Idols',
+    addIdol: 'Add idol',
+    editIdol: 'Edit idol',
+    addGroup: 'Add group',
+    editGroup: 'Edit group',
+    addEvent: 'Add event',
+    editEvent: 'Edit event',
+    eventSales: 'Event sales',
+    lotteryResults: 'Lottery results',
+    products: 'Products',
+    addProduct: 'Add product',
+    editProduct: 'Edit product',
+    productSales: 'Product sales',
+    orders: 'Orders',
+    companies: 'Companies',
+    addCompany: 'Add company',
+    editCompany: 'Edit company',
+    addManagerAccount: 'Add manager account'
+  },
   common: {
     save: 'Save',
     submit: 'Submit',
@@ -42,7 +92,8 @@ export default {
     statusInactive: 'Inactive',
     previous: 'Previous',
     next: 'Next',
-    pageLabel: 'Page {page}'
+    pageLabel: 'Page {page}',
+    actions: 'Actions'
   },
 
   nav: {
@@ -473,7 +524,7 @@ export default {
 
   ticketPurchase: {
     lotteryEntry: 'Lottery entry',
-    directSaleCheckout: 'Direct sale checkout',
+    directSaleCheckout: 'Buy tickets',
     getTickets: 'Get tickets',
     stepTickets: 'Tickets',
     stepPayment: 'Payment',
@@ -482,10 +533,10 @@ export default {
     chooseTier: 'Choose a ticket tier',
     tier: 'Tier',
     seatMap: 'Seat map',
-    orderSummary: 'Order Summary',
+    orderSummary: 'Your ticket',
     total: 'Total',
     applyLottery: 'Apply for Lottery →',
-    continueCheckout: 'Continue to Checkout →',
+    continueCheckout: 'Continue to payment →',
     contactPayment: 'Contact & payment',
     fullName: 'Full name',
     paymentMethod: 'Payment method',
@@ -494,13 +545,13 @@ export default {
     expiry: 'Expiry',
     cvc: 'CVC',
     back: 'Back',
-    reviewOrder: 'Review order',
+    reviewOrder: 'Review purchase',
     confirmTitle: 'Review & confirm',
     confirmHint: 'Check everything below before we charge the mock payment method.',
-    placeOrder: 'Place Order',
+    placeOrder: 'Buy ticket',
     appliedTitle: 'You applied!',
     wentTitle: 'You\'re going!',
-    wentNote: 'Order {orderNumber} is confirmed for {title} · {date}. This is a mock checkout, so nothing was actually charged.',
+    wentNote: 'Your ticket for {title} · {date} is confirmed (ticket no. {orderNumber}). This is a mock payment, so nothing was actually charged.',
     declinedTitle: 'Payment declined',
     declinedNote: 'This mock payment was declined, so no ticket was issued — head back and try again.',
     viewHistory: 'View in History',
@@ -513,7 +564,8 @@ export default {
     ineligibleUnavailable: 'Every ticket tier for this show is currently sold out or closed to entries — check back later.',
     ineligibleDefault: 'Tickets for this show aren\'t on sale yet.',
     errorContactEmail: 'Fill in your name and email.',
-    errorPayment: 'Enter mock payment details to continue.'
+    errorPayment: 'Enter mock payment details to continue.',
+    paying: 'Processing payment…'
   },
 
   lotteryEntry: {
@@ -637,7 +689,7 @@ export default {
     expiry: 'Expiry',
     cvc: 'CVC',
     reviewPayment: 'Review payment',
-    orderSummary: 'Order summary',
+    orderSummary: 'Your winning ticket',
     total: 'Total',
     confirmTitle: 'Confirm your payment',
     confirmHint: 'Double-check the details below before we charge the mock payment method.',
@@ -652,7 +704,8 @@ export default {
     notFound: 'We couldn\'t find that lottery entry.',
     notWon: 'This lottery entry hasn\'t won — there\'s nothing to pay for yet.',
     noTicket: 'No ticket has been issued for this entry yet.',
-    notPayable: 'This ticket isn\'t awaiting payment.'
+    notPayable: 'This ticket isn\'t awaiting payment.',
+    paying: 'Processing payment…'
   },
 
   groupDetail: {

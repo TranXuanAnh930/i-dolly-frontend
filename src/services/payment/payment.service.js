@@ -10,12 +10,12 @@ export class PaymentService extends BaseService {
     return 'payment'
   }
 
-  // PATCH /payment/status/order/{id} — re-fetches the Payment row for a
+  // GET /payment/status/order/{id} — re-fetches the Payment row for a
   // just-created pending order so the buyer can be sent to
   // pg_approval_url (PayPal's own approval page).
   static async getOrderStatus (orderId) {
     try {
-      const response = await this.request({ auth: true }).patch(`${this.entity}/status/order/${orderId}`)
+      const response = await this.request({ auth: true }).get(`${this.entity}/status/order/${orderId}`)
       return this.responseWrapper(response, response.data)
     } catch (error) {
       const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
@@ -23,11 +23,11 @@ export class PaymentService extends BaseService {
     }
   }
 
-  // PATCH /payment/status/ticket/{id} — same, for a pending direct-sale
+  // GET /payment/status/ticket/{id} — same, for a pending direct-sale
   // ticket purchase.
   static async getTicketStatus (ticketId) {
     try {
-      const response = await this.request({ auth: true }).patch(`${this.entity}/status/ticket/${ticketId}`)
+      const response = await this.request({ auth: true }).get(`${this.entity}/status/ticket/${ticketId}`)
       return this.responseWrapper(response, response.data)
     } catch (error) {
       const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText

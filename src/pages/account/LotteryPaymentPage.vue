@@ -151,7 +151,7 @@
 
           <div class="form-actions">
             <button type="button" class="back-btn" :disabled="paying" @click="step = 1">&larr; {{ $t('ticketPurchase.back') }}</button>
-            <button type="button" class="place-order-btn" :disabled="paying" @click="confirmPayment">{{ paying ? (gateway === 'paypal' ? $t('checkout.paypalRedirecting') : $t('checkout.placingOrder')) : `${$t('lotteryPayment.payNow')} →` }}</button>
+            <button type="button" class="place-order-btn" :disabled="paying" @click="confirmPayment">{{ paying ? (gateway === 'paypal' ? $t('checkout.paypalRedirecting') : $t('lotteryPayment.paying')) : `${$t('lotteryPayment.payNow')} →` }}</button>
           </div>
         </div>
 
@@ -284,7 +284,6 @@ export default {
       immediate: true,
       async handler (entry) {
         if (!entry) return
-        document.title = `${this.$t('lotteryPayment.title')} | I-Dolly`
         this.context = await this.lotteryEntriesStore.resolveContext(entry)
       }
     }
@@ -521,7 +520,11 @@ export default {
 }
 
 .panel-hint {
-  margin-top: -8px;
+  // No negative margin: .panel is a flex column (gap: 6px), so pulling this
+  // up overlapped the heading / gateway options right above it. The bottom
+  // margin keeps it off the field label that follows.
+  margin-bottom: 6px;
+  line-height: 1.5;
   font-family: $font-content;
   font-size: 13px;
   color: $color-gray-500;

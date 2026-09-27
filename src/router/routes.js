@@ -53,87 +53,85 @@ import adminCompaniesPage from '../pages/admin/AdminCompaniesPage.vue'
 import adminCompanyFormPage from '../pages/admin/AdminCompanyFormPage.vue'
 import adminManagerAccountFormPage from '../pages/admin/AdminManagerAccountFormPage.vue'
 
-import { DOMAIN_TITLE } from '../env'
-
 export const routes = [
   {
     path: '/events',
     alias: '/',
     name: 'events',
     component: eventsPage,
-    meta: { title: `${DOMAIN_TITLE} | events` }
+    meta: { titleKey: 'pageTitle.events' }
   },
   {
     path: '/events/:id',
     name: 'event-detail',
     component: eventDetailPage,
     props: true,
-    meta: { title: `${DOMAIN_TITLE} | event` }
+    meta: { titleKey: 'pageTitle.event' }
   },
   {
     path: '/events/:id/seats',
     name: 'event-tickets',
     component: ticketPurchasePage,
     props: true,
-    meta: { isAuth: true, title: `${DOMAIN_TITLE} | tickets` }
+    meta: { isAuth: true, titleKey: 'pageTitle.tickets' }
   },
   {
     path: '/events/:id/lottery',
     name: 'event-lottery-entry',
     component: lotteryEntryPage,
     props: true,
-    meta: { isAuth: true, title: `${DOMAIN_TITLE} | lottery entry` }
+    meta: { isAuth: true, titleKey: 'pageTitle.lotteryEntry' }
   },
   {
     path: '/members',
     name: 'members',
     component: membersPage,
-    meta: { title: `${DOMAIN_TITLE} | members` }
+    meta: { titleKey: 'pageTitle.members' }
   },
   {
     path: '/members/:id',
     name: 'member-detail',
     component: idolDetailPage,
     props: true,
-    meta: { title: `${DOMAIN_TITLE} | member` }
+    meta: { titleKey: 'pageTitle.member' }
   },
   {
     path: '/groups',
     name: 'groups',
     component: groupsPage,
-    meta: { title: `${DOMAIN_TITLE} | groups` }
+    meta: { titleKey: 'pageTitle.groups' }
   },
   {
     path: '/groups/:id',
     name: 'group-detail',
     component: groupDetailPage,
     props: true,
-    meta: { title: `${DOMAIN_TITLE} | group` }
+    meta: { titleKey: 'pageTitle.group' }
   },
   {
     path: '/store',
     name: 'store',
     component: storePage,
-    meta: { title: `${DOMAIN_TITLE} | store` }
+    meta: { titleKey: 'pageTitle.store' }
   },
   {
     path: '/products/:id',
     name: 'product-detail',
     component: productDetailPage,
     props: true,
-    meta: { title: `${DOMAIN_TITLE} | product` }
+    meta: { titleKey: 'pageTitle.product' }
   },
   {
     path: '/cart',
     name: 'cart',
     component: cartPage,
-    meta: { title: `${DOMAIN_TITLE} | cart` }
+    meta: { titleKey: 'pageTitle.cart' }
   },
   {
     path: '/checkout',
     name: 'checkout',
     component: checkoutPage,
-    meta: { isAuth: true, title: `${DOMAIN_TITLE} | checkout` }
+    meta: { isAuth: true, titleKey: 'pageTitle.checkout' }
   },
   {
     // PayPal's return_url (app/utils/paypal_client.py::create_order) —
@@ -144,102 +142,102 @@ export const routes = [
     path: '/payment/paypal/return',
     name: 'paypal-return',
     component: paypalReturnPage,
-    meta: { isAuth: true, title: `${DOMAIN_TITLE} | payment` }
+    meta: { isAuth: true, titleKey: 'pageTitle.payment' }
   },
   {
     // PayPal's cancel_url — informational only, no capture call.
     path: '/payment/paypal/cancel',
     name: 'paypal-cancel',
     component: paypalCancelPage,
-    meta: { isAuth: true, title: `${DOMAIN_TITLE} | payment cancelled` }
+    meta: { isAuth: true, titleKey: 'pageTitle.paymentCancelled' }
   },
   {
     path: '/history',
     name: 'history',
     component: historyPage,
-    meta: { isAuth: true, title: `${DOMAIN_TITLE} | history` }
+    meta: { isAuth: true, excludeRoles: ['manager', 'admin'], titleKey: 'pageTitle.history' }
   },
   {
     path: '/notifications',
     name: 'notifications',
     component: notificationsPage,
-    meta: { isAuth: true, title: `${DOMAIN_TITLE} | notifications` }
+    meta: { isAuth: true, titleKey: 'pageTitle.notifications' }
   },
   {
     path: '/history/orders/:orderNumber',
     name: 'order-details',
     component: orderDetailsPage,
     props: true,
-    meta: { isAuth: true, title: `${DOMAIN_TITLE} | order` }
+    meta: { isAuth: true, titleKey: 'pageTitle.orderDetails' }
   },
   {
     path: '/history/tickets/:orderNumber',
     name: 'ticket-details',
     component: ticketDetailsPage,
     props: true,
-    meta: { title: `${DOMAIN_TITLE} | ticket` }
+    meta: { titleKey: 'pageTitle.ticketDetails' }
   },
   {
     path: '/history/lottery/:id',
     name: 'lottery-details',
     component: lotteryResultDetailsPage,
     props: true,
-    meta: { isAuth: true, title: `${DOMAIN_TITLE} | lottery entry` }
+    meta: { isAuth: true, titleKey: 'pageTitle.lotteryDetails' }
   },
   {
     path: '/history/lottery/:id/pay',
     name: 'lottery-payment',
     component: lotteryPaymentPage,
     props: true,
-    meta: { isAuth: true, title: `${DOMAIN_TITLE} | pay for ticket` }
+    meta: { isAuth: true, titleKey: 'pageTitle.lotteryPayment' }
   },
   {
     path: '/account',
     name: 'account',
     component: accountSettingsPage,
-    meta: { isAuth: true, title: `${DOMAIN_TITLE} | account settings` }
+    meta: { isAuth: true, titleKey: 'pageTitle.accountSettings' }
   },
   {
     path: '/guidelines',
     name: 'guidelines',
     component: guidelinesPage,
-    meta: { title: `${DOMAIN_TITLE} | guidelines` }
+    meta: { titleKey: 'pageTitle.guidelines' }
   },
   {
     path: '/about',
     name: 'about',
     component: aboutPage,
-    meta: { title: `${DOMAIN_TITLE} | about` }
+    meta: { excludeRoles: ['manager', 'admin'], titleKey: 'pageTitle.about' }
   },
   {
     path: '/contact',
     name: 'contact',
     component: contactPage,
-    meta: { title: `${DOMAIN_TITLE} | contact` }
+    meta: { excludeRoles: ['manager', 'admin'], titleKey: 'pageTitle.contact' }
   },
   {
     path: '/login',
     name: 'login',
     component: loginPage,
-    meta: { title: `${DOMAIN_TITLE} | login` }
+    meta: { titleKey: 'pageTitle.login' }
   },
   {
     path: '/register',
     name: 'register',
     component: registerPage,
-    meta: { title: `${DOMAIN_TITLE} | register` }
+    meta: { titleKey: 'pageTitle.register' }
   },
   {
     path: '/forgot-password',
     name: 'forgot-password',
     component: forgotPasswordPage,
-    meta: { title: `${DOMAIN_TITLE} | forgot password` }
+    meta: { titleKey: 'pageTitle.forgotPassword' }
   },
   {
     path: '/reset-password',
     name: 'reset-password',
     component: resetPasswordPage,
-    meta: { title: `${DOMAIN_TITLE} | reset password` }
+    meta: { titleKey: 'pageTitle.resetPassword' }
   },
   {
     // Old shared entry point — role-routed to the right area by
@@ -256,104 +254,104 @@ export const routes = [
     path: '/manager/idols',
     name: 'manager-idols',
     component: managerIdolsPage,
-    meta: { isAuth: true, roles: ['manager'], title: `${DOMAIN_TITLE} | manager · idols` }
+    meta: { isAuth: true, roles: ['manager'], titleKey: 'pageTitle.idols' }
   },
   {
     path: '/manager/idols/new',
     name: 'manager-idols-new',
     component: managerIdolFormPage,
-    meta: { isAuth: true, roles: ['manager'], title: `${DOMAIN_TITLE} | manager · add idol` }
+    meta: { isAuth: true, roles: ['manager'], titleKey: 'pageTitle.addIdol' }
   },
   {
     path: '/manager/idols/:id/edit',
     name: 'manager-idols-edit',
     component: managerIdolFormPage,
     props: true,
-    meta: { isAuth: true, roles: ['manager'], title: `${DOMAIN_TITLE} | manager · edit idol` }
+    meta: { isAuth: true, roles: ['manager'], titleKey: 'pageTitle.editIdol' }
   },
   {
     path: '/manager/groups',
     name: 'manager-groups',
     component: managerGroupsPage,
-    meta: { isAuth: true, roles: ['manager'], title: `${DOMAIN_TITLE} | manager · groups` }
+    meta: { isAuth: true, roles: ['manager'], titleKey: 'pageTitle.groups' }
   },
   {
     path: '/manager/groups/new',
     name: 'manager-groups-new',
     component: managerGroupFormPage,
-    meta: { isAuth: true, roles: ['manager'], title: `${DOMAIN_TITLE} | manager · add group` }
+    meta: { isAuth: true, roles: ['manager'], titleKey: 'pageTitle.addGroup' }
   },
   {
     path: '/manager/groups/:id/edit',
     name: 'manager-groups-edit',
     component: managerGroupFormPage,
     props: true,
-    meta: { isAuth: true, roles: ['manager'], title: `${DOMAIN_TITLE} | manager · edit group` }
+    meta: { isAuth: true, roles: ['manager'], titleKey: 'pageTitle.editGroup' }
   },
   {
     path: '/manager/events',
     name: 'manager-events',
     component: managerEventsPage,
-    meta: { isAuth: true, roles: ['manager'], title: `${DOMAIN_TITLE} | manager · events` }
+    meta: { isAuth: true, roles: ['manager'], titleKey: 'pageTitle.events' }
   },
   {
     path: '/manager/events/new',
     name: 'manager-events-new',
     component: managerEventFormPage,
-    meta: { isAuth: true, roles: ['manager'], title: `${DOMAIN_TITLE} | manager · add event` }
+    meta: { isAuth: true, roles: ['manager'], titleKey: 'pageTitle.addEvent' }
   },
   {
     path: '/manager/events/:id/edit',
     name: 'manager-events-edit',
     component: managerEventFormPage,
     props: true,
-    meta: { isAuth: true, roles: ['manager'], title: `${DOMAIN_TITLE} | manager · edit event` }
+    meta: { isAuth: true, roles: ['manager'], titleKey: 'pageTitle.editEvent' }
   },
   {
     path: '/manager/events/:id/sales',
     name: 'manager-events-sales',
     component: managerEventSalesPage,
     props: true,
-    meta: { isAuth: true, roles: ['manager'], title: `${DOMAIN_TITLE} | manager · event sales` }
+    meta: { isAuth: true, roles: ['manager'], titleKey: 'pageTitle.eventSales' }
   },
   {
     path: '/manager/events/:id/lottery-results',
     name: 'manager-events-lottery-results',
     component: managerLotteryResultsPage,
     props: true,
-    meta: { isAuth: true, roles: ['manager'], title: `${DOMAIN_TITLE} | manager · lottery results` }
+    meta: { isAuth: true, roles: ['manager'], titleKey: 'pageTitle.lotteryResults' }
   },
   {
     path: '/manager/products',
     name: 'manager-products',
     component: managerProductsPage,
-    meta: { isAuth: true, roles: ['manager'], title: `${DOMAIN_TITLE} | manager · products` }
+    meta: { isAuth: true, roles: ['manager'], titleKey: 'pageTitle.products' }
   },
   {
     path: '/manager/products/new',
     name: 'manager-products-new',
     component: managerProductFormPage,
-    meta: { isAuth: true, roles: ['manager'], title: `${DOMAIN_TITLE} | manager · add product` }
+    meta: { isAuth: true, roles: ['manager'], titleKey: 'pageTitle.addProduct' }
   },
   {
     path: '/manager/products/:id/edit',
     name: 'manager-products-edit',
     component: managerProductFormPage,
     props: true,
-    meta: { isAuth: true, roles: ['manager'], title: `${DOMAIN_TITLE} | manager · edit product` }
+    meta: { isAuth: true, roles: ['manager'], titleKey: 'pageTitle.editProduct' }
   },
   {
     path: '/manager/products/:id/sales',
     name: 'manager-products-sales',
     component: managerProductSalesPage,
     props: true,
-    meta: { isAuth: true, roles: ['manager'], title: `${DOMAIN_TITLE} | manager · product sales` }
+    meta: { isAuth: true, roles: ['manager'], titleKey: 'pageTitle.productSales' }
   },
   {
     path: '/manager/orders',
     name: 'manager-orders',
     component: managerOrdersPage,
-    meta: { isAuth: true, roles: ['manager'], title: `${DOMAIN_TITLE} | manager · orders` }
+    meta: { isAuth: true, roles: ['manager'], titleKey: 'pageTitle.orders' }
   },
 
   // --- admin: unscoped, picks a company via the same picker manager
@@ -362,107 +360,107 @@ export const routes = [
     path: '/admin/idols',
     name: 'admin-idols',
     component: adminIdolsPage,
-    meta: { isAuth: true, roles: ['admin'], title: `${DOMAIN_TITLE} | admin · idols` }
+    meta: { isAuth: true, roles: ['admin'], titleKey: 'pageTitle.idols' }
   },
   {
     path: '/admin/idols/new',
     name: 'admin-idols-new',
     component: adminIdolFormPage,
-    meta: { isAuth: true, roles: ['admin'], title: `${DOMAIN_TITLE} | admin · add idol` }
+    meta: { isAuth: true, roles: ['admin'], titleKey: 'pageTitle.addIdol' }
   },
   {
     path: '/admin/idols/:id/edit',
     name: 'admin-idols-edit',
     component: adminIdolFormPage,
     props: true,
-    meta: { isAuth: true, roles: ['admin'], title: `${DOMAIN_TITLE} | admin · edit idol` }
+    meta: { isAuth: true, roles: ['admin'], titleKey: 'pageTitle.editIdol' }
   },
   {
     path: '/admin/groups',
     name: 'admin-groups',
     component: adminGroupsPage,
-    meta: { isAuth: true, roles: ['admin'], title: `${DOMAIN_TITLE} | admin · groups` }
+    meta: { isAuth: true, roles: ['admin'], titleKey: 'pageTitle.groups' }
   },
   {
     path: '/admin/groups/new',
     name: 'admin-groups-new',
     component: adminGroupFormPage,
-    meta: { isAuth: true, roles: ['admin'], title: `${DOMAIN_TITLE} | admin · add group` }
+    meta: { isAuth: true, roles: ['admin'], titleKey: 'pageTitle.addGroup' }
   },
   {
     path: '/admin/groups/:id/edit',
     name: 'admin-groups-edit',
     component: adminGroupFormPage,
     props: true,
-    meta: { isAuth: true, roles: ['admin'], title: `${DOMAIN_TITLE} | admin · edit group` }
+    meta: { isAuth: true, roles: ['admin'], titleKey: 'pageTitle.editGroup' }
   },
   {
     path: '/admin/events',
     name: 'admin-events',
     component: adminEventsPage,
-    meta: { isAuth: true, roles: ['admin'], title: `${DOMAIN_TITLE} | admin · events` }
+    meta: { isAuth: true, roles: ['admin'], titleKey: 'pageTitle.events' }
   },
   {
     path: '/admin/events/new',
     name: 'admin-events-new',
     component: adminEventFormPage,
-    meta: { isAuth: true, roles: ['admin'], title: `${DOMAIN_TITLE} | admin · add event` }
+    meta: { isAuth: true, roles: ['admin'], titleKey: 'pageTitle.addEvent' }
   },
   {
     path: '/admin/events/:id/edit',
     name: 'admin-events-edit',
     component: adminEventFormPage,
     props: true,
-    meta: { isAuth: true, roles: ['admin'], title: `${DOMAIN_TITLE} | admin · edit event` }
+    meta: { isAuth: true, roles: ['admin'], titleKey: 'pageTitle.editEvent' }
   },
   {
     path: '/admin/products',
     name: 'admin-products',
     component: adminProductsPage,
-    meta: { isAuth: true, roles: ['admin'], title: `${DOMAIN_TITLE} | admin · products` }
+    meta: { isAuth: true, roles: ['admin'], titleKey: 'pageTitle.products' }
   },
   {
     path: '/admin/products/new',
     name: 'admin-products-new',
     component: adminProductFormPage,
-    meta: { isAuth: true, roles: ['admin'], title: `${DOMAIN_TITLE} | admin · add product` }
+    meta: { isAuth: true, roles: ['admin'], titleKey: 'pageTitle.addProduct' }
   },
   {
     path: '/admin/products/:id/edit',
     name: 'admin-products-edit',
     component: adminProductFormPage,
     props: true,
-    meta: { isAuth: true, roles: ['admin'], title: `${DOMAIN_TITLE} | admin · edit product` }
+    meta: { isAuth: true, roles: ['admin'], titleKey: 'pageTitle.editProduct' }
   },
   {
     path: '/admin/companies',
     name: 'admin-companies',
     component: adminCompaniesPage,
-    meta: { isAuth: true, roles: ['admin'], title: `${DOMAIN_TITLE} | admin · companies` }
+    meta: { isAuth: true, roles: ['admin'], titleKey: 'pageTitle.companies' }
   },
   {
     path: '/admin/companies/new',
     name: 'admin-companies-new',
     component: adminCompanyFormPage,
-    meta: { isAuth: true, roles: ['admin'], title: `${DOMAIN_TITLE} | admin · add company` }
+    meta: { isAuth: true, roles: ['admin'], titleKey: 'pageTitle.addCompany' }
   },
   {
     path: '/admin/companies/:id/edit',
     name: 'admin-companies-edit',
     component: adminCompanyFormPage,
     props: true,
-    meta: { isAuth: true, roles: ['admin'], title: `${DOMAIN_TITLE} | admin · edit company` }
+    meta: { isAuth: true, roles: ['admin'], titleKey: 'pageTitle.editCompany' }
   },
   {
     path: '/admin/companies/:id/managers/new',
     name: 'admin-manager-account-new',
     component: adminManagerAccountFormPage,
     props: true,
-    meta: { isAuth: true, roles: ['admin'], title: `${DOMAIN_TITLE} | admin · add manager account` }
+    meta: { isAuth: true, roles: ['admin'], titleKey: 'pageTitle.addManagerAccount' }
   },
   {
     path: '/:pathMatch(.*)*',
     component: notFoundPage,
-    meta: { title: `${DOMAIN_TITLE} | not found` }
+    meta: { titleKey: 'pageTitle.notFound' }
   }
 ]

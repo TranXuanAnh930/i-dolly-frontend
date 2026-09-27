@@ -8,7 +8,7 @@
       </button>
 
       <div v-if="open" class="more-menu__panel">
-        <router-link v-if="$currentUser.id" to="/history" class="more-menu__item" @click="close">
+        <router-link v-if="$currentUser.id && !isStaff" to="/history" class="more-menu__item" @click="close">
           <span class="more-menu__icon">
             <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
               <circle cx="10" cy="10.5" r="7" stroke="currentColor" stroke-width="1.5"/>
@@ -34,7 +34,7 @@
           </span>
         </router-link>
 
-        <router-link to="/contact" class="more-menu__item" @click="close">
+        <router-link v-if="!isStaff" to="/contact" class="more-menu__item" @click="close">
           <span class="more-menu__icon">
             <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
               <rect x="3.5" y="4.5" width="13" height="11" rx="1.8" stroke="currentColor" stroke-width="1.5"/>
@@ -60,7 +60,7 @@
           </span>
         </router-link>
 
-        <router-link to="/about" class="more-menu__item" @click="close">
+        <router-link v-if="!isStaff" to="/about" class="more-menu__item" @click="close">
           <span class="more-menu__icon">
             <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
               <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5"/>
@@ -89,6 +89,15 @@ export default {
   data () {
     return {
       open: false
+    }
+  },
+
+  computed: {
+    // Staff (managers and admins) get no fan-facing history/contact/about
+    // links — see checkAccessMiddleware's meta.excludeRoles for the
+    // matching route block.
+    isStaff () {
+      return ['manager', 'admin'].includes(this.$currentUser.role)
     }
   },
 

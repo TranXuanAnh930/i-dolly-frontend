@@ -102,6 +102,13 @@ export default {
   flex-direction: column;
   gap: 16px;
   padding: 24px 0 80px;
+
+  // .wrapper's own side padding is overridden by the shorthand above; fine
+  // on desktop where the wrapper is centered with room either side, but
+  // on a phone it leaves the content flush against the screen edges.
+  @include media_mobile {
+    padding: 20px 16px 80px;
+  }
 }
 
 .back-link {

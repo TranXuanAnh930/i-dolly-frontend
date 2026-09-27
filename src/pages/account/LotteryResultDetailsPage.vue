@@ -122,7 +122,6 @@ export default {
       immediate: true,
       async handler (entry) {
         if (!entry) return
-        document.title = `${this.$t('lotteryDetails.title')} | I-Dolly`
         this.loadingContext = true
         try {
           this.context = await this.lotteryEntriesStore.resolveContext(entry)

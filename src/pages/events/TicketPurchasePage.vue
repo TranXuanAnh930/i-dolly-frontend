@@ -182,7 +182,7 @@
 
           <div class="form-actions">
             <button type="button" class="back-btn" :disabled="placing" @click="step = 2">&larr; {{ $t('ticketPurchase.back') }}</button>
-            <button type="button" class="place-order-btn" :disabled="placing" @click="placeOrder">{{ placing ? (gateway === 'paypal' ? $t('checkout.paypalRedirecting') : $t('checkout.placingOrder')) : `${$t('ticketPurchase.placeOrder')} →` }}</button>
+            <button type="button" class="place-order-btn" :disabled="placing" @click="placeOrder">{{ placing ? (gateway === 'paypal' ? $t('checkout.paypalRedirecting') : $t('ticketPurchase.paying')) : `${$t('ticketPurchase.placeOrder')} →` }}</button>
           </div>
         </div>
 
@@ -251,6 +251,7 @@ import { formatDate, formatEventDateTime, formatNumber } from '@/utils/format'
 import { withTax } from '@/utils/tax'
 import VenueSeatMap from '@/components/VenueSeatMap.vue'
 import UiPageLoader from '@/components/progress-loaders/UiPageLoader.vue'
+import { setPageTitle } from '@/utils/pageTitle'
 
 export default {
   name: 'TicketPurchasePage',
@@ -330,7 +331,7 @@ export default {
     concert: {
       immediate: true,
       handler (concert) {
-        if (concert) document.title = `Tickets · ${concert.title} | I-Dolly`
+        if (concert) setPageTitle(() => `${this.$t('pageTitle.tickets')} · ${concert.title}`)
       }
     },
     id: {
@@ -645,7 +646,11 @@ export default {
 }
 
 .panel-hint {
-  margin-top: -8px;
+  // No negative margin: .panel is a flex column (gap: 6px), so pulling this
+  // up overlapped the heading / gateway options right above it. The bottom
+  // margin keeps it off the field label that follows.
+  margin-bottom: 6px;
+  line-height: 1.5;
   font-family: $font-content;
   font-size: 13px;
   color: $color-gray-500;

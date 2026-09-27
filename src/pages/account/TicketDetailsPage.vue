@@ -100,15 +100,6 @@ export default {
     }
   },
 
-  watch: {
-    ticket: {
-      immediate: true,
-      handler (ticket) {
-        if (ticket) document.title = `${ticket.id.slice(0, 8)} | I-Dolly`
-      }
-    }
-  },
-
   created () {
     // The concert can only be resolved once the ticket is loaded (its id comes
     // off ticket.ticket_type), so this chains rather than running alongside —

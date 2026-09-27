@@ -18,18 +18,20 @@
         </thead>
         <tbody>
           <tr v-for="group in myGroups" :key="group.id" :class="{ 'is-inactive': !group.is_active }">
-            <td>{{ group.name }}</td>
-            <td>{{ group.debut_date || '—' }}</td>
-            <td class="description-cell">{{ group.description || '—' }}</td>
-            <td>
+            <td :data-label="$t('common.name')">{{ group.name }}</td>
+            <td :data-label="$t('managerGroups.debutDate')">{{ group.debut_date || '—' }}</td>
+            <td class="description-cell" :data-label="$t('common.description')">{{ group.description || '—' }}</td>
+            <td :data-label="$t('common.status')">
               <span class="status-badge" :class="{ 'status-badge--inactive': !group.is_active }">
                 {{ group.is_active ? $t('common.statusActive') : $t('common.statusInactive') }}
               </span>
             </td>
             <td class="actions">
-              <router-link :to="{ name: 'manager-groups-edit', params: { id: group.id } }">{{ $t('common.edit') }}</router-link>
-              <button v-if="group.is_active" type="button" class="danger" @click="deactivate(group)">{{ $t('common.deactivate') }}</button>
-              <button v-else type="button" @click="reactivate(group)">{{ $t('common.reactivate') }}</button>
+              <UiRowActions>
+                <router-link :to="{ name: 'manager-groups-edit', params: { id: group.id } }">{{ $t('common.edit') }}</router-link>
+                <button v-if="group.is_active" type="button" class="danger" @click="deactivate(group)">{{ $t('common.deactivate') }}</button>
+                <button v-else type="button" @click="reactivate(group)">{{ $t('common.reactivate') }}</button>
+              </UiRowActions>
             </td>
           </tr>
         </tbody>
@@ -42,10 +44,13 @@
 </template>
 
 <script>
+import UiRowActions from '@/components/UiRowActions.vue'
 import { GroupsService } from '@/services/members/groups.service'
 
 export default {
   name: 'ManagerGroupsPage',
+
+  components: { UiRowActions },
 
   data () {
     return {
@@ -109,12 +114,21 @@ export default {
   flex-direction: column;
   gap: 16px;
   padding: 24px 0 80px;
+
+  // .wrapper's own side padding is overridden by the shorthand above; fine
+  // on desktop where the wrapper is centered with room either side, but
+  // on a phone it leaves the content flush against the screen edges.
+  @include media_mobile {
+    padding: 20px 16px 80px;
+  }
 }
 
 .page-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .page-head__title {
@@ -153,6 +167,10 @@ export default {
   border-radius: 16px;
   box-shadow: 0 2px 4px 0 rgba($color-gray-500, .12), 0 0 1px 1px rgba($color-gray-500, .05);
   overflow-x: auto;
+
+  @include media_mobile {
+    overflow-x: visible;
+  }
 }
 
 .table {
@@ -183,17 +201,89 @@ export default {
       border-bottom: none;
     }
 
-    &.is-inactive {
+    // Dims the row's data but not its actions cell — otherwise the phone
+    // dropdown menu opened from an inactive row renders see-through too.
+    &.is-inactive td:not(.actions) {
       opacity: .55;
+    }
+  }
+
+  // A 5-column table (one of them free-text description) has no honest
+  // way to fit an iPhone's width — rather than a horizontally-scrolling
+  // strip, each row becomes its own card: the name across the top, debut
+  // date and status side by side beneath it (grid-auto-flow: dense pulls
+  // status up next to debut date, ahead of the full-width description
+  // that sits between them in the markup), then the description, then the
+  // row actions collapsed into a dropdown at the bottom right. Labels are
+  // re-shown via data-label, kept in sync with the real <th> text/i18n
+  // above. Same card as ManagerIdolsPage, minus the photo half.
+  @include media_mobile {
+    display: block;
+
+    thead {
+      display: none;
+    }
+
+    tbody {
+      display: block;
+
+      tr {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-auto-flow: row dense;
+        column-gap: 14px;
+        row-gap: 10px;
+        padding: 16px;
+      }
+    }
+
+    td {
+      display: block;
+      min-width: 0;
+      padding: 0;
+      white-space: normal;
+      overflow-wrap: anywhere;
+
+      &[data-label]::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 2px;
+        font-weight: 700;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .03em;
+        color: $color-gray-500;
+      }
+
+      // Name — the card's heading, so full width and a touch heavier.
+      &:first-child {
+        grid-column: 1 / -1;
+        font-weight: 700;
+        font-size: 15px;
+      }
     }
   }
 }
 
-.description-cell {
+// td.description-cell (not just .description-cell) so the mobile override
+// below matches ".table td"'s own specificity and actually wins instead of
+// losing the cascade tie to it.
+td.description-cell {
   max-width: 320px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+
+  // Truncating to one line only makes sense in the table's own column
+  // width — in the stacked mobile card there's a full-width line to work
+  // with, so let it wrap instead of clipping silently.
+  @include media_mobile {
+    grid-column: 1 / -1;
+    max-width: none;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+  }
 }
 
 .status-badge {
@@ -220,7 +310,15 @@ export default {
   gap: 8px;
   white-space: nowrap;
 
+  @include media_mobile {
+    grid-column: 2;
+  }
+
   a, button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
     border: 1.5px solid $color-line;
     background: $color-white;
     border-radius: 8px;
@@ -228,6 +326,13 @@ export default {
     font-family: $font-content;
     font-weight: 700;
     font-size: 12px;
+    // Pinned so a <router-link> (inherits the page's line-height) and a
+    // <button> (UA default) render the same height side by side.
+    line-height: 1.4;
+    // One shared width so a row's Edit / Deactivate / Sales buttons read as
+    // a matched set instead of each hugging its own label; wide enough for
+    // the longest common label ("Deactivate"), longer ones just grow past it.
+    min-width: 92px;
     cursor: pointer;
     color: $color-ink;
     text-decoration: none;

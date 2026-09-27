@@ -1,4 +1,54 @@
 export default {
+  // Browser tab titles — route meta.titleKey points here (see utils/pageTitle.js).
+  pageTitle: {
+    events: 'イベント',
+    event: 'イベント詳細',
+    tickets: 'チケット購入',
+    lotteryEntry: '抽選応募',
+    members: 'メンバー',
+    member: 'メンバー詳細',
+    groups: 'ユニット',
+    group: 'ユニット詳細',
+    store: 'ストア',
+    product: '商品詳細',
+    cart: 'カート',
+    checkout: 'チェックアウト',
+    payment: 'お支払い',
+    paymentCancelled: 'お支払いキャンセル',
+    history: '履歴',
+    notifications: '通知',
+    orderDetails: 'ご注文内容',
+    ticketDetails: 'チケット詳細',
+    lotteryDetails: '抽選結果',
+    lotteryPayment: 'チケットの支払い',
+    accountSettings: 'アカウント設定',
+    guidelines: 'ご利用ガイド',
+    about: 'I-Dollyについて',
+    contact: 'お問い合わせ',
+    login: 'ログイン',
+    register: '新規登録',
+    forgotPassword: 'パスワードをお忘れの方',
+    resetPassword: 'パスワード再設定',
+    notFound: 'ページが見つかりません',
+    idols: 'アイドル',
+    addIdol: 'アイドルを追加',
+    editIdol: 'アイドルを編集',
+    addGroup: 'ユニットを追加',
+    editGroup: 'ユニットを編集',
+    addEvent: 'イベントを追加',
+    editEvent: 'イベントを編集',
+    eventSales: 'イベント販売履歴',
+    lotteryResults: '抽選結果一覧',
+    products: '商品',
+    addProduct: '商品を追加',
+    editProduct: '商品を編集',
+    productSales: '商品販売履歴',
+    orders: '注文',
+    companies: '会社',
+    addCompany: '会社を追加',
+    editCompany: '会社を編集',
+    addManagerAccount: 'マネージャーアカウントを追加'
+  },
   common: {
     save: '保存',
     submit: '送信',
@@ -42,7 +92,8 @@ export default {
     statusInactive: '無効',
     previous: '前へ',
     next: '次へ',
-    pageLabel: '{page}ページ目'
+    pageLabel: '{page}ページ目',
+    actions: '操作'
   },
 
   nav: {
@@ -473,7 +524,7 @@ export default {
 
   ticketPurchase: {
     lotteryEntry: '抽選応募',
-    directSaleCheckout: '先着販売チェックアウト',
+    directSaleCheckout: 'チケット購入（先着販売）',
     getTickets: 'チケットを取得',
     stepTickets: 'チケット',
     stepPayment: 'お支払い',
@@ -482,10 +533,10 @@ export default {
     chooseTier: 'チケット種別を選択',
     tier: '種別',
     seatMap: '座席表',
-    orderSummary: 'ご注文内容',
+    orderSummary: '購入するチケット',
     total: '合計',
     applyLottery: '抽選に応募する →',
-    continueCheckout: 'チェックアウトへ進む →',
+    continueCheckout: 'お支払いへ進む →',
     contactPayment: '連絡先・お支払い',
     fullName: 'お名前',
     paymentMethod: 'お支払い方法',
@@ -494,13 +545,13 @@ export default {
     expiry: '有効期限',
     cvc: 'セキュリティコード',
     back: '戻る',
-    reviewOrder: '注文内容を確認',
+    reviewOrder: '購入内容を確認',
     confirmTitle: '内容の確認',
     confirmHint: 'モック決済で請求する前に、以下の内容をご確認ください。',
-    placeOrder: '注文を確定する',
+    placeOrder: 'チケットを購入する',
     appliedTitle: '応募しました！',
     wentTitle: '参加確定！',
-    wentNote: '注文番号 {orderNumber}（{title} · {date}）が確定しました。これはモックのチェックアウトのため、実際の請求は発生しません。',
+    wentNote: '{title}（{date}）のチケットが確定しました（チケット番号 {orderNumber}）。モック決済のため、実際の請求は発生しません。',
     declinedTitle: 'お支払いが拒否されました',
     declinedNote: 'このモック決済は拒否されたため、チケットは発行されませんでした。もう一度お試しください。',
     viewHistory: '履歴で見る',
@@ -513,7 +564,8 @@ export default {
     ineligibleUnavailable: 'このイベントのチケット種別はすべて完売または応募受付終了です — しばらくしてから再度ご確認ください。',
     ineligibleDefault: 'このイベントのチケットはまだ販売されていません。',
     errorContactEmail: 'お名前とメールアドレスを入力してください。',
-    errorPayment: 'お支払い情報（モック）を入力してください。'
+    errorPayment: 'お支払い情報（モック）を入力してください。',
+    paying: 'お支払い処理中…'
   },
 
   lotteryEntry: {
@@ -637,7 +689,7 @@ export default {
     expiry: '有効期限',
     cvc: 'セキュリティコード',
     reviewPayment: '内容を確認',
-    orderSummary: 'ご注文内容',
+    orderSummary: '当選チケット',
     total: '合計',
     confirmTitle: 'お支払い内容の確認',
     confirmHint: 'モック決済を実行する前に、以下の内容をご確認ください。',
@@ -652,7 +704,8 @@ export default {
     notFound: 'その抽選応募が見つかりませんでした。',
     notWon: 'この抽選応募はまだ当選していません — お支払いの必要はありません。',
     noTicket: 'この応募に対するチケットはまだ発行されていません。',
-    notPayable: 'このチケットは支払い待ちの状態ではありません。'
+    notPayable: 'このチケットは支払い待ちの状態ではありません。',
+    paying: 'お支払い処理中…'
   },
 
   groupDetail: {

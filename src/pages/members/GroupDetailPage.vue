@@ -52,6 +52,7 @@ import EventCard from '@/components/EventCard.vue'
 import ReleaseCard from '@/components/ReleaseCard.vue'
 import UiPageLoader from '@/components/progress-loaders/UiPageLoader.vue'
 import NotFound from '@/pages/static/NotFound.vue'
+import { setPageTitle } from '@/utils/pageTitle'
 
 export default {
   name: 'GroupDetailPage',
@@ -86,7 +87,7 @@ export default {
 
   watch: {
     group (group) {
-      if (group) document.title = `${group.name} | I-Dolly`
+      if (group) setPageTitle(group.name)
     },
     id: {
       immediate: true,

@@ -28,17 +28,19 @@
         </thead>
         <tbody>
           <tr v-for="concert in filteredEvents" :key="concert.id" :class="{ 'is-cancelled': concert.status === 'cancelled' }">
-            <td>{{ concert.title }}</td>
-            <td>{{ venueName(concert.venue_id) }}</td>
-            <td>{{ formatDate(concert.event_datetime) }}</td>
-            <td>
+            <td :data-label="$t('managerEvents.titleLabel')">{{ concert.title }}</td>
+            <td :data-label="$t('managerEvents.venue')">{{ venueName(concert.venue_id) }}</td>
+            <td :data-label="$t('managerEvents.date')">{{ formatDate(concert.event_datetime) }}</td>
+            <td :data-label="$t('managerEvents.status')">
               <span class="status-badge" :class="{ 'status-badge--cancelled': concert.status === 'cancelled' }">
                 {{ statusLabel(concert.status) }}
               </span>
             </td>
             <td class="actions">
-              <router-link :to="{ name: 'manager-events-sales', params: { id: concert.id }, query: { title: concert.title } }">{{ $t('managerProducts.viewSales') }}</router-link>
-              <router-link :to="{ name: 'manager-events-edit', params: { id: concert.id } }">{{ $t('common.edit') }}</router-link>
+              <UiRowActions>
+                <router-link :to="{ name: 'manager-events-sales', params: { id: concert.id }, query: { title: concert.title } }">{{ $t('managerProducts.viewSales') }}</router-link>
+                <router-link :to="{ name: 'manager-events-edit', params: { id: concert.id } }">{{ $t('common.edit') }}</router-link>
+              </UiRowActions>
             </td>
           </tr>
         </tbody>
@@ -56,10 +58,13 @@
 <script>
 import { format, parseISO } from 'date-fns'
 
+import UiRowActions from '@/components/UiRowActions.vue'
 import { ConcertsService } from '@/services/events/concerts.service'
 
 export default {
   name: 'ManagerEventsPage',
+
+  components: { UiRowActions },
 
   data () {
     return {
@@ -121,6 +126,13 @@ export default {
   flex-direction: column;
   gap: 16px;
   padding: 24px 0 80px;
+
+  // .wrapper's own side padding is overridden by the shorthand above; fine
+  // on desktop where the wrapper is centered with room either side, but
+  // on a phone it leaves the content flush against the screen edges.
+  @include media_mobile {
+    padding: 20px 16px 80px;
+  }
 }
 
 .page-head {
@@ -236,6 +248,10 @@ export default {
   border-radius: 16px;
   box-shadow: 0 2px 4px 0 rgba($color-gray-500, .12), 0 0 1px 1px rgba($color-gray-500, .05);
   overflow-x: auto;
+
+  @include media_mobile {
+    overflow-x: visible;
+  }
 }
 
 .table {
@@ -271,8 +287,67 @@ export default {
       border-bottom: none;
     }
 
-    &.is-cancelled {
+    // Dims the row's data but not its actions cell — otherwise the phone
+    // dropdown menu opened from a cancelled row renders see-through too.
+    &.is-cancelled td:not(.actions) {
       opacity: .55;
+    }
+  }
+
+  // A 5-column table has no honest way to fit an iPhone's width — rather
+  // than leave it as a horizontally-scrolling strip (easy to miss there's
+  // more off to the right), each row becomes its own card: the title
+  // across the top, the remaining columns label-over-value in two columns
+  // beneath it (label re-shown via data-label, kept in sync with the real
+  // <th> text/i18n above, not hardcoded here, so it never drifts), and the
+  // row actions collapsed into a dropdown at the bottom right — the same
+  // card as ManagerProductsPage/ManagerIdolsPage, minus the image half.
+  @include media_mobile {
+    display: block;
+
+    thead {
+      display: none;
+    }
+
+    tbody {
+      display: block;
+
+      // Same specificity as the fixed-height rule above (also "tbody tr")
+      // so this actually wins instead of losing to it under the cascade.
+      tr {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        column-gap: 14px;
+        row-gap: 10px;
+        height: auto;
+        padding: 16px;
+      }
+    }
+
+    td {
+      display: block;
+      min-width: 0;
+      padding: 0;
+      white-space: normal;
+      overflow-wrap: anywhere;
+
+      &[data-label]::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 2px;
+        font-weight: 700;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .03em;
+        color: $color-gray-500;
+      }
+
+      // Title — the card's heading, so full width and a touch heavier.
+      &:first-child {
+        grid-column: 1 / -1;
+        font-weight: 700;
+        font-size: 15px;
+      }
     }
   }
 }
@@ -302,6 +377,10 @@ export default {
   justify-content: center;
   gap: 8px;
 
+  @include media_mobile {
+    align-self: end;
+  }
+
   a, button {
     display: inline-flex;
     align-items: center;
@@ -314,6 +393,13 @@ export default {
     font-family: $font-content;
     font-weight: 700;
     font-size: 12px;
+    // Pinned so a <router-link> (inherits the page's line-height) and a
+    // <button> (UA default) render the same height side by side.
+    line-height: 1.4;
+    // One shared width so a row's Edit / Deactivate / Sales buttons read as
+    // a matched set instead of each hugging its own label; wide enough for
+    // the longest common label ("Deactivate"), longer ones just grow past it.
+    min-width: 92px;
     cursor: pointer;
     color: $color-ink;
     text-decoration: none;

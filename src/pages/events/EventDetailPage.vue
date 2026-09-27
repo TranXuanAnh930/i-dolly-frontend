@@ -172,6 +172,7 @@ import IdolPortrait from '@/components/IdolPortrait.vue'
 import VenueSeatMap from '@/components/VenueSeatMap.vue'
 import UiPageLoader from '@/components/progress-loaders/UiPageLoader.vue'
 import NotFound from '@/pages/static/NotFound.vue'
+import { setPageTitle } from '@/utils/pageTitle'
 
 export default {
   name: 'EventDetailPage',
@@ -265,7 +266,7 @@ export default {
 
   watch: {
     concert (concert) {
-      if (concert) document.title = `${concert.title} | I-Dolly`
+      if (concert) setPageTitle(concert.title)
     },
     id: {
       immediate: true,
