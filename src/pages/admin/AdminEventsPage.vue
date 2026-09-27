@@ -29,20 +29,22 @@
           </thead>
           <tbody>
             <tr v-for="concert in myEvents" :key="concert.id" :class="{ 'is-cancelled': concert.status === 'cancelled' }">
-              <td>{{ concert.title }}</td>
-              <td>{{ venueName(concert.venue_id) }}</td>
-              <td>{{ formatDate(concert.event_datetime) }}</td>
-              <td>
+              <td :data-label="$t('managerEvents.titleLabel')">{{ concert.title }}</td>
+              <td :data-label="$t('managerEvents.venue')">{{ venueName(concert.venue_id) }}</td>
+              <td :data-label="$t('managerEvents.date')">{{ formatDate(concert.event_datetime) }}</td>
+              <td :data-label="$t('managerEvents.status')">
                 <span class="status-badge" :class="{ 'status-badge--cancelled': concert.status === 'cancelled' }">
                   {{ statusLabel(concert.status) }}
                 </span>
               </td>
               <td class="actions">
-                <router-link :to="{ name: 'admin-events-edit', params: { id: concert.id } }">{{ $t('common.edit') }}</router-link>
-                <button v-if="concert.status !== 'cancelled'" type="button" :disabled="drawStore.isDrawing(concert.id)" @click="runLotteryDraw(concert)">
-                  {{ drawStore.isDrawing(concert.id) ? $t('managerEvents.lotteryDrawRunning') : $t('managerEvents.runLotteryDraw') }}
-                </button>
-                <button v-if="concert.status !== 'cancelled'" type="button" class="danger" @click="cancelEvent(concert)">{{ $t('managerEvents.cancelEvent') }}</button>
+                <UiRowActions>
+                  <router-link :to="{ name: 'admin-events-edit', params: { id: concert.id } }">{{ $t('common.edit') }}</router-link>
+                  <button v-if="concert.status !== 'cancelled'" type="button" :disabled="drawStore.isDrawing(concert.id)" @click="runLotteryDraw(concert)">
+                    {{ drawStore.isDrawing(concert.id) ? $t('managerEvents.lotteryDrawRunning') : $t('managerEvents.runLotteryDraw') }}
+                  </button>
+                  <button v-if="concert.status !== 'cancelled'" type="button" class="danger" @click="cancelEvent(concert)">{{ $t('managerEvents.cancelEvent') }}</button>
+                </UiRowActions>
                 <!-- Inline rather than a toast: by the time a draw fails the
                      admin may well have clicked into another row, and this
                      keeps the failure attached to the event it belongs to. -->
@@ -62,6 +64,7 @@
 <script>
 import { format, parseISO } from 'date-fns'
 
+import UiRowActions from '@/components/UiRowActions.vue'
 import { ConcertsService } from '@/services/events/concerts.service'
 import { useCompaniesStore } from '@/store/members/companies'
 import { useToastStore } from '@/store/toast'
@@ -69,6 +72,8 @@ import { useLotteryDrawStore } from '@/store/events/lotteryDraw'
 
 export default {
   name: 'AdminEventsPage',
+
+  components: { UiRowActions },
 
   data () {
     return {
@@ -166,12 +171,21 @@ export default {
   flex-direction: column;
   gap: 16px;
   padding: 24px 0 80px;
+
+  // .wrapper's own side padding is overridden by the shorthand above; fine
+  // on desktop where the wrapper is centered with room either side, but
+  // on a phone it leaves the cards flush against the screen edges.
+  @include media_mobile {
+    padding: 20px 16px 80px;
+  }
 }
 
 .page-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .draw-error {
@@ -180,6 +194,12 @@ export default {
   font-size: 12px;
   color: $color-error;
   max-width: 34ch;
+
+  @include media_mobile {
+    margin-top: 6px;
+    max-width: none;
+    text-align: right;
+  }
 }
 
 .page-head__title {
@@ -212,6 +232,10 @@ export default {
   gap: 6px;
   max-width: 280px;
 
+  @include media_mobile {
+    max-width: none;
+  }
+
   span {
     font-family: $font-content;
     font-weight: 700;
@@ -242,6 +266,10 @@ export default {
   border-radius: 16px;
   box-shadow: 0 2px 4px 0 rgba($color-gray-500, .12), 0 0 1px 1px rgba($color-gray-500, .05);
   overflow-x: auto;
+
+  @include media_mobile {
+    overflow-x: visible;
+  }
 }
 
 .table {
@@ -272,8 +300,60 @@ export default {
       border-bottom: none;
     }
 
-    &.is-cancelled {
+    // Dims the row's data but not its actions cell — otherwise the phone
+    // dropdown menu opened from a cancelled row renders see-through too.
+    &.is-cancelled td:not(.actions) {
       opacity: .55;
+    }
+  }
+
+  // Same phone card as ManagerEventsPage: the title across the top, the
+  // remaining columns label-over-value in two columns beneath it (label
+  // re-shown via data-label, kept in sync with the real <th> text/i18n
+  // above), and the row actions collapsed into a dropdown at the bottom right.
+  @include media_mobile {
+    display: block;
+
+    thead {
+      display: none;
+    }
+
+    tbody {
+      display: block;
+
+      tr {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        column-gap: 14px;
+        row-gap: 10px;
+        padding: 16px;
+      }
+    }
+
+    td {
+      display: block;
+      min-width: 0;
+      padding: 0;
+      white-space: normal;
+      overflow-wrap: anywhere;
+
+      &[data-label]::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 2px;
+        font-weight: 700;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .03em;
+        color: $color-gray-500;
+      }
+
+      // Title — the card's heading, so full width and a touch heavier.
+      &:first-child {
+        grid-column: 1 / -1;
+        font-weight: 700;
+        font-size: 15px;
+      }
     }
   }
 }
@@ -301,7 +381,15 @@ export default {
   display: flex;
   gap: 8px;
 
+  @include media_mobile {
+    align-self: end;
+  }
+
   a, button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
     border: 1.5px solid $color-line;
     background: $color-white;
     border-radius: 8px;
@@ -309,6 +397,13 @@ export default {
     font-family: $font-content;
     font-weight: 700;
     font-size: 12px;
+    // Pinned so a <router-link> (inherits the page's line-height) and a
+    // <button> (UA default) render the same height side by side.
+    line-height: 1.4;
+    // One shared width so a row's Edit / Deactivate / Sales buttons read as
+    // a matched set instead of each hugging its own label; wide enough for
+    // the longest common label ("Deactivate"), longer ones just grow past it.
+    min-width: 92px;
     cursor: pointer;
     color: $color-ink;
     text-decoration: none;

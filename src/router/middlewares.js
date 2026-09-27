@@ -1,5 +1,6 @@
 import { useUserStore } from '@/store/auth/user'
 import { AuthService } from '@/services/auth/auth.service'
+import { setRouteTitle } from '@/utils/pageTitle'
 
 /**
  * Current user state initialization
@@ -58,22 +59,32 @@ export function redirectManagerHomeMiddleware (to, from, next) {
 }
 
 /**
- * Check access permission to auth routes, and to routes restricted to
- * specific roles (manager/admin sections) via `meta.roles`.
+ * Check access permission to auth routes, to routes restricted to specific
+ * roles (manager/admin sections) via `meta.roles`, and to fan-facing pages
+ * hidden from specific roles via `meta.excludeRoles` (e.g. history/contact/
+ * about for managers and admins — the header hides those links too, this
+ * just covers a typed URL or old bookmark).
  */
 export function checkAccessMiddleware (to, from, next) {
   const currentUser = useUserStore().currentUser
   const isAuthRoute = to.matched.some(item => item.meta.isAuth)
   const requiredRoles = to.matched.flatMap(item => item.meta.roles || [])
+  const excludedRoles = to.matched.flatMap(item => item.meta.excludeRoles || [])
 
   if (isAuthRoute && !currentUser.id) return next({ name: 'login' })
   if (requiredRoles.length && !requiredRoles.includes(currentUser.role)) return next({ name: 'events' })
+  // Back to each role's own home: an admin's is Companies; 'events' itself
+  // bounces a manager on to their own events page (redirectManagerHomeMiddleware).
+  if (currentUser.role && excludedRoles.includes(currentUser.role)) {
+    return next({ name: currentUser.role === 'admin' ? 'admin-companies' : 'events' })
+  }
   next()
 }
 
+// meta.titleKey is an i18n key (pageTitle.*) rather than a finished string,
+// so the tab title follows the language switcher — see utils/pageTitle.js.
 export function setPageTitleMiddleware (to, from, next) {
-  const pageTitle = to.matched.find(item => item.meta.title)
-
-  if (pageTitle) window.document.title = pageTitle.meta.title
+  const withTitle = to.matched.find(item => item.meta.titleKey)
+  setRouteTitle(withTitle && withTitle.meta.titleKey)
   next()
 }

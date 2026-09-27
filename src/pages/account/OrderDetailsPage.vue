@@ -126,15 +126,6 @@ export default {
     }
   },
 
-  watch: {
-    order: {
-      immediate: true,
-      handler (order) {
-        if (order) document.title = `${order.id} | I-Dolly`
-      }
-    }
-  },
-
   created () {
     useCatalogStore().fetchAll()
     // A no-op for guests/non-fan roles, and already loaded on every page

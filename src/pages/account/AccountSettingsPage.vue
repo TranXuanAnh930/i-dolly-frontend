@@ -57,7 +57,9 @@
         <button type="submit" class="save-btn" :disabled="passwordSaving">{{ passwordSaving ? $t('common.save') + '…' : $t('account.changePassword') }}</button>
       </form>
 
-      <form class="panel" @submit.prevent="saveAddress">
+      <!-- Staff (managers/admins) never buy or receive anything, so there's no shipping
+           address to keep. -->
+      <form v-if="!isStaff" class="panel" @submit.prevent="saveAddress">
         <h2 class="panel__title">{{ $t('account.shippingAddress') }}</h2>
         <div class="section-rule"></div>
 
@@ -129,10 +131,16 @@ export default {
     }
   },
 
+  computed: {
+    isStaff () {
+      return ['manager', 'admin'].includes(this.$currentUser.role)
+    }
+  },
+
   created () {
     if (this.$currentUser.name) this.profile.name = this.$currentUser.name
     if (this.$currentUser.email) this.profile.email = this.$currentUser.email
-    this.fetchAddress()
+    if (!this.isStaff) this.fetchAddress()
   },
 
   methods: {

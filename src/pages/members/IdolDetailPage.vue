@@ -95,6 +95,7 @@ import { formatDate } from '@/utils/format'
 import IdolPortrait from '@/components/IdolPortrait.vue'
 import UiPageLoader from '@/components/progress-loaders/UiPageLoader.vue'
 import NotFound from '@/pages/static/NotFound.vue'
+import { setPageTitle } from '@/utils/pageTitle'
 
 export default {
   name: 'IdolDetailPage',
@@ -150,7 +151,7 @@ export default {
 
   watch: {
     member (member) {
-      if (member) document.title = `${member.name} | I-Dolly`
+      if (member) setPageTitle(member.name)
     },
     id: {
       immediate: true,

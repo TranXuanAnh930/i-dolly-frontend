@@ -16,12 +16,14 @@
         </thead>
         <tbody>
           <tr v-for="company in companiesStore.companies" :key="company.id">
-            <td>{{ company.name }}</td>
-            <td>{{ company.contact_email || '—' }}</td>
+            <td :data-label="$t('common.name')">{{ company.name }}</td>
+            <td :data-label="$t('adminCompanies.contactEmail')">{{ company.contact_email || '—' }}</td>
             <td class="actions">
-              <router-link :to="{ name: 'admin-companies-edit', params: { id: company.id } }">{{ $t('common.edit') }}</router-link>
-              <button type="button" class="danger" @click="remove(company)">{{ $t('common.delete') }}</button>
-              <router-link :to="{ name: 'admin-manager-account-new', params: { id: company.id } }">{{ $t('adminCompanies.addManagerAccount') }}</router-link>
+              <UiRowActions>
+                <router-link :to="{ name: 'admin-companies-edit', params: { id: company.id } }">{{ $t('common.edit') }}</router-link>
+                <button type="button" class="danger" @click="remove(company)">{{ $t('common.delete') }}</button>
+                <router-link :to="{ name: 'admin-manager-account-new', params: { id: company.id } }">{{ $t('adminCompanies.addManagerAccount') }}</router-link>
+              </UiRowActions>
             </td>
           </tr>
         </tbody>
@@ -34,10 +36,13 @@
 </template>
 
 <script>
+import UiRowActions from '@/components/UiRowActions.vue'
 import { useCompaniesStore } from '@/store/members/companies'
 
 export default {
   name: 'AdminCompaniesPage',
+
+  components: { UiRowActions },
 
   data () {
     return {
@@ -74,12 +79,21 @@ export default {
   flex-direction: column;
   gap: 16px;
   padding: 24px 0 80px;
+
+  // .wrapper's own side padding is overridden by the shorthand above; fine
+  // on desktop where the wrapper is centered with room either side, but
+  // on a phone it leaves the cards flush against the screen edges.
+  @include media_mobile {
+    padding: 20px 16px 80px;
+  }
 }
 
 .page-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .page-head__title {
@@ -118,6 +132,10 @@ export default {
   border-radius: 16px;
   box-shadow: 0 2px 4px 0 rgba($color-gray-500, .12), 0 0 1px 1px rgba($color-gray-500, .05);
   overflow-x: auto;
+
+  @include media_mobile {
+    overflow-x: visible;
+  }
 }
 
 .table {
@@ -148,13 +166,71 @@ export default {
       border-bottom: none;
     }
   }
+
+  // Same phone card as the other admin/manager lists: name across the top,
+  // contact email label-over-value beneath it (label re-shown via
+  // data-label, kept in sync with the real <th> text/i18n above), and the
+  // row actions collapsed into a dropdown at the bottom right.
+  @include media_mobile {
+    display: block;
+
+    thead {
+      display: none;
+    }
+
+    tbody {
+      display: block;
+
+      tr {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        column-gap: 14px;
+        row-gap: 10px;
+        padding: 16px;
+      }
+    }
+
+    td {
+      display: block;
+      min-width: 0;
+      padding: 0;
+      white-space: normal;
+      overflow-wrap: anywhere;
+
+      &[data-label]::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 2px;
+        font-weight: 700;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .03em;
+        color: $color-gray-500;
+      }
+
+      // Name — the card's heading, so full width and a touch heavier.
+      &:first-child {
+        grid-column: 1 / -1;
+        font-weight: 700;
+        font-size: 15px;
+      }
+    }
+  }
 }
 
 .actions {
   display: flex;
   gap: 8px;
 
+  @include media_mobile {
+    align-self: end;
+  }
+
   a, button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
     border: 1.5px solid $color-line;
     background: $color-white;
     border-radius: 8px;
@@ -162,6 +238,13 @@ export default {
     font-family: $font-content;
     font-weight: 700;
     font-size: 12px;
+    // Pinned so a <router-link> (inherits the page's line-height) and a
+    // <button> (UA default) render the same height side by side.
+    line-height: 1.4;
+    // One shared width so a row's Edit / Deactivate / Sales buttons read as
+    // a matched set instead of each hugging its own label; wide enough for
+    // the longest common label ("Deactivate"), longer ones just grow past it.
+    min-width: 92px;
     cursor: pointer;
     color: $color-ink;
     text-decoration: none;
