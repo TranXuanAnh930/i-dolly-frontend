@@ -19,11 +19,11 @@
         </thead>
         <tbody>
           <tr v-for="sale in sales" :key="sale.ticket_id">
-            <td>{{ formatDate(sale.created_at) }}</td>
-            <td>{{ tierLabel(sale.tier) }}</td>
-            <td>{{ sale.source === 'lottery' ? $t('managerEventSales.sourceLottery') : $t('managerEventSales.sourceDirect') }}</td>
-            <td>&yen;{{ sale.price.toLocaleString('en-US') }}</td>
-            <td>
+            <td :data-label="$t('managerEventSales.date')">{{ formatDate(sale.created_at) }}</td>
+            <td :data-label="$t('managerEventSales.tier')">{{ tierLabel(sale.tier) }}</td>
+            <td :data-label="$t('managerEventSales.source')">{{ sale.source === 'lottery' ? $t('managerEventSales.sourceLottery') : $t('managerEventSales.sourceDirect') }}</td>
+            <td :data-label="$t('managerEventSales.price')">&yen;{{ sale.price.toLocaleString('en-US') }}</td>
+            <td :data-label="$t('managerOrders.status')">
               <span class="status-badge" :class="`status-badge--${sale.status}`">{{ statusLabel(sale.status) }}</span>
             </td>
           </tr>
@@ -119,6 +119,13 @@ export default {
   flex-direction: column;
   gap: 16px;
   padding: 24px 0 80px;
+
+  // .wrapper's own side padding is overridden by the shorthand above; fine
+  // on desktop where the wrapper is centered with room either side, but
+  // on a phone it leaves the content flush against the screen edges.
+  @include media_mobile {
+    padding: 20px 16px 80px;
+  }
 }
 
 .back-link {
@@ -159,6 +166,10 @@ export default {
   border-radius: 16px;
   box-shadow: 0 2px 4px 0 rgba($color-gray-500, .12), 0 0 1px 1px rgba($color-gray-500, .05);
   overflow-x: auto;
+
+  @include media_mobile {
+    overflow-x: visible;
+  }
 }
 
 .table {
@@ -187,6 +198,48 @@ export default {
 
     &:last-child {
       border-bottom: none;
+    }
+  }
+
+  // A 5-column table has no honest way to fit an iPhone's width — rather
+  // than leave it as a horizontally-scrolling strip, each row becomes its
+  // own stacked card, with the column header re-shown per value via
+  // data-label (kept in sync with the real <th> text/i18n above).
+  @include media_mobile {
+    display: block;
+
+    thead {
+      display: none;
+    }
+
+    tbody {
+      display: block;
+
+      tr {
+        display: block;
+        padding: 14px 16px;
+      }
+    }
+
+    td {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 6px 0;
+      white-space: normal;
+      text-align: right;
+
+      &[data-label]::before {
+        content: attr(data-label);
+        flex: none;
+        font-weight: 700;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .03em;
+        color: $color-gray-500;
+        text-align: left;
+      }
     }
   }
 }

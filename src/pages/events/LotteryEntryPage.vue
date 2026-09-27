@@ -127,6 +127,7 @@ import { paletteColorForId, contrastTextColor } from '@/utils/palette'
 import { formatNumber } from '@/utils/format'
 import { withTax } from '@/utils/tax'
 import UiPageLoader from '@/components/progress-loaders/UiPageLoader.vue'
+import { setPageTitle } from '@/utils/pageTitle'
 
 export default {
   name: 'LotteryEntryPage',
@@ -183,7 +184,7 @@ export default {
     concert: {
       immediate: true,
       handler (concert) {
-        if (concert) document.title = `Lottery · ${concert.title} | I-Dolly`
+        if (concert) setPageTitle(() => `${this.$t('pageTitle.lotteryEntry')} · ${concert.title}`)
       }
     },
     id: {

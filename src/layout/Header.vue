@@ -110,19 +110,19 @@
             <li class="menu-item--desktop">
               <UiHeaderDropdownMenu/>
             </li>
-            <li v-if="$currentUser.id" class="menu-item--mobile">
+            <li v-if="$currentUser.id && !isStaff" class="menu-item--mobile">
               <router-link to="/history" class="menu__link">{{ $t('history.title') }}</router-link>
             </li>
             <li v-if="$currentUser.id" class="menu-item--mobile">
               <router-link to="/account" class="menu__link">{{ $t('menu.accountSettings.title') }}</router-link>
             </li>
-            <li class="menu-item--mobile">
+            <li v-if="!isStaff" class="menu-item--mobile">
               <router-link to="/contact" class="menu__link">{{ $t('menu.contact.title') }}</router-link>
             </li>
             <li class="menu-item--mobile">
               <router-link to="/guidelines" class="menu__link">{{ $t('menu.guidelines.title') }}</router-link>
             </li>
-            <li class="menu-item--mobile">
+            <li v-if="!isStaff" class="menu-item--mobile">
               <router-link to="/about" class="menu__link">{{ $t('menu.about.title') }}</router-link>
             </li>
           </ul>

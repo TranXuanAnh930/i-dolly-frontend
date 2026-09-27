@@ -19,34 +19,35 @@
         </thead>
         <tbody>
           <tr v-for="order in orders" :key="order.id">
-            <td>{{ formatDate(order.created_at) }}</td>
-            <td>
+            <td :data-label="$t('managerOrders.date')">{{ formatDate(order.created_at) }}</td>
+            <td class="buyer-cell" :data-label="$t('managerOrders.buyer')">
               <div class="buyer">
                 <span class="buyer__name">{{ order.buyer_name }}</span>
                 <span class="buyer__email">{{ order.buyer_email }}</span>
               </div>
             </td>
-            <td>
+            <td class="items-cell" :data-label="$t('managerOrders.items')">
               <ul class="items-list">
                 <li v-for="item in order.items" :key="item.product_id">{{ item.product_name }} × {{ item.quantity }}</li>
               </ul>
             </td>
-            <td>&yen;{{ order.company_total.toLocaleString('en-US') }}</td>
-            <td>
+            <td :data-label="$t('managerOrders.total')">&yen;{{ order.company_total.toLocaleString('en-US') }}</td>
+            <td :data-label="$t('managerOrders.status')">
               <span class="status-badge" :class="`status-badge--${order.status}`">{{ statusLabel(order.status) }}</span>
             </td>
-            <td>
+            <td :data-label="$t('managerOrders.shippingStatus')">
               <span v-if="order.shippingstatus" class="status-badge" :class="`status-badge--ship-${order.shippingstatus.status}`">{{ shippingStatusLabel(order.shippingstatus.status) }}</span>
               <span v-else>&mdash;</span>
             </td>
             <td class="actions">
-              <button
-                v-if="canShip(order)"
-                type="button"
-                :disabled="shippingId === order.id"
-                @click="shipOrder(order)">
-                {{ shippingId === order.id ? $t('common.saving') : $t('managerOrders.shipAction') }}
-              </button>
+              <UiRowActions v-if="canShip(order)">
+                <button
+                  type="button"
+                  :disabled="shippingId === order.id"
+                  @click="shipOrder(order)">
+                  {{ shippingId === order.id ? $t('common.saving') : $t('managerOrders.shipAction') }}
+                </button>
+              </UiRowActions>
             </td>
           </tr>
         </tbody>
@@ -67,6 +68,7 @@
 <script>
 import { format, parseISO } from 'date-fns'
 
+import UiRowActions from '@/components/UiRowActions.vue'
 import { OrderService } from '@/services/store/order.service'
 import { useToastStore } from '@/store/toast'
 
@@ -75,6 +77,8 @@ const SHIPPABLE_STATUSES = ['pending', 'processing']
 
 export default {
   name: 'ManagerOrdersPage',
+
+  components: { UiRowActions },
 
   data () {
     return {
@@ -165,6 +169,13 @@ export default {
   flex-direction: column;
   gap: 16px;
   padding: 24px 0 80px;
+
+  // .wrapper's own side padding is overridden by the shorthand above; fine
+  // on desktop where the wrapper is centered with room either side, but
+  // on a phone it leaves the content flush against the screen edges.
+  @include media_mobile {
+    padding: 20px 16px 80px;
+  }
 }
 
 .page-head {
@@ -192,6 +203,10 @@ export default {
   border-radius: 16px;
   box-shadow: 0 2px 4px 0 rgba($color-gray-500, .12), 0 0 1px 1px rgba($color-gray-500, .05);
   overflow-x: auto;
+
+  @include media_mobile {
+    overflow-x: visible;
+  }
 }
 
 .table {
@@ -223,6 +238,74 @@ export default {
       border-bottom: none;
     }
   }
+
+  // A 7-column table (two of them multi-line — buyer, items) has no honest
+  // way to fit an iPhone's width — rather than a horizontally-scrolling
+  // strip, each row becomes its own card, matching the other manager
+  // lists: buyer across the top as the card's heading, then the items
+  // (both pulled ahead of the date that precedes them in the markup via
+  // "order"), then date/total and status/shipping in two columns, label
+  // over value (re-shown via data-label, kept in sync with the real <th>
+  // text/i18n above), and the ship action in a dropdown at the bottom right.
+  @include media_mobile {
+    display: block;
+
+    thead {
+      display: none;
+    }
+
+    tbody {
+      display: block;
+
+      tr {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        column-gap: 14px;
+        row-gap: 10px;
+        padding: 16px;
+      }
+    }
+
+    td {
+      display: block;
+      min-width: 0;
+      padding: 0;
+      overflow-wrap: anywhere;
+
+      &[data-label]::before {
+        content: attr(data-label);
+        display: block;
+        font-weight: 700;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .03em;
+        color: $color-gray-500;
+        margin-bottom: 2px;
+      }
+    }
+
+    // td.* (not just .*) so these match ".table td"'s own specificity and
+    // win by source order, same as the other manager pages' cell overrides.
+    td.buyer-cell {
+      order: -2;
+      grid-column: 1 / -1;
+    }
+
+    td.items-cell {
+      order: -1;
+      grid-column: 1 / -1;
+    }
+
+    // Already-shipped/delivered orders have no action to offer — drop the
+    // empty cell rather than leave a blank grid row (plus its gap) behind.
+    td.actions {
+      grid-column: 2;
+
+      &:empty {
+        display: none;
+      }
+    }
+  }
 }
 
 .buyer {
@@ -230,11 +313,19 @@ export default {
   flex-direction: column;
   gap: 2px;
   white-space: nowrap;
+
+  @include media_mobile {
+    white-space: normal;
+  }
 }
 
 .buyer__name {
   font-weight: 700;
   color: $color-ink;
+
+  @include media_mobile {
+    font-size: 15px;
+  }
 }
 
 .buyer__email {

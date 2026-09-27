@@ -27,18 +27,18 @@
         </thead>
         <tbody>
           <tr v-for="entry in sortedResults" :key="entry.lottery_entry_id">
-            <td>{{ entry.email }}</td>
-            <td>{{ tierLabel(entry.tier) }}</td>
-            <td>
+            <td :data-label="$t('managerLotteryResults.email')">{{ entry.email }}</td>
+            <td :data-label="$t('managerLotteryResults.tier')">{{ tierLabel(entry.tier) }}</td>
+            <td :data-label="$t('managerLotteryResults.status')">
               <span class="status-badge" :class="`status-badge--${entry.status}`">
                 {{ entry.status === 'won' ? $t('managerLotteryResults.statusWon') : $t('managerLotteryResults.statusLost') }}
               </span>
             </td>
-            <td>
+            <td :data-label="$t('managerLotteryResults.paymentStatus')">
               <span v-if="entry.payment_status" class="status-badge" :class="`status-badge--${entry.payment_status}`">{{ paymentStatusLabel(entry.payment_status) }}</span>
               <span v-else>&mdash;</span>
             </td>
-            <td>{{ entry.payment_deadline_at ? formatDate(entry.payment_deadline_at) : '—' }}</td>
+            <td :data-label="$t('managerLotteryResults.paymentDeadline')">{{ entry.payment_deadline_at ? formatDate(entry.payment_deadline_at) : '—' }}</td>
           </tr>
         </tbody>
       </table>
@@ -147,6 +147,13 @@ export default {
   flex-direction: column;
   gap: 16px;
   padding: 24px 0 80px;
+
+  // .wrapper's own side padding is overridden by the shorthand above; fine
+  // on desktop where the wrapper is centered with room either side, but
+  // on a phone it leaves the content flush against the screen edges.
+  @include media_mobile {
+    padding: 20px 16px 80px;
+  }
 }
 
 .back-link {
@@ -214,6 +221,10 @@ export default {
   border-radius: 16px;
   box-shadow: 0 2px 4px 0 rgba($color-gray-500, .12), 0 0 1px 1px rgba($color-gray-500, .05);
   overflow-x: auto;
+
+  @include media_mobile {
+    overflow-x: visible;
+  }
 }
 
 .table {
@@ -242,6 +253,48 @@ export default {
 
     &:last-child {
       border-bottom: none;
+    }
+  }
+
+  // A 5-column table has no honest way to fit an iPhone's width — rather
+  // than leave it as a horizontally-scrolling strip, each row becomes its
+  // own stacked card, with the column header re-shown per value via
+  // data-label (kept in sync with the real <th> text/i18n above).
+  @include media_mobile {
+    display: block;
+
+    thead {
+      display: none;
+    }
+
+    tbody {
+      display: block;
+
+      tr {
+        display: block;
+        padding: 14px 16px;
+      }
+    }
+
+    td {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 6px 0;
+      white-space: normal;
+      text-align: right;
+
+      &[data-label]::before {
+        content: attr(data-label);
+        flex: none;
+        font-weight: 700;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .03em;
+        color: $color-gray-500;
+        text-align: left;
+      }
     }
   }
 }

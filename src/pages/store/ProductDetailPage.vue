@@ -103,6 +103,7 @@ import { withTax } from '@/utils/tax'
 import UiPageLoader from '@/components/progress-loaders/UiPageLoader.vue'
 import ReleaseCard from '@/components/ReleaseCard.vue'
 import NotFound from '@/pages/static/NotFound.vue'
+import { setPageTitle } from '@/utils/pageTitle'
 
 export default {
   name: 'ProductDetailPage',
@@ -216,7 +217,7 @@ export default {
   watch: {
     product (product) {
       if (!product) return
-      document.title = `${product.name} | I-Dolly`
+      setPageTitle(product.name)
     },
     id: {
       immediate: true,
