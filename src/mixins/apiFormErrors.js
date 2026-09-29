@@ -2,7 +2,8 @@ import { useToastStore } from '@/store/toast'
 
 // Shared by the manager/admin forms: turns an ApiError (services/apiError.js)
 // into what a form shows —
-//   - the translated message, returned for the form's own error banner,
+//   - the translated message, returned for the form's own error banner
+//     ('' for invalid_image, which only shows on the image field),
 //   - `apiErrorDetail`: the server's detail as secondary text, only for the
 //     generic bad_request / conflict / rule_violation form checks,
 //   - per-field messages next to their inputs, read with fieldError(name):
@@ -36,7 +37,8 @@ export default {
       if (error.code === 'forbidden' || error.code === 'fan_only_purchase') {
         useToastStore().add({ type: 'error', message: error.message })
       }
-      return error.message
+      // invalid_image is already shown next to the image field.
+      return error.code === 'invalid_image' ? '' : error.message
     }
   }
 }
