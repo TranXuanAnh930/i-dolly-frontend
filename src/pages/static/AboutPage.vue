@@ -16,23 +16,15 @@
       <div class="features">
         <div class="feature">
           <span class="feature__icon">
+            <!-- Shopping bag with a ticket inside: the store and tickets in one place. -->
             <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-              <path d="M5 6.5h10l-.8 8.5a1.5 1.5 0 0 1-1.5 1.4H7.3a1.5 1.5 0 0 1-1.5-1.4L5 6.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-              <path d="M7 6.5V5a3 3 0 0 1 6 0v1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M4.5 6.5h11l-.9 9.1a1.5 1.5 0 0 1-1.5 1.4H6.9a1.5 1.5 0 0 1-1.5-1.4L4.5 6.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+              <path d="M7.2 6.5V5.2a2.8 2.8 0 0 1 5.6 0v1.3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M7 10h6v1.2a.9.9 0 0 0 0 1.6V14H7v-1.2a.9.9 0 0 0 0-1.6V10Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
             </svg>
           </span>
-          <h3 class="feature__title">{{ $t('about.featureMarketplaceTitle') }}</h3>
-          <p class="feature__body">{{ $t('about.featureMarketplaceBody') }}</p>
-        </div>
-        <div class="feature">
-          <span class="feature__icon">
-            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-              <path d="M3 7.5V6a1.5 1.5 0 0 1 1.5-1.5h11A1.5 1.5 0 0 1 17 6v1.5a1.5 1.5 0 0 0 0 3V14a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 14v-3.5a1.5 1.5 0 0 0 0-3Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-              <path d="M11 5v10" stroke="currentColor" stroke-width="1.5" stroke-dasharray="1.6 1.6" stroke-linecap="round"/>
-            </svg>
-          </span>
-          <h3 class="feature__title">{{ $t('about.featureTicketsTitle') }}</h3>
-          <p class="feature__body">{{ $t('about.featureTicketsBody') }}</p>
+          <h3 class="feature__title">{{ $t('about.featureShopTitle') }}</h3>
+          <p class="feature__body">{{ $t('about.featureShopBody') }}</p>
         </div>
         <div class="feature">
           <span class="feature__icon">
@@ -54,6 +46,17 @@
           </span>
           <h3 class="feature__title">{{ $t('about.featureEmailTitle') }}</h3>
           <p class="feature__body">{{ $t('about.featureEmailBody') }}</p>
+        </div>
+        <div class="feature">
+          <span class="feature__icon">
+            <!-- Speech bubble with a sparkle: AI answers on the contact page. -->
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path d="M4.5 3.5h11A1.5 1.5 0 0 1 17 5v7.5a1.5 1.5 0 0 1-1.5 1.5H9l-3.5 3v-3h-1A1.5 1.5 0 0 1 3 12.5V5a1.5 1.5 0 0 1 1.5-1.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+              <path d="M10 5.8c.3 1.6 1.1 2.4 2.7 2.7-1.6.3-2.4 1.1-2.7 2.7-.3-1.6-1.1-2.4-2.7-2.7 1.6-.3 2.4-1.1 2.7-2.7Z" fill="currentColor"/>
+            </svg>
+          </span>
+          <h3 class="feature__title">{{ $t('about.featureAiFaqTitle') }}</h3>
+          <p class="feature__body">{{ $t('about.featureAiFaqBody') }}</p>
         </div>
       </div>
 
