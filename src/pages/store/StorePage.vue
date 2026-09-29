@@ -13,8 +13,10 @@
 
       <UiPageLoader v-if="isLoading"/>
 
-      <template v-else>
-        <div class="filter-card">
+      <!-- A failed load already shows fetch-error above — no filters, count
+           or "no matches" state, which would blame filters that aren't set. -->
+      <template v-else-if="!fetchError">
+        <div v-if="typeOptions.length > 1 || idolUnits.length" class="filter-card">
           <div class="filter-row" v-if="typeOptions.length > 1">
             <span class="filter-card__label">{{ $t('store.typeLabel') }}</span>
             <div class="chip-row">
@@ -48,6 +50,10 @@
 
         <div v-if="filteredReleases.length" class="grid">
           <ReleaseCard v-for="release in filteredReleases" :key="release.id" :release="release"/>
+        </div>
+
+        <div v-else-if="!products.length" class="empty-state">
+          <p class="empty-state__title">{{ $t('store.noItems') }}</p>
         </div>
 
         <div v-else class="empty-state">

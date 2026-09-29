@@ -485,15 +485,9 @@ export default {
   font-style: italic;
   font-size: clamp(20px, 4.6vw, 44px);
   line-height: 1.3;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-
-  @include media_mobile {
-    white-space: normal;
-    overflow: visible;
-    text-overflow: clip;
-  }
+  // Wrap rather than truncate: this is the one place the full concert title
+  // is shown, so an ellipsis here would hide part of it with no way to read it.
+  overflow-wrap: anywhere;
 }
 
 .hero__meta {
