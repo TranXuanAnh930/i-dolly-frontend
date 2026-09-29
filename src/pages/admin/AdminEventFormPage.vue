@@ -20,6 +20,7 @@
           <label class="field">
             <span class="field__label">{{ $t('managerEvents.titleLabel') }}</span>
             <input v-model="form.title" required>
+            <span v-if="fieldError('title')" class="field__error">{{ fieldError('title') }}</span>
           </label>
           <label class="field">
             <span class="field__label">{{ $t('managerEvents.venue') }}</span>
@@ -27,33 +28,39 @@
               <option value="" disabled>{{ $t('managerEventForm.selectVenuePlaceholder') }}</option>
               <option v-for="venue in venues" :key="venue.id" :value="venue.id">{{ venue.name }} · {{ venue.city }}</option>
             </select>
+            <span v-if="fieldError('venue_id')" class="field__error">{{ fieldError('venue_id') }}</span>
           </label>
           <label class="field">
             <span class="field__label">{{ $t('managerEventForm.capacity') }}</span>
             <input type="number" min="1" v-model.number="form.capacity" required>
+            <span v-if="fieldError('capacity')" class="field__error">{{ fieldError('capacity') }}</span>
           </label>
           <label class="field" v-if="isEditing">
             <span class="field__label">{{ $t('managerEvents.status') }}</span>
             <select v-model="form.status">
               <option v-for="status in statusOptions" :key="status" :value="status">{{ statusLabel(status) }}</option>
             </select>
+            <span v-if="fieldError('status')" class="field__error">{{ fieldError('status') }}</span>
           </label>
           <label class="field">
             <span class="field__label">{{ $t('managerEventForm.eventDateTime') }}</span>
             <input type="datetime-local" v-model="form.event_datetime" required>
+            <span v-if="fieldError('event_datetime')" class="field__error">{{ fieldError('event_datetime') }}</span>
           </label>
           <label class="field">
             <span class="field__label">{{ $t('managerEventForm.doorsOpen') }}</span>
             <input type="datetime-local" v-model="form.doors_open_at">
+            <span v-if="fieldError('doors_open_at')" class="field__error">{{ fieldError('doors_open_at') }}</span>
           </label>
         </div>
 
         <label class="field">
           <span class="field__label">{{ $t('common.description') }}</span>
           <textarea v-model="form.description" rows="4"></textarea>
+          <span v-if="fieldError('description')" class="field__error">{{ fieldError('description') }}</span>
         </label>
 
-        <p class="form-error" v-if="error">{{ error }}</p>
+        <p class="form-error" v-if="error">{{ error }}<span v-if="apiErrorDetail" class="form-error__detail">{{ apiErrorDetail }}</span></p>
 
         <div class="form-actions">
           <router-link :to="{ name: 'admin-events' }" class="cancel-btn">{{ $t('common.cancel') }}</router-link>
@@ -68,6 +75,7 @@
 import { ConcertsService } from '@/services/events/concerts.service'
 import { useCompaniesStore } from '@/store/members/companies'
 import { useToastStore } from '@/store/toast'
+import apiFormErrors from '@/mixins/apiFormErrors'
 
 const STATUS_OPTIONS = ['scheduled', 'on_sale', 'sold_out', 'completed', 'cancelled']
 
@@ -88,6 +96,8 @@ function emptyForm () {
 
 export default {
   name: 'AdminEventFormPage',
+
+  mixins: [apiFormErrors],
 
   props: {
     id: { type: String, default: null }
@@ -154,7 +164,7 @@ export default {
         this.concerts = response.data.concerts
         this.venues = response.data.venues
       } catch (error) {
-        if (!error.redirected) this.error = error.message
+        if (!error.redirected) this.error = this.applyApiError(error)
       }
     },
     statusLabel (status) {
@@ -168,6 +178,7 @@ export default {
       }
       this.saving = true
       this.error = ''
+      this.clearApiErrors()
       const fields = {
         title: this.form.title,
         venue_id: this.form.venue_id,
@@ -185,8 +196,9 @@ export default {
         }
         this.$router.push({ name: 'admin-events' })
       } catch (error) {
-        this.error = error.message
-        if (this.isEditing) useToastStore().add({ type: 'error', message: error.message })
+        this.error = this.applyApiError(error)
+        // applyApiError already toasted a permission error.
+        if (this.isEditing && !error.is('forbidden', 'fan_only_purchase')) useToastStore().add({ type: 'error', message: error.message })
       } finally {
         this.saving = false
       }
@@ -380,5 +392,20 @@ export default {
     opacity: .6;
     cursor: default;
   }
+}
+
+// Per-field API errors (422 fieldErrors, invalid_image) — see
+// mixins/apiFormErrors.js.
+.field__error {
+  font-family: $font-content;
+  font-size: 12px;
+  font-weight: 700;
+  color: $color-error;
+}
+
+.form-error__detail {
+  display: block;
+  margin-top: 4px;
+  font-weight: 400;
 }
 </style>

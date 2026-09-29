@@ -1,18 +1,22 @@
 import axios from 'axios'
 
-import { Http } from '../http.init'
-import { ResponseWrapper, ErrorWrapper } from '../util'
+import { Http, requestTimeout } from '../http.init'
+import { ResponseWrapper } from '../util'
 import { useAuthStore } from '@/store/auth/auth'
 import { useUserStore } from '@/store/auth/user'
 import $router from '@/router'
 
 import { API_URL } from '@/env'
+import { toApiError } from '../apiError'
 
 let BEARER = ''
 // The one refresh currently in flight, shared by every caller until it
 // settles — see refreshTokensOnce(). Module-level rather than store state: a
 // promise isn't reactive data, and there's only ever one session per app.
 let refreshInFlight = null
+// Set while an expired session is already being torn down, so a burst of
+// failing requests produces one logout + one redirect, not one each.
+let sessionExpiring = false
 
 export class AuthService {
   /**
@@ -28,12 +32,10 @@ export class AuthService {
   // of per-field validation errors — flatten that to a readable message.
   static async register ({ name, email, password }) {
     try {
-      const response = await axios.post(`${API_URL}/account/register`, { name, email, password })
+      const response = await axios.post(`${API_URL}/account/register`, { name, email, password }, { timeout: requestTimeout() })
       return new ResponseWrapper(response, response.data)
     } catch (error) {
-      const detail = error.response && error.response.data ? error.response.data.detail : undefined
-      const message = Array.isArray(detail) ? detail.map(d => d.msg).join(' ') : detail
-      throw new ErrorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
@@ -49,14 +51,14 @@ export class AuthService {
       // JSON body — the browser needs to be told to accept/store it.
       const response = await axios.post(`${API_URL}/account/login`,
         payload,
-        { withCredentials: true })
+        { withCredentials: true, timeout: requestTimeout() })
       _setAuthData({
         accessToken: response.data.access_token,
         exp: _parseTokenData(response.data.access_token).exp
       })
       return new ResponseWrapper(response, response.data)
     } catch (error) {
-      throw new ErrorWrapper(error, error.response && error.response.data ? error.response.data.detail : undefined)
+      throw toApiError(error)
     }
   }
 
@@ -65,7 +67,7 @@ export class AuthService {
       const response = await new Http({ auth: true }).post('profile/logout', {}, { withCredentials: true })
       return new ResponseWrapper(response, response.data)
     } catch (error) {
-      throw new ErrorWrapper(error, error.response && error.response.data ? error.response.data.detail : undefined)
+      throw toApiError(error)
     } finally {
       // clear the local session and redirect even if the logout request
       // itself failed (e.g. network error, already-expired token)
@@ -79,7 +81,7 @@ export class AuthService {
       // POST /account/refresh reads the refresh token straight off the
       // httpOnly cookie set at login — nothing to send in the body, just
       // withCredentials so the cookie rides along.
-      const response = await axios.post(`${API_URL}/account/refresh`, {}, { withCredentials: true })
+      const response = await axios.post(`${API_URL}/account/refresh`, {}, { withCredentials: true, timeout: requestTimeout() })
 
       _setAuthData({
         accessToken: response.data.access_token,
@@ -87,9 +89,12 @@ export class AuthService {
       })
       return new ResponseWrapper(response, response.data)
     } catch (error) {
-      _resetAuthData()
-      $router.push({ name: 'login' }).catch(() => {})
-      throw new ErrorWrapper(error, error.response && error.response.data ? error.response.data.detail : undefined)
+      const apiError = toApiError(error)
+      // invalid_refresh_token (or any other 401): the session is really
+      // gone. No response at all (offline, timeout) is not a reason to log
+      // the fan out — the caller just sees a network error.
+      if (apiError.status === 401) AuthService.expireSession()
+      throw apiError
     }
   }
 
@@ -103,6 +108,20 @@ export class AuthService {
   // flight started a second one. Sharing the promise until it settles means
   // exactly one refresh per expiry no matter how many requests pile up behind
   // it, and no artificial delay on the first one.
+  // Ends a session the server no longer accepts: clears it locally and
+  // sends the fan to login with ?redirect= back to where they were — once,
+  // however many in-flight requests discover it at the same moment.
+  static expireSession () {
+    if (sessionExpiring) return
+    sessionExpiring = true
+    _resetAuthData()
+    const current = $router.currentRoute.value
+    const redirect = current.name === 'login' ? current.query.redirect : current.fullPath
+    $router.push({ name: 'login', query: redirect && redirect !== '/' ? { redirect } : {} })
+      .catch(() => {})
+      .finally(() => { sessionExpiring = false })
+  }
+
   static refreshTokensOnce () {
     if (!refreshInFlight) {
       refreshInFlight = this.refreshTokens().finally(() => { refreshInFlight = null })
@@ -133,14 +152,6 @@ export class AuthService {
     }
 
     localStorage.setItem('refreshToken', status)
-  }
-
-  // Drops the local session and sends the visitor to login — for a request
-  // that still 401s after a refresh, or 401s with no refresh token to try
-  // (see BaseService.getStaffPage).
-  static expireSession () {
-    _resetAuthData()
-    $router.push({ name: 'login' }).catch(() => {})
   }
 
   // A 403 from a manager/admin-only endpoint means the server doesn't see

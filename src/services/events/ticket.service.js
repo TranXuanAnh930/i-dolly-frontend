@@ -1,4 +1,5 @@
 import { BaseService } from '../base.service'
+import { toApiError } from '../apiError'
 
 // POST /tickets/checkout — direct-sale purchase, fan-account-only
 // server-side (a manager/admin or guest attempt 403s via
@@ -18,8 +19,7 @@ export class TicketService extends BaseService {
       const response = await this.request({ auth: true }).post(`${this.entity}/checkout`, data)
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
@@ -35,24 +35,18 @@ export class TicketService extends BaseService {
       const response = await this.request({ auth: true }).post(`${this.entity}/${ticketId}/checkout`, data)
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
   // GET /tickets/mine — every ticket this fan has ever bought or been
-  // issued (each with ticket_type already populated). 404s on none yet —
-  // treated as an empty list like every other list endpoint here.
+  // issued (each with ticket_type already populated). 200 [] on none yet.
   static async fetchAll () {
     try {
       const response = await this.request({ auth: true }).get(`${this.entity}/mine`)
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      if (error.response && error.response.status === 404) {
-        return this.responseWrapper(error.response, [])
-      }
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
@@ -63,8 +57,7 @@ export class TicketService extends BaseService {
       const response = await this.request({ auth: true }).get(`${this.entity}/concert/${concertId}/sales`, { params: { page, limit } })
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 }

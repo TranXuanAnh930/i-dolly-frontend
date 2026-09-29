@@ -10,6 +10,7 @@
           <label class="field">
             <span class="field__label">{{ $t('common.name') }}</span>
             <input v-model="form.name" required>
+            <span v-if="fieldError('name')" class="field__error">{{ fieldError('name') }}</span>
           </label>
           <label class="field">
             <span class="field__label">{{ $t('managerProducts.category') }}</span>
@@ -17,27 +18,32 @@
               <option value="" disabled>{{ $t('managerProductForm.selectCategoryPlaceholder') }}</option>
               <option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option>
             </select>
+            <span v-if="fieldError('category_id')" class="field__error">{{ fieldError('category_id') }}</span>
           </label>
           <label class="field">
             <span class="field__label">{{ $t('managerProducts.price') }}</span>
             <input type="number" min="0.01" step="0.01" v-model.number="form.price" required>
+            <span v-if="fieldError('price')" class="field__error">{{ fieldError('price') }}</span>
           </label>
           <label class="field">
             <span class="field__label">{{ $t('managerProducts.quantity') }}</span>
             <input type="number" min="0" v-model.number="form.quantity" required>
+            <span v-if="fieldError('quantity')" class="field__error">{{ fieldError('quantity') }}</span>
           </label>
           <label class="field">
             <span class="field__label">{{ $t('common.photo') }}</span>
             <input type="file" accept="image/*" @change="onImageChange">
+            <span v-if="fieldError('image')" class="field__error">{{ fieldError('image') }}</span>
           </label>
         </div>
 
         <label class="field">
           <span class="field__label">{{ $t('common.description') }}</span>
           <textarea v-model="form.description" rows="4" required></textarea>
+          <span v-if="fieldError('description')" class="field__error">{{ fieldError('description') }}</span>
         </label>
 
-        <p class="form-error" v-if="error">{{ error }}</p>
+        <p class="form-error" v-if="error">{{ error }}<span v-if="apiErrorDetail" class="form-error__detail">{{ apiErrorDetail }}</span></p>
 
         <div class="form-actions">
           <router-link :to="{ name: 'admin-products' }" class="cancel-btn">{{ $t('common.cancel') }}</router-link>
@@ -51,6 +57,7 @@
 <script>
 import { ProductsService } from '@/services/store/products.service'
 import { useToastStore } from '@/store/toast'
+import apiFormErrors from '@/mixins/apiFormErrors'
 
 function emptyForm () {
   return { name: '', category_id: '', price: '', quantity: '', description: '' }
@@ -58,6 +65,8 @@ function emptyForm () {
 
 export default {
   name: 'AdminProductFormPage',
+
+  mixins: [apiFormErrors],
 
   props: {
     id: { type: String, default: null }
@@ -115,7 +124,7 @@ export default {
         this.products = response.data.products
         this.categories = response.data.categories
       } catch (error) {
-        if (!error.redirected) this.error = error.message
+        if (!error.redirected) this.error = this.applyApiError(error)
       }
     },
     onImageChange (event) {
@@ -128,6 +137,7 @@ export default {
       }
       this.saving = true
       this.error = ''
+      this.clearApiErrors()
       const fields = {
         name: this.form.name,
         category_id: this.form.category_id,
@@ -145,8 +155,9 @@ export default {
         }
         this.$router.push({ name: 'admin-products' })
       } catch (error) {
-        this.error = error.message
-        if (this.isEditing) useToastStore().add({ type: 'error', message: error.message })
+        this.error = this.applyApiError(error)
+        // applyApiError already toasted a permission error.
+        if (this.isEditing && !error.is('forbidden', 'fan_only_purchase')) useToastStore().add({ type: 'error', message: error.message })
       } finally {
         this.saving = false
       }
@@ -309,5 +320,20 @@ export default {
     opacity: .6;
     cursor: default;
   }
+}
+
+// Per-field API errors (422 fieldErrors, invalid_image) — see
+// mixins/apiFormErrors.js.
+.field__error {
+  font-family: $font-content;
+  font-size: 12px;
+  font-weight: 700;
+  color: $color-error;
+}
+
+.form-error__detail {
+  display: block;
+  margin-top: 4px;
+  font-weight: 400;
 }
 </style>

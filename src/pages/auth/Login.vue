@@ -12,7 +12,7 @@
       <form class="form" @submit.prevent="makeLogin">
         <label class="field">
           <span class="field__label">{{ $t('common.email') }}</span>
-          <div class="field__control" :class="{ 'field__control--error': error }">
+          <div class="field__control" :class="{ 'field__control--error': credentialsError }">
             <svg class="field__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
               <rect x="2" y="4" width="16" height="12" rx="2.5" stroke="currentColor" stroke-width="1.6"/>
               <path d="M3 5.5 10 11 17 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -23,7 +23,7 @@
 
         <label class="field">
           <span class="field__label">{{ $t('common.password') }}</span>
-          <div class="field__control" :class="{ 'field__control--error': error }">
+          <div class="field__control" :class="{ 'field__control--error': credentialsError }">
             <svg class="field__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
               <rect x="4" y="9" width="12" height="9" rx="2.2" stroke="currentColor" stroke-width="1.6"/>
               <path d="M6.5 9V6.5a3.5 3.5 0 0 1 7 0V9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
@@ -46,7 +46,9 @@
 
         <router-link to="/forgot-password" class="forgot-link">{{ $t('login.forgotPassword') }}</router-link>
 
-        <button type="submit" class="submit-btn" :disabled="loading">{{ loading ? $t('login.loggingIn') : $t('login.submit') }}</button>
+        <p v-if="errorText" class="form-error" role="alert">{{ errorText }}</p>
+
+        <button type="submit" class="submit-btn" :disabled="loading || retryIn > 0">{{ loading ? $t('login.loggingIn') : $t('login.submit') }}</button>
       </form>
 
       <p class="register-link">
@@ -72,34 +74,86 @@ export default {
       email: '',
       password: '',
       showPassword: false,
-      error: '',
-      loading: false
+      // The ApiError from the last failed attempt (message is translated on
+      // read, so it follows a language switch).
+      error: null,
+      loading: false,
+      // Rate limit: the moment the server said to try again, and a clock
+      // ticking once a second so the countdown re-renders.
+      retryUntil: 0,
+      now: Date.now(),
+      ticker: null
+    }
+  },
+
+  computed: {
+    retryIn () {
+      return Math.max(0, Math.ceil((this.retryUntil - this.now) / 1000))
+    },
+    credentialsError () {
+      return !!this.error && this.error.code === 'invalid_credentials'
+    },
+    errorText () {
+      if (!this.error) return ''
+      if (this.error.code === 'rate_limited') {
+        return this.retryIn > 0 ? this.$t('errors.rate_limited', { seconds: this.retryIn }) : ''
+      }
+      return this.error.message
     }
   },
 
   watch: {
     // Clears the red error state as soon as the fan edits either field,
-    // rather than leaving them stuck red until the next failed submit.
-    email () { this.error = '' },
-    password () { this.error = '' }
+    // rather than leaving them stuck red until the next failed submit — but
+    // a rate-limit countdown stays until it runs out.
+    email () { this.clearError() },
+    password () { this.clearError() }
+  },
+
+  beforeUnmount () {
+    clearInterval(this.ticker)
   },
 
   methods: {
     async makeLogin () {
-      if (this.loading) return
+      if (this.loading || this.retryIn > 0) return
       this.loading = true
       try {
         await AuthService.makeLogin({ username: this.email, password: this.password })
-        this.error = ''
+        this.error = null
         await useUserStore().getCurrent()
         useToastStore().add({ type: 'success', message: this.$t('login.successMessage', { name: useUserStore().currentUser.name }) })
-        await this.$router.push(this.landingRouteFor(useUserStore().currentUser.role))
+        await this.$router.push(this.redirectTarget() || this.landingRouteFor(useUserStore().currentUser.role))
       } catch (error) {
-        useToastStore().add({ type: 'error', message: error.message })
-        this.error = error.status === 404 ? this.$t('login.errorUserNotFound') : error.message
+        // invalid_credentials → "Email or password is incorrect"; everything
+        // else (rate limit, offline, server error) via its own message.
+        this.error = error
+        if (error.code === 'rate_limited') this.startCountdown(error.retryAfter)
       } finally {
         this.loading = false
       }
+    },
+    clearError () {
+      if (this.error && this.error.code === 'rate_limited' && this.retryIn > 0) return
+      this.error = null
+    },
+    startCountdown (seconds) {
+      this.retryUntil = Date.now() + (seconds || 60) * 1000
+      this.now = Date.now()
+      clearInterval(this.ticker)
+      this.ticker = setInterval(() => {
+        this.now = Date.now()
+        if (this.retryIn <= 0) {
+          clearInterval(this.ticker)
+          this.error = null
+        }
+      }, 1000)
+    },
+    // ?redirect= from AuthService.expireSession — back to where the session
+    // ran out. Only an in-app path, never an absolute/protocol-relative URL.
+    redirectTarget () {
+      const redirect = this.$route.query.redirect
+      return typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : null
     },
     // Managers/admins land straight in their own working area rather than
     // the public storefront, since that's what they log in to do.
@@ -298,6 +352,16 @@ export default {
   &:hover {
     color: $color-gray-500;
   }
+}
+
+.form-error {
+  background: #fdeaf1;
+  color: $color-error;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-family: $font-content;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .forgot-link {

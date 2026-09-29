@@ -46,10 +46,11 @@ export const useNotificationStore = defineStore('notifications', {
         this.unreadCount = response.data.count
         if (this.unreadCount > previous) await this.fetchMine()
       } catch (error) {
-        // A 429 here just means this poll cadence overlapped with another
-        // tab's (or itself) — not a real error per api-spec.md §7, so it's
-        // swallowed rather than surfaced like every other action's errors.
-        if (error.status === 429) return
+        // Background polling stays silent: a 429 just means this cadence
+        // overlapped another tab's (not a real error per api-spec.md §7),
+        // and a network error (offline, cold start) fixes itself by the
+        // next tick.
+        if (error.code === 'rate_limited' || error.isNetworkError) return
         this.error = error.message
       }
     },

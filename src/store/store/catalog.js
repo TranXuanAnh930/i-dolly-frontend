@@ -79,15 +79,9 @@ export const useCatalogStore = defineStore('catalog', {
           this.loaded = true
         })
         .catch(error => {
-          // An empty catalog 404s rather than returning an empty list (this
-          // API's convention for every collection — see base.service.js),
-          // which isn't an error state for this store.
-          if (error.status === 404) {
-            this.products = []
-            this.loaded = true
-          } else {
-            this.error = error.message
-          }
+          // An empty catalog is 200 with an empty list, so anything that
+          // lands here is a real failure.
+          this.error = error.message
         })
         .finally(() => {
           this.loading = false

@@ -70,6 +70,8 @@
           </label>
         </template>
 
+        <p class="form-error" v-if="error">{{ error }}</p>
+
         <div class="form-actions">
           <button v-if="!isEditing" type="button" class="back-btn" @click="step = 1">&larr; {{ $t('ticketPurchase.back') }}</button>
           <button type="button" class="continue-btn" :disabled="!canProceedPreferences" @click="step = 3">{{ $t('lotteryEntry.reviewEntry') }} →</button>
@@ -95,7 +97,7 @@
 
         <div class="form-actions">
           <button type="button" class="back-btn" :disabled="submitting" @click="step = 2">&larr; {{ $t('ticketPurchase.back') }}</button>
-          <button type="button" class="continue-btn" :disabled="submitting" @click="confirmEntry">{{ submitting ? $t('common.saving') : (isEditing ? $t('lotteryEntry.updateEntry') : $t('lotteryEntry.confirmEntry')) }}</button>
+          <button type="button" class="continue-btn" :disabled="submitting || entryBlocked" @click="confirmEntry">{{ submitting ? $t('common.saving') : (isEditing ? $t('lotteryEntry.updateEntry') : $t('lotteryEntry.confirmEntry')) }}</button>
         </div>
       </div>
 
@@ -155,6 +157,10 @@ export default {
       lockedTierIds: [],
       isEditing: false,
       submitting: false,
+      // Set when the server says this entry can't go through at all right
+      // now (window not open / closed, campaign drawn or cancelled, ranking
+      // locked) — retrying can't help, so the confirm button stays off.
+      entryBlocked: false,
       error: ''
     }
   },
@@ -297,6 +303,7 @@ export default {
     // later ranks are left alone — compaction just shifts them up to fill
     // the gap instead of erasing them.
     onSelectChange (i) {
+      if (!this.entryBlocked) this.error = ''
       if (this.choices[i]) this.clearFrom(i + 1)
       this.compactChoices()
     },
@@ -338,10 +345,31 @@ export default {
         useToastStore().add({ type: 'success', message: this.$t(successKey) })
         this.step = 4
       } catch (error) {
-        this.error = error.message
-        useToastStore().add({ type: 'error', message: error.message })
+        await this.handleEntryError(error)
       } finally {
         this.submitting = false
+      }
+    },
+    async handleEntryError (error) {
+      this.error = error.message
+      if (error.is('entries_not_open', 'entries_closed', 'campaign_not_open', 'campaign_cancelled', 'ranking_locked')) {
+        this.entryBlocked = true
+        return
+      }
+      // Something about the ranking itself needs fixing — back to that step
+      // with the reason still shown.
+      if (error.is('tier_already_applied', 'lottery_preference_required', 'duplicate_ranked_tier')) {
+        this.step = 2
+        return
+      }
+      // Already entered (e.g. from another tab): reload so the page shows
+      // the entry that exists.
+      if (error.code === 'lottery_entry_cap_exceeded') {
+        await this.fetchPage()
+        return
+      }
+      if (error.is('forbidden', 'fan_only_purchase')) {
+        useToastStore().add({ type: 'error', message: error.message })
       }
     }
   }

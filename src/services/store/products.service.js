@@ -1,5 +1,6 @@
 import { BaseService } from '../base.service'
 import { toFormData } from '@/utils/formData'
+import { toApiError } from '../apiError'
 
 // GET /products/all, GET /products/{id} — public, no auth. See
 // docs/api-spec.md §5 (Marketplace) in the E-commerce backend repo for the
@@ -24,8 +25,7 @@ export class ProductsService extends BaseService {
       const response = await this.request({ auth: true }).post(`${this.entity}/add_product`, toFormData(fields))
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
@@ -40,8 +40,7 @@ export class ProductsService extends BaseService {
       const response = await this.request({ auth: true }).post(`${this.entity}/add_with_detail`, toFormData(fields))
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
@@ -52,8 +51,7 @@ export class ProductsService extends BaseService {
       const response = await this.request({ auth: true }).post(`${this.entity}/${id}/image`, toFormData({ image: file }))
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
@@ -65,8 +63,7 @@ export class ProductsService extends BaseService {
       const response = await this.request().get(`${this.entity}/store-page`)
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
@@ -78,8 +75,7 @@ export class ProductsService extends BaseService {
       const response = await this.request().get(`${this.entity}/${id}/detail`)
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
@@ -116,8 +112,7 @@ export class ProductsService extends BaseService {
       const response = await this.request({ auth: true }).get(`${this.entity}/${id}/sales`, { params: { page, limit } })
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 }

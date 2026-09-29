@@ -33,7 +33,8 @@
         <div class="field-grid">
           <label class="field field--full">
             <span class="field__label">{{ $t('account.currentPassword') }}</span>
-            <input :type="showPasswords ? 'text' : 'password'" v-model="password.current" autocomplete="current-password">
+            <input :type="showPasswords ? 'text' : 'password'" v-model="password.current" autocomplete="current-password" :class="{ 'is-invalid': currentPasswordError }">
+            <span v-if="currentPasswordError" class="field__error">{{ currentPasswordError }}</span>
           </label>
         </div>
 
@@ -124,6 +125,8 @@ export default {
       },
       showPasswords: false,
       passwordError: '',
+      // incorrect_password lands on the current-password field itself.
+      currentPasswordError: '',
       passwordSaving: false,
       address: emptyAddress(),
       addressError: '',
@@ -134,6 +137,12 @@ export default {
   computed: {
     isStaff () {
       return ['manager', 'admin'].includes(this.$currentUser.role)
+    }
+  },
+
+  watch: {
+    'password.current' () {
+      this.currentPasswordError = ''
     }
   },
 
@@ -165,15 +174,15 @@ export default {
       }
 
       this.passwordError = ''
+      this.currentPasswordError = ''
       this.passwordSaving = true
       try {
         await UsersService.changePassword(this.password.current, this.password.next)
         this.password = { current: '', next: '', confirm: '' }
         useToastStore().add({ type: 'success', message: this.$t('account.passwordChanged') })
       } catch (error) {
-        // Backend 400s with "Incorrect old password" — surface that
-        // directly rather than a generic message.
-        this.passwordError = error.message
+        if (error.code === 'incorrect_password') this.currentPasswordError = error.message
+        else this.passwordError = error.message
       } finally {
         this.passwordSaving = false
       }
@@ -416,4 +425,15 @@ export default {
   font-weight: 700;
 }
 
+
+.field input.is-invalid {
+  border-color: $color-error;
+}
+
+.field__error {
+  font-family: $font-content;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: $color-error;
+}
 </style>

@@ -1,4 +1,5 @@
 import { BaseService } from '../base.service'
+import { toApiError } from '../apiError'
 
 // GET /concerts/all, GET /concerts/{id} — public, no auth. See
 // docs/api-spec.md §4 (Events & Ticketing) in the E-commerce backend repo
@@ -18,8 +19,7 @@ export class ConcertsService extends BaseService {
       const response = await this.request().get(`${this.entity}/events-page`)
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
@@ -34,8 +34,7 @@ export class ConcertsService extends BaseService {
       const response = await this.request({ auth: true }).get(`${this.entity}/${id}/detail`)
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
@@ -63,8 +62,7 @@ export class ConcertsService extends BaseService {
       const response = await this.request({ auth: true }).put(`${this.entity}/lottery-draw/${id}`)
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 }

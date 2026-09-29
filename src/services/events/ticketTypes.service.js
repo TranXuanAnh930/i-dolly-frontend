@@ -1,4 +1,5 @@
 import { BaseService } from '../base.service'
+import { toApiError } from '../apiError'
 
 // GET /ticket_types/concert/{concert_id} — public, no auth. This entity has
 // no `/all` route (ticket types are always scoped to one concert). See
@@ -16,8 +17,7 @@ export class TicketTypesService extends BaseService {
       const response = await this.request().get(`${this.entity}/concert/${concertId}`)
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
@@ -29,8 +29,7 @@ export class TicketTypesService extends BaseService {
       const response = await this.request().get(`${this.entity}/${id}`)
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 }

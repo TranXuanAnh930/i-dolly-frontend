@@ -10,18 +10,21 @@
           <label class="field">
             <span class="field__label">{{ $t('common.name') }}</span>
             <input v-model="form.name" required>
+            <span v-if="fieldError('name')" class="field__error">{{ fieldError('name') }}</span>
           </label>
           <label class="field">
             <span class="field__label">{{ $t('common.email') }}</span>
             <input type="email" v-model="form.email" required>
+            <span v-if="fieldError('email')" class="field__error">{{ fieldError('email') }}</span>
           </label>
           <label class="field">
             <span class="field__label">{{ $t('common.password') }}</span>
             <input type="password" v-model="form.password" minlength="6" required>
+            <span v-if="fieldError('password')" class="field__error">{{ fieldError('password') }}</span>
           </label>
         </div>
 
-        <p class="form-error" v-if="error">{{ error }}</p>
+        <p class="form-error" v-if="error">{{ error }}<span v-if="apiErrorDetail" class="form-error__detail">{{ apiErrorDetail }}</span></p>
 
         <div class="form-actions">
           <router-link :to="{ name: 'admin-companies' }" class="cancel-btn">{{ $t('common.cancel') }}</router-link>
@@ -35,9 +38,12 @@
 <script>
 import { useCompaniesStore } from '@/store/members/companies'
 import { useToastStore } from '@/store/toast'
+import apiFormErrors from '@/mixins/apiFormErrors'
 
 export default {
   name: 'AdminManagerAccountFormPage',
+
+  mixins: [apiFormErrors],
 
   props: {
     id: { type: String, required: true }
@@ -77,6 +83,7 @@ export default {
       }
       this.saving = true
       this.error = ''
+      this.clearApiErrors()
       try {
         await this.companiesStore.createManagerAccount({
           name: this.form.name,
@@ -87,7 +94,7 @@ export default {
         useToastStore().add({ type: 'success', message: this.$t('adminManagerAccountForm.successMessage', { email: this.form.email }) })
         this.$router.push({ name: 'admin-companies' })
       } catch (error) {
-        this.error = error.message
+        this.error = this.applyApiError(error)
       } finally {
         this.saving = false
       }
@@ -240,5 +247,20 @@ export default {
     opacity: .6;
     cursor: default;
   }
+}
+
+// Per-field API errors (422 fieldErrors, invalid_image) — see
+// mixins/apiFormErrors.js.
+.field__error {
+  font-family: $font-content;
+  font-size: 12px;
+  font-weight: 700;
+  color: $color-error;
+}
+
+.form-error__detail {
+  display: block;
+  margin-top: 4px;
+  font-weight: 400;
 }
 </style>

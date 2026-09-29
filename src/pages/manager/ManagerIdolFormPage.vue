@@ -11,12 +11,14 @@
           <img v-if="imagePreviewUrl" :src="imagePreviewUrl" class="image-preview" alt="">
           <input type="file" accept="image/*" @change="onImageChange">
           <span class="field__hint" v-if="isEditing && !imageFile">{{ $t('common.imageKeptHint') }}</span>
+          <span v-if="fieldError('image')" class="field__error">{{ fieldError('image') }}</span>
         </label>
 
         <div class="field-grid">
           <label class="field">
             <span class="field__label">{{ $t('common.name') }}</span>
             <input v-model="form.name" required>
+            <span v-if="fieldError('name')" class="field__error">{{ fieldError('name') }}</span>
           </label>
           <label class="field">
             <span class="field__label">{{ $t('managerIdols.group') }}</span>
@@ -24,14 +26,17 @@
               <option value="">{{ $t('common.none') }}</option>
               <option v-for="group in myGroups" :key="group.id" :value="group.id">{{ group.name }}{{ !group.is_active ? ` (${$t('common.statusInactive')})` : '' }}</option>
             </select>
+            <span v-if="fieldError('group_id')" class="field__error">{{ fieldError('group_id') }}</span>
           </label>
           <label class="field">
             <span class="field__label">{{ $t('managerIdolForm.dateOfBirth') }}</span>
             <input type="date" v-model="form.date_of_birth">
+            <span v-if="fieldError('date_of_birth')" class="field__error">{{ fieldError('date_of_birth') }}</span>
           </label>
           <label class="field">
             <span class="field__label">{{ $t('idolDetail.hometown') }}</span>
             <input v-model="form.hometown">
+            <span v-if="fieldError('hometown')" class="field__error">{{ fieldError('hometown') }}</span>
           </label>
           <label class="field">
             <span class="field__label">{{ $t('managerIdolForm.color') }}</span>
@@ -39,19 +44,22 @@
               <option value="">{{ $t('common.none') }}</option>
               <option v-for="color in colors" :key="color.id" :value="color.id">{{ color.name }}</option>
             </select>
+            <span v-if="fieldError('color_id')" class="field__error">{{ fieldError('color_id') }}</span>
           </label>
         </div>
 
         <label class="field">
           <span class="field__label">{{ $t('managerIdolForm.shortIntro') }}</span>
           <input v-model="form.short_intro" maxlength="500">
+          <span v-if="fieldError('short_intro')" class="field__error">{{ fieldError('short_intro') }}</span>
         </label>
         <label class="field">
           <span class="field__label">{{ $t('managerIdolForm.longDescription') }}</span>
           <textarea v-model="form.long_description" rows="4"></textarea>
+          <span v-if="fieldError('long_description')" class="field__error">{{ fieldError('long_description') }}</span>
         </label>
 
-        <p class="form-error" v-if="error">{{ error }}</p>
+        <p class="form-error" v-if="error">{{ error }}<span v-if="apiErrorDetail" class="form-error__detail">{{ apiErrorDetail }}</span></p>
 
         <div class="form-actions">
           <router-link :to="{ name: 'manager-idols' }" class="cancel-btn">{{ $t('common.cancel') }}</router-link>
@@ -66,6 +74,7 @@
 import { IdolsService } from '@/services/members/idols.service'
 import { useToastStore } from '@/store/toast'
 import { resolveMediaUrl } from '@/utils/media'
+import apiFormErrors from '@/mixins/apiFormErrors'
 
 function emptyForm () {
   return {
@@ -81,6 +90,8 @@ function emptyForm () {
 
 export default {
   name: 'ManagerIdolFormPage',
+
+  mixins: [apiFormErrors],
 
   props: {
     id: { type: String, default: null }
@@ -171,7 +182,7 @@ export default {
         this.groups = response.data.groups
         this.colors = response.data.colors
       } catch (error) {
-        if (!error.redirected) this.error = error.message
+        if (!error.redirected) this.error = this.applyApiError(error)
       }
     },
     onImageChange (event) {
@@ -186,6 +197,7 @@ export default {
       }
       this.saving = true
       this.error = ''
+      this.clearApiErrors()
       const fields = {
         name: this.form.name,
         group_id: this.form.group_id || null,
@@ -205,8 +217,9 @@ export default {
         }
         this.$router.push({ name: 'manager-idols' })
       } catch (error) {
-        this.error = error.message
-        if (this.isEditing) useToastStore().add({ type: 'error', message: error.message })
+        this.error = this.applyApiError(error)
+        // applyApiError already toasted a permission error.
+        if (this.isEditing && !error.is('forbidden', 'fan_only_purchase')) useToastStore().add({ type: 'error', message: error.message })
       } finally {
         this.saving = false
       }
@@ -393,5 +406,20 @@ export default {
     opacity: .6;
     cursor: default;
   }
+}
+
+// Per-field API errors (422 fieldErrors, invalid_image) — see
+// mixins/apiFormErrors.js.
+.field__error {
+  font-family: $font-content;
+  font-size: 12px;
+  font-weight: 700;
+  color: $color-error;
+}
+
+.form-error__detail {
+  display: block;
+  margin-top: 4px;
+  font-weight: 400;
 }
 </style>

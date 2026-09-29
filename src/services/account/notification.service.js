@@ -1,4 +1,5 @@
 import { BaseService } from '../base.service'
+import { toApiError } from '../apiError'
 
 // Wraps /notifications — see docs/api-spec.md §7 in the backend repo for
 // the full polling contract: no WebSocket/SSE layer exists, so a client
@@ -22,24 +23,18 @@ export class NotificationService extends BaseService {
       const response = await this.request({ auth: true }).get(`${this.entity}/unread-count`)
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
-  // GET /notifications/mine — auth required. 404s when the fan has no
-  // notifications at all (also true for unreadOnly with zero matches) —
-  // treated as an empty list like every other list endpoint here.
+  // GET /notifications/mine — auth required. 200 [] when there's nothing
+  // (also for unreadOnly with zero matches).
   static async getMine ({ unreadOnly = false } = {}) {
     try {
       const response = await this.request({ auth: true }).get(`${this.entity}/mine`, { params: { unread_only: unreadOnly } })
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      if (error.response && error.response.status === 404) {
-        return this.responseWrapper(error.response, [])
-      }
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
@@ -50,8 +45,7 @@ export class NotificationService extends BaseService {
       const response = await this.request({ auth: true }).post(`${this.entity}/${id}/read`)
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
@@ -61,8 +55,7 @@ export class NotificationService extends BaseService {
       const response = await this.request({ auth: true }).post(`${this.entity}/read-all`)
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 }

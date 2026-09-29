@@ -10,19 +10,22 @@
           <label class="field">
             <span class="field__label">{{ $t('common.name') }}</span>
             <input v-model="form.name" required>
+            <span v-if="fieldError('name')" class="field__error">{{ fieldError('name') }}</span>
           </label>
           <label class="field">
             <span class="field__label">{{ $t('managerGroups.debutDate') }}</span>
             <input type="date" v-model="form.debut_date">
+            <span v-if="fieldError('debut_date')" class="field__error">{{ fieldError('debut_date') }}</span>
           </label>
         </div>
 
         <label class="field">
           <span class="field__label">{{ $t('common.description') }}</span>
           <textarea v-model="form.description" rows="4"></textarea>
+          <span v-if="fieldError('description')" class="field__error">{{ fieldError('description') }}</span>
         </label>
 
-        <p class="form-error" v-if="error">{{ error }}</p>
+        <p class="form-error" v-if="error">{{ error }}<span v-if="apiErrorDetail" class="form-error__detail">{{ apiErrorDetail }}</span></p>
 
         <div class="form-actions">
           <router-link :to="{ name: 'manager-groups' }" class="cancel-btn">{{ $t('common.cancel') }}</router-link>
@@ -36,6 +39,7 @@
 <script>
 import { GroupsService } from '@/services/members/groups.service'
 import { useToastStore } from '@/store/toast'
+import apiFormErrors from '@/mixins/apiFormErrors'
 
 function emptyForm () {
   return { name: '', debut_date: '', description: '' }
@@ -43,6 +47,8 @@ function emptyForm () {
 
 export default {
   name: 'ManagerGroupFormPage',
+
+  mixins: [apiFormErrors],
 
   props: {
     id: { type: String, default: null }
@@ -97,7 +103,7 @@ export default {
         const response = await GroupsService.getManagerGroupsPage()
         this.groups = response.data.groups
       } catch (error) {
-        if (!error.redirected) this.error = error.message
+        if (!error.redirected) this.error = this.applyApiError(error)
       }
     },
     async save () {
@@ -107,6 +113,7 @@ export default {
       }
       this.saving = true
       this.error = ''
+      this.clearApiErrors()
       const fields = {
         name: this.form.name,
         debut_date: this.form.debut_date || null,
@@ -121,8 +128,9 @@ export default {
         }
         this.$router.push({ name: 'manager-groups' })
       } catch (error) {
-        this.error = error.message
-        if (this.isEditing) useToastStore().add({ type: 'error', message: error.message })
+        this.error = this.applyApiError(error)
+        // applyApiError already toasted a permission error.
+        if (this.isEditing && !error.is('forbidden', 'fan_only_purchase')) useToastStore().add({ type: 'error', message: error.message })
       } finally {
         this.saving = false
       }
@@ -280,5 +288,20 @@ export default {
     opacity: .6;
     cursor: default;
   }
+}
+
+// Per-field API errors (422 fieldErrors, invalid_image) — see
+// mixins/apiFormErrors.js.
+.field__error {
+  font-family: $font-content;
+  font-size: 12px;
+  font-weight: 700;
+  color: $color-error;
+}
+
+.form-error__detail {
+  display: block;
+  margin-top: 4px;
+  font-weight: 400;
 }
 </style>
