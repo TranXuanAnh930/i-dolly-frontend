@@ -202,8 +202,6 @@ export default {
     sub: '全ユニットのディスコグラフィーに加え、ペンライトやグッズもレーベルから直接。財布の準備はいいですか。',
     typeLabel: '種類',
     typeAll: 'すべて',
-    typeAlbum: 'アルバム',
-    typeSingle: 'シングル',
     unitLabel: 'ユニット',
     resultCount: '{count}件のアイテム',
     noResults: '条件に一致するアイテムが見つかりません。',
@@ -980,5 +978,20 @@ export default {
     creating: '作成中…',
     errorRequired: '名前・メールアドレス・6文字以上のパスワードが必要です。',
     successMessage: '{email}宛にマネージャーアカウントを作成しました。'
+  },
+  // Backend enum values (ticket_types.tier, product category names) mapped to
+  // display labels — see utils/labels.js.
+  labels: {
+    tier: {
+      vip: 'VIP',
+      premium: 'プレミアム',
+      regular: 'レギュラー'
+    },
+    category: {
+      album: 'アルバム',
+      single: 'シングル',
+      ep: 'EP',
+      merch: 'グッズ'
+    }
   }
 }

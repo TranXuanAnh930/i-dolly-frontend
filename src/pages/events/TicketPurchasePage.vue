@@ -252,6 +252,7 @@ import { withTax } from '@/utils/tax'
 import VenueSeatMap from '@/components/VenueSeatMap.vue'
 import UiPageLoader from '@/components/progress-loaders/UiPageLoader.vue'
 import { setPageTitle } from '@/utils/pageTitle'
+import { tierLabel } from '@/utils/labels'
 
 export default {
   name: 'TicketPurchasePage',
@@ -371,7 +372,7 @@ export default {
       return { 'is-active': this.step === n, 'is-done': this.step > n }
     },
     tierLabel (tier) {
-      return tier ? tier.tier.charAt(0).toUpperCase() + tier.tier.slice(1) : ''
+      return tier ? tierLabel(tier.tier) : ''
     },
     remaining (tier) {
       return Math.max(0, tier.total_quantity - tier.sold_quantity)

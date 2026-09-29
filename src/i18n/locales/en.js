@@ -202,8 +202,6 @@ export default {
     sub: 'Every unit\'s discography, plus lightsticks and merch, straight from the label. Your wallet has been warned.',
     typeLabel: 'Type',
     typeAll: 'All',
-    typeAlbum: 'Album',
-    typeSingle: 'Single',
     unitLabel: 'Unit',
     resultCount: '{count} items',
     noResults: 'No items match those filters.',
@@ -980,5 +978,20 @@ export default {
     creating: 'Creating…',
     errorRequired: 'Name, email and a password of at least 6 characters are required.',
     successMessage: 'Manager account created for {email}.'
+  },
+  // Backend enum values (ticket_types.tier, product category names) mapped to
+  // display labels — see utils/labels.js.
+  labels: {
+    tier: {
+      vip: 'VIP',
+      premium: 'Premium',
+      regular: 'Regular'
+    },
+    category: {
+      album: 'Album',
+      single: 'Single',
+      ep: 'EP',
+      merch: 'Merch'
+    }
   }
 }

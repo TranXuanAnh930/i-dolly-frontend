@@ -46,6 +46,7 @@
 import { format, parseISO } from 'date-fns'
 
 import { TicketService } from '@/services/events/ticket.service'
+import { tierLabel } from '@/utils/labels'
 
 const PAGE_SIZE = 10
 
@@ -103,7 +104,7 @@ export default {
       return iso ? format(parseISO(iso), 'MMM d, yyyy · h:mm a') : '—'
     },
     tierLabel (tier) {
-      return tier ? tier.charAt(0).toUpperCase() + tier.slice(1) : ''
+      return tierLabel(tier)
     },
     statusLabel (status) {
       const key = 'status' + status.split('_').map(part => part[0].toUpperCase() + part.slice(1)).join('')

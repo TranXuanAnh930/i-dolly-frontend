@@ -173,6 +173,7 @@ import VenueSeatMap from '@/components/VenueSeatMap.vue'
 import UiPageLoader from '@/components/progress-loaders/UiPageLoader.vue'
 import NotFound from '@/pages/static/NotFound.vue'
 import { setPageTitle } from '@/utils/pageTitle'
+import { tierLabel } from '@/utils/labels'
 
 export default {
   name: 'EventDetailPage',
@@ -419,7 +420,7 @@ export default {
       return { id: group.id, name: group.name, color: hex, textColor: contrastTextColor(hex) }
     },
     tierLabel (tier) {
-      return tier.tier.charAt(0).toUpperCase() + tier.tier.slice(1)
+      return tierLabel(tier.tier)
     },
     remaining (tier) {
       return Math.max(0, tier.total_quantity - tier.sold_quantity)

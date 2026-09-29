@@ -176,6 +176,7 @@ import { DirectSaleCampaignService } from '@/services/events/directSaleCampaign.
 import { useToastStore } from '@/store/toast'
 import { useLotteryDrawStore } from '@/store/events/lotteryDraw'
 import { formatNumber } from '@/utils/format'
+import { tierLabel } from '@/utils/labels'
 
 const STATUS_OPTIONS = ['scheduled', 'on_sale', 'sold_out', 'completed', 'cancelled']
 
@@ -363,7 +364,7 @@ export default {
       }
     },
     tierLabel (tier) {
-      return tier ? tier.charAt(0).toUpperCase() + tier.slice(1) : ''
+      return tierLabel(tier)
     },
     formatDate (iso) {
       return iso ? format(parseISO(iso), 'MMM d, yyyy · h:mm a') : '—'

@@ -35,6 +35,17 @@ export function formatEventDateTime (date) {
   return format(date, EVENT_DATE_TIME_FORMAT[currentLocale()], { locale: DATE_FNS_LOCALES[currentLocale()] })
 }
 
+// Same reasoning as EVENT_DATE_TIME_FORMAT, for a bare date (e.g. an album's
+// release date): "Aug 1, 2026" / "2026年8月1日", not "8月 1, 2026".
+const CALENDAR_DATE_FORMAT = {
+  en: 'MMM d, yyyy',
+  ja: 'yyyy年M月d日'
+}
+
+export function formatCalendarDate (date) {
+  return format(date, CALENDAR_DATE_FORMAT[currentLocale()], { locale: DATE_FNS_LOCALES[currentLocale()] })
+}
+
 export function formatNumber (value, options) {
   return new Intl.NumberFormat(INTL_LOCALES[currentLocale()], options).format(value)
 }

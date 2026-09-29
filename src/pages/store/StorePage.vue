@@ -62,6 +62,7 @@
 <script>
 import { ProductsService } from '@/services/store/products.service'
 import { paletteColorForId, contrastTextColor } from '@/utils/palette'
+import { categoryLabel } from '@/utils/labels'
 import UnitPill from '@/components/UnitPill.vue'
 import ReleaseCard from '@/components/ReleaseCard.vue'
 import UiPageLoader from '@/components/progress-loaders/UiPageLoader.vue'
@@ -140,8 +141,7 @@ export default {
       this.activeUnitIds = []
     },
     typeLabel (option) {
-      const key = { All: 'typeAll', Album: 'typeAlbum', Single: 'typeSingle' }[option]
-      return key ? this.$t(`store.${key}`) : option
+      return option === 'All' ? this.$t('store.typeAll') : categoryLabel(option)
     }
   }
 }

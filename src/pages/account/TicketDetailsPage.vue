@@ -56,6 +56,7 @@ import { useTicketsStore } from '@/store/events/tickets'
 import { useConcertsStore } from '@/store/events/concerts'
 import { formatDate, formatNumber } from '@/utils/format'
 import { withTax } from '@/utils/tax'
+import { tierLabel } from '@/utils/labels'
 
 export default {
   name: 'TicketDetailsPage',
@@ -88,7 +89,7 @@ export default {
     },
     tierLabel () {
       const tier = this.ticket && this.ticket.ticket_type.tier
-      return tier ? tier.charAt(0).toUpperCase() + tier.slice(1) : ''
+      return tierLabel(tier)
     },
     total () {
       return this.ticket ? withTax(this.ticket.ticket_type.price) : 0
