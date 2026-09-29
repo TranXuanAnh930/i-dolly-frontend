@@ -31,7 +31,6 @@
       <div v-else-if="helped" class="confirmation">
         <div class="confirmation__badge">✓</div>
         <h2 class="confirmation__title">{{ $t('contact.helpedTitle') }}</h2>
-        <p class="confirmation__note">{{ $t('contact.helpedNote') }}</p>
         <div class="confirmation__actions">
           <button type="button" class="confirmation__btn" @click="startOver">{{ $t('contact.askSomethingElse') }}</button>
           <router-link to="/events" class="confirmation__link">{{ $t('contact.backEvents') }}</router-link>
@@ -87,8 +86,9 @@
           <span v-if="fieldErrors.content" id="contact-content-error" class="field__error">{{ $t(fieldErrors.content.key, fieldErrors.content.params) }}</span>
         </label>
 
-        <!-- Optional instant answer. Never shows an error of its own and
-             never blocks Submit — skipping it entirely is always fine. -->
+        <!-- Check first: the only button until the FAQ has had a go. No answer
+             (or any failure, or "No") reveals Send beside it; an answer shows
+             the helpfulness prompt instead. -->
         <div class="instant" aria-live="polite">
           <template v-if="instant.status === 'shown'">
             <div class="instant__box">
@@ -105,25 +105,25 @@
               </div>
             </div>
           </template>
-
-          <template v-else-if="!instant.dismissed">
-            <button
-              type="button"
-              class="check-btn"
-              :disabled="!canCheckAnswer"
-              @click="checkForAnswer">
-              <span v-if="instant.status === 'loading'" class="spinner" aria-hidden="true"></span>
-              {{ instant.status === 'loading' ? $t('contact.aiChecking') : $t('contact.aiCheck') }}
-            </button>
-            <p class="instant__hint">{{ instant.status === 'loading' ? $t('contact.aiLoadingHint') : $t('contact.aiHint') }}</p>
-          </template>
+          <p v-else class="instant__hint">{{ $t(hintKey) }}</p>
         </div>
 
         <p class="form-error" v-if="submitError" :key="submitError.key">{{ $t(submitError.key) }}</p>
 
-        <button type="submit" class="submit-btn" :disabled="submitting">
-          {{ submitting ? $t('contact.submitting') : $t('contact.submit') }}
-        </button>
+        <div v-if="instant.status !== 'shown'" class="actions-row">
+          <button
+            v-if="!instant.dismissed"
+            type="button"
+            class="check-btn"
+            :disabled="instant.status === 'loading'"
+            @click="checkForAnswer">
+            <span v-if="instant.status === 'loading'" class="spinner" aria-hidden="true"></span>
+            {{ instant.status === 'loading' ? $t('contact.aiChecking') : $t('contact.aiCheck') }}
+          </button>
+          <button v-if="sendUnlocked" type="submit" class="submit-btn" :disabled="submitting">
+            {{ submitting ? $t('contact.submitting') : $t('contact.submit') }}
+          </button>
+        </div>
       </form>
     </div>
   </div>
@@ -193,6 +193,11 @@ export default {
       // Bumped whenever the question changes, so an instant answer that
       // lands after an edit (or after Submit won) is dropped, not shown.
       instantRequestId: 0,
+      // Send only appears once the FAQ check came back empty (no answer, or
+      // any failure) or the fan said an answer didn't help. It then stays for
+      // the rest of this question — editing afterwards shouldn't force
+      // another paid, rate-limited AI call just to get the button back.
+      sendUnlocked: false,
       helped: false,
       submitting: false,
       submitError: null,
@@ -217,11 +222,11 @@ export default {
     liveLength () {
       return codePointLength(this.liveContent)
     },
-    contentValid () {
-      return this.contentLength >= MIN_LENGTH && this.contentLength <= MAX_LENGTH
-    },
-    canCheckAnswer () {
-      return !!this.form.topic && this.contentValid && this.instant.status !== 'loading'
+    hintKey () {
+      if (this.instant.status === 'loading') return 'contact.aiLoadingHint'
+      if (this.instant.dismissed) return 'contact.aiDismissedHint'
+      if (this.sendUnlocked) return 'contact.aiNoAnswerHint'
+      return 'contact.aiHint'
     }
   },
 
@@ -305,7 +310,16 @@ export default {
       return FIELDS.every(field => !errors[field])
     },
     async checkForAnswer () {
-      if (!this.canCheckAnswer) return
+      if (this.instant.status === 'loading') return
+      // The check is the page's one button up front, so rather than sitting
+      // disabled with no explanation it says what's missing. Email isn't
+      // needed until Send.
+      const topicError = this.fieldError('topic')
+      const contentError = this.fieldError('content')
+      this.fieldErrors.topic = topicError
+      this.fieldErrors.content = contentError
+      if (topicError || contentError) return
+
       const requestId = ++this.instantRequestId
       this.instant = { ...emptyInstant(), status: 'loading' }
       let answer = null
@@ -321,16 +335,19 @@ export default {
       }
       if (requestId !== this.instantRequestId) return
       this.instant = answer ? { ...emptyInstant(), status: 'shown', answer } : emptyInstant()
+      if (!answer) this.sendUnlocked = true
     },
     answerHelped () {
       this.helped = true
     },
     answerDidNotHelp () {
-      // Keep everything they typed so they can go straight to Submit.
+      // Keep everything they typed so they can go straight to Send.
       this.instant = { ...emptyInstant(), dismissed: true }
+      this.sendUnlocked = true
     },
     async submit () {
-      if (this.submitting) return
+      // Also guards Enter-to-submit before Send has been revealed.
+      if (this.submitting || !this.sendUnlocked) return
       this.submitError = null
       if (!this.validate()) return
 
@@ -388,6 +405,7 @@ export default {
       this.instantRequestId++
       this.instant = emptyInstant()
       this.submitError = null
+      this.sendUnlocked = false
       this.helped = false
       this.submitted = null
     }
@@ -536,9 +554,23 @@ export default {
   gap: 10px;
 }
 
+// Check on the left; Send, once revealed, pushed to the right end of the
+// same row. Stacked full width on phones.
+.actions-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  @include media_mobile {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
 .check-btn {
-  align-self: flex-start;
   display: inline-flex;
+  justify-content: center;
   align-items: center;
   gap: 8px;
   border: 1.5px solid $color-brand;
@@ -657,8 +689,7 @@ export default {
 }
 
 .submit-btn {
-  margin-top: 4px;
-  align-self: flex-start;
+  margin-left: auto;
   border: none;
   border-radius: 999px;
   padding: 12px 26px;
@@ -682,7 +713,7 @@ export default {
   }
 
   @include media_mobile {
-    align-self: stretch;
+    margin-left: 0;
   }
 }
 

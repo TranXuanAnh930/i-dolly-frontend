@@ -28,7 +28,13 @@ export class InquiriesService extends BaseService {
   // answer itself comes back in the language of the question.
   static async instantAnswer ({ topic, content, lang }, { auth = false } = {}) {
     try {
-      const response = await this.request({ auth }).post(`${this.entity}/instant-answer`, { topic, content, lang })
+      const response = await this.request({ auth }).post(`${this.entity}/instant-answer`, { topic, content, lang }, {
+        // The backend gives the AI call 15s plus one retry (~30s worst case)
+        // before answering "not answerable" itself; this just caps the
+        // spinner a little past that if the request hangs anyway. A timeout
+        // rejects like any other failure, so the page falls back silently.
+        timeout: 35000
+      })
       return new ResponseWrapper(response, response.data)
     } catch (error) {
       throw this._error(error)
