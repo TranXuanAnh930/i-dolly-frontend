@@ -369,13 +369,13 @@ export default {
     featureShopTitle: 'Tickets & store',
     featureShopBody: 'Direct-sale seats or lottery entries for every show, plus albums, singles and merch — all in one place.',
     featurePaypalTitle: 'PayPal',
-    featurePaypalBody: 'Real PayPal checkout alongside a mock gateway, for both orders and tickets.',
+    featurePaypalBody: 'PayPal checkout (sandbox mode) alongside a mock gateway, for both orders and tickets.',
     featureEmailTitle: 'Email',
-    featureEmailBody: 'Confirmations, password resets, and reminders land straight in your inbox.',
+    featureEmailBody: 'Account verification, password resets, and order and ticket confirmations land straight in your inbox.',
     featureAiFaqTitle: 'AI FAQ answers',
     featureAiFaqBody: 'Ask on the contact page and get an instant, AI-generated answer from our FAQ — in English or Japanese.',
     noteTitle: 'A note on this build',
-    noteBody: 'I-Dolly is a demo booking site — the units, idols, venues, and releases are all fictional, and checkout is mocked (nothing is ever actually charged). Login is the one connection to a real backend; everything else runs on data stored right in your browser.'
+    noteBody: 'I-Dolly is a demo booking site — the units, idols, venues, and releases are all fictional. Everything runs on a real backend, but no real money ever changes hands: checkout uses either a mock gateway or PayPal in sandbox mode.'
   },
 
   contact: {
