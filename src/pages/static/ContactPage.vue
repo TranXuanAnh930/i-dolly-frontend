@@ -373,24 +373,20 @@ export default {
     // The server's own 422/429 text is English-only, so it's never shown —
     // each case maps to this page's own (translated) message instead.
     handleSubmitError (error) {
-      if (error.status === 422 && Array.isArray(error.detail)) {
+      if (error.code === 'validation_error') {
         const errors = emptyErrors()
         const serverFieldMessages = {
           email: err('contact.errorEmailInvalid'),
           topic: err('contact.errorTopic'),
           content: err('contact.errorContentShort', { min: MIN_LENGTH })
         }
-        let unmatched = false
-        error.detail.forEach(item => {
-          const field = Array.isArray(item.loc) ? item.loc[item.loc.length - 1] : null
-          if (FIELDS.includes(field)) errors[field] = serverFieldMessages[field]
-          else unmatched = true
-        })
+        const fields = Object.keys(error.fieldErrors)
+        fields.filter(field => FIELDS.includes(field)).forEach(field => { errors[field] = serverFieldMessages[field] })
         this.fieldErrors = errors
-        if (unmatched) this.submitError = err('contact.errorGeneric')
+        if (!fields.length || fields.some(field => !FIELDS.includes(field))) this.submitError = err('contact.errorGeneric')
         return
       }
-      if (error.status === 429) {
+      if (error.code === 'rate_limited') {
         this.submitError = err('contact.errorRateLimit')
         return
       }

@@ -34,11 +34,6 @@ function _getStatusMessage (status) {
   return message
 }
 
-function _getResponseErrorMessage (error) {
-  if (error.response && error.response.data) return error.response.data.message
-  if (error.response && error.response.statusText) return error.response.statusText
-  return error.message === 'Network Error' ? 'Oops! Network Error. Try again later' : error.message
-}
 
 /**
  * Create instance, which represent response object
@@ -56,22 +51,8 @@ export class ResponseWrapper {
   }
 }
 
-/**
- * Create instance, which represent error object
- * @param {Object} [error] - axios error object
- * @param {String} [message] - custom message to display
- */
-export class ErrorWrapper extends Error {
-  constructor (error, message) {
-    super()
-    this.success = error.response ? error.response.data.success : false
-    this.meta = error.response ? error.response.data.meta : false
-    this.code = error.response ? error.response.data.code : false
-    this.status = error.response ? error.response.status : false
-    this.statusMessage = _getStatusMessage(this.status)
-    this.message = message || _getResponseErrorMessage(error)
-  }
-}
+// Errors: see ./apiError.js (ApiError / toApiError).
+
 
 /**
  * Uses to clear request data before send it

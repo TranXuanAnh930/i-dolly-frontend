@@ -72,6 +72,8 @@
             <span>{{ $t('ticketPurchase.total') }}</span>
             <span>&yen;{{ formatNumber(total) }}</span>
           </div>
+          <!-- e.g. sold_out / not_on_sale sending the fan back here to pick again -->
+          <p class="form-error" v-if="error" :key="error">{{ error }}</p>
           <button type="button" class="continue-btn" @click="proceed">{{ isLotteryTier ? $t('ticketPurchase.applyLottery') : $t('ticketPurchase.continueCheckout') }}</button>
         </div>
       </div>
@@ -281,6 +283,9 @@ export default {
       simulateSucc: true,
       placing: false,
       error: '',
+      // One key per purchase attempt (minted on reaching the confirm step,
+      // reused on a retry) — see CheckoutPage.vue for why.
+      idempotencyKey: null,
       orderNumber: '',
       outcome: null,
       paypalApprovalUrl: null
@@ -411,6 +416,7 @@ export default {
     // so that page can lock it in as the required 1st preference instead
     // of asking the fan to pick a tier a second time.
     proceed () {
+      this.error = ''
       if (this.isLotteryTier) {
         this.$router.push({ name: 'event-lottery-entry', params: { id: this.concert.id }, query: { tier: this.selectedTierId } })
       } else {
@@ -430,12 +436,14 @@ export default {
         return
       }
       this.error = ''
+      this.idempotencyKey = crypto.randomUUID()
       this.step = 3
     },
     // Real direct-sale checkout — see ticket.service.js / POST
     // /tickets/checkout. Card fields aren't sent anywhere (same mock as
     // CheckoutPage.vue) — only simulateSucc reaches the backend.
     async placeOrder () {
+      if (this.placing) return
       this.error = ''
       this.placing = true
 
@@ -445,45 +453,81 @@ export default {
           amount: this.total,
           gateway: this.gateway,
           simulate_succ: this.gateway === 'mock' ? this.simulateSucc : undefined,
-          idempotency_key: crypto.randomUUID(),
+          idempotency_key: this.idempotencyKey
         })
-        const ticket = response.data
-        useTicketsStore().add(ticket)
-
-        if (this.gateway === 'paypal') {
-          // docs/api-spec.md §6: checkout returns the ticket "pending" (not
-          // an error) — fetch the Payment row it created to read PayPal's
-          // buyer-facing approval link, then send the fan there with a full
-          // page redirect.
-          const paymentResponse = await PaymentService.getTicketStatus(ticket.id)
-          this.paypalApprovalUrl = paymentResponse.data.pg_approval_url
-          this.outcome = 'redirecting'
-          this.step = 4
-          if (this.paypalApprovalUrl) {
-            window.location.href = this.paypalApprovalUrl
-          } else {
-            this.error = this.$t('checkout.paypalError')
-          }
-          return
-        }
-
-        this.orderNumber = ticket.id.slice(0, 8)
-        this.outcome = ticket.status === 'paid' ? 'purchase' : 'declined'
-        this.step = 4
-
-        useToastStore().add({
-          type: this.outcome === 'purchase' ? 'success' : 'error',
-          message: this.$t(this.outcome === 'purchase' ? 'ticketPurchase.wentTitle' : 'ticketPurchase.declinedTitle')
-        })
-
-        // The tier's sold_quantity just changed server-side (on a
-        // successful purchase) — refetch so ticketTypes stays accurate if
-        // the buyer navigates back to step 1.
-        TicketTypesService.getByConcertPublic(this.concert.id).then(response => { this.ticketTypes = response.data })
+        await this.showTicketResult(response.data)
       } catch (err) {
-        this.error = err.message
+        await this.handlePurchaseError(err)
       } finally {
         this.placing = false
+      }
+    },
+    // Payment outcomes are 200s (docs/api-spec.md §0): "paid", "cancelled"
+    // (declined mock payment) or "pending" (PayPal — go approve it).
+    async showTicketResult (ticket) {
+      useTicketsStore().add(ticket)
+
+      if (ticket.status === 'pending') {
+        // docs/api-spec.md §6: checkout returns the ticket "pending" (not
+        // an error) — fetch the Payment row it created to read PayPal's
+        // buyer-facing approval link, then send the fan there with a full
+        // page redirect.
+        const paymentResponse = await PaymentService.getTicketStatus(ticket.id)
+        this.paypalApprovalUrl = paymentResponse.data.pg_approval_url
+        this.outcome = 'redirecting'
+        this.step = 4
+        if (this.paypalApprovalUrl) {
+          window.location.href = this.paypalApprovalUrl
+        } else {
+          this.error = this.$t('checkout.paypalError')
+        }
+        return
+      }
+
+      this.orderNumber = ticket.id.slice(0, 8)
+      this.outcome = ticket.status === 'paid' ? 'purchase' : 'declined'
+      this.step = 4
+
+      useToastStore().add({
+        type: this.outcome === 'purchase' ? 'success' : 'error',
+        message: this.$t(this.outcome === 'purchase' ? 'ticketPurchase.wentTitle' : 'ticketPurchase.declinedTitle')
+      })
+
+      // The tier's sold_quantity just changed server-side (on a
+      // successful purchase) — refetch so ticketTypes stays accurate if
+      // the buyer navigates back to step 1.
+      TicketTypesService.getByConcertPublic(this.concert.id).then(response => { this.ticketTypes = response.data }).catch(() => {})
+    },
+    async handlePurchaseError (err) {
+      // A double submit: the first request already created the ticket —
+      // show it (newest ticket for this concert), not an error.
+      if (err.code === 'duplicate_idempotency_key') {
+        const ticketsStore = useTicketsStore()
+        await ticketsStore.fetchAll({ force: true })
+        const latest = ticketsStore.sorted.find(ticket => ticket.ticket_type && ticket.ticket_type.concert_id === this.concert.id)
+        if (latest) {
+          await this.showTicketResult(latest)
+          return
+        }
+      }
+      // Price changed, or the tier sold out / went off sale while the fan
+      // was on the confirm step: reload the tiers so the page shows what's
+      // actually true now. A price change also needs a fresh confirm (and
+      // key); sold out / off sale sends them back to pick again.
+      if (err.is('amount_mismatch', 'sold_out', 'not_on_sale')) {
+        await this.reloadTiers()
+        if (err.code === 'amount_mismatch') this.idempotencyKey = crypto.randomUUID()
+        else this.step = 1
+      }
+      this.error = err.message
+    },
+    async reloadTiers () {
+      try {
+        const response = await ConcertsService.getDetailPublic(this.concert.id)
+        this.ticketTypes = response.data.ticket_types
+        this.campaignsByTierId = this.campaignsByTierIdFrom(response.data)
+      } catch {
+        // Keep what's shown; the error message already explains the failure.
       }
     }
   }

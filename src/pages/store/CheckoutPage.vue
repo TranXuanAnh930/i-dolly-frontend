@@ -179,6 +179,7 @@ import { OrderService } from '@/services/store/order.service'
 import { PaymentService } from '@/services/payment/payment.service'
 import { ShippingAddressesService } from '@/services/account/shippingAddresses.service'
 import { formatNumber } from '@/utils/format'
+import { redirectIfStaff } from '@/utils/fanOnly'
 
 export default {
   name: 'CheckoutPage',
@@ -197,6 +198,11 @@ export default {
       simulateSucc: true,
       placing: false,
       error: '',
+      // One key per checkout attempt, minted when the fan reaches the
+      // confirm step and reused if the same submit is retried — so a double
+      // submit or a retry after a lost response is recognized server-side
+      // (409 duplicate_idempotency_key) instead of charging twice.
+      idempotencyKey: null,
       order: null,
       paypalApprovalUrl: null
     }
@@ -221,6 +227,7 @@ export default {
   },
 
   created () {
+    if (redirectIfStaff(this)) return
     useCatalogStore().fetchAll()
     // Refreshes a logged-in fan's real cart — a no-op for guests/non-fan
     // roles (see cartStore.isServerBacked).
@@ -259,9 +266,11 @@ export default {
       }
 
       this.error = ''
+      this.idempotencyKey = crypto.randomUUID()
       this.step = 2
     },
     async placeOrder () {
+      if (this.placing) return
       this.error = ''
       this.placing = true
 
@@ -271,48 +280,80 @@ export default {
           shipping_address_id: this.shippingAddress.id,
           gateway: this.gateway,
           simulate_succ: this.gateway === 'mock' ? this.simulateSucc : undefined,
-          idempotency_key: crypto.randomUUID(),
+          idempotency_key: this.idempotencyKey
         })
-        this.order = response.data
-
-        // The backend consumes the cart (stock decremented, rows deleted)
-        // as soon as checkout runs — for mock that's immediate (approved or
-        // declined), for paypal it happens up front too even though the
-        // order itself stays "pending" until the buyer actually pays.
-        await this.cart.fetchCart()
-
-        // Cache the order directly rather than refetching the whole list —
-        // it's already known in full, and this is what makes it show up in
-        // History immediately (see ordersStore.add).
-        useOrdersStore().add(this.order)
-
-        if (this.gateway === 'paypal') {
-          // docs/api-spec.md §6: checkout returns the order "pending", not
-          // an error — fetch the Payment row it created to read PayPal's
-          // buyer-facing approval link, then send the fan there with a full
-          // page redirect (not a new tab — PayPal itself redirects back to
-          // this same tab when the fan approves or cancels).
-          const paymentResponse = await PaymentService.getOrderStatus(this.order.id)
-          this.paypalApprovalUrl = paymentResponse.data.pg_approval_url
-          if (this.paypalApprovalUrl) {
-            window.location.href = this.paypalApprovalUrl
-            return
-          }
-          this.error = this.$t('checkout.paypalError')
-          this.order = null
-          return
-        }
-
-        if (this.order.status === 'confirmed') {
-          useToastStore().add({ type: 'success', message: this.$t('checkout.orderPlaced') })
-        } else {
-          useToastStore().add({ type: 'error', message: this.$t('checkout.orderDeclinedTitle') })
-        }
+        await this.showOrderResult(response.data)
       } catch (err) {
-        this.error = err.message
+        await this.handleCheckoutError(err)
       } finally {
         this.placing = false
       }
+    },
+    // Payment outcomes are 200s, not errors (docs/api-spec.md §0): the
+    // order's own status says what happened — "confirmed", "cancelled" (a
+    // declined mock payment) or "pending" (PayPal: go approve it).
+    async showOrderResult (order) {
+      this.order = order
+
+      // The backend consumes the cart (stock decremented, rows deleted)
+      // as soon as checkout runs — for mock that's immediate (approved or
+      // declined), for paypal it happens up front too even though the
+      // order itself stays "pending" until the buyer actually pays.
+      await this.cart.fetchCart()
+
+      // Cache the order directly rather than refetching the whole list —
+      // it's already known in full, and this is what makes it show up in
+      // History immediately (see ordersStore.add).
+      useOrdersStore().add(this.order)
+
+      if (this.order.status === 'pending') {
+        // docs/api-spec.md §6: checkout returns the order "pending", not
+        // an error — fetch the Payment row it created to read PayPal's
+        // buyer-facing approval link, then send the fan there with a full
+        // page redirect (not a new tab — PayPal itself redirects back to
+        // this same tab when the fan approves or cancels).
+        const paymentResponse = await PaymentService.getOrderStatus(this.order.id)
+        this.paypalApprovalUrl = paymentResponse.data.pg_approval_url
+        if (this.paypalApprovalUrl) {
+          window.location.href = this.paypalApprovalUrl
+          return
+        }
+        this.error = this.$t('checkout.paypalError')
+        this.order = null
+        return
+      }
+
+      if (this.order.status === 'confirmed') {
+        useToastStore().add({ type: 'success', message: this.$t('checkout.orderPlaced') })
+      } else {
+        useToastStore().add({ type: 'error', message: this.$t('checkout.orderDeclinedTitle') })
+      }
+    },
+    async handleCheckoutError (err) {
+      // A double submit (or a retry after a lost response): the first
+      // request already created the order. Show that order, not an error.
+      if (err.code === 'duplicate_idempotency_key') {
+        const ordersStore = useOrdersStore()
+        await ordersStore.fetchAll({ force: true })
+        const latest = ordersStore.sorted[0]
+        if (latest) {
+          await this.showOrderResult(latest)
+          return
+        }
+      }
+      // Prices changed under the fan: refresh the cart (and so the total
+      // shown on this confirm step), and make them confirm again with a
+      // fresh key — the old one was spent on the rejected attempt.
+      if (err.code === 'amount_mismatch') {
+        await this.cart.fetchCart()
+        this.idempotencyKey = crypto.randomUUID()
+      }
+      // Stock or per-fan caps changed: refresh the cart so it shows the
+      // quantities that are actually still possible.
+      if (err.code === 'insufficient_stock' || err.code === 'resale_cap_exceeded' || err.code === 'cart_empty') {
+        await this.cart.fetchCart()
+      }
+      this.error = err.message
     }
   }
 }

@@ -1,4 +1,5 @@
 import { BaseService } from '../base.service'
+import { toApiError } from '../apiError'
 
 // POST /shipping_addresses/add, PUT .../update/{id}, DELETE .../delete/{id}
 // — all require auth (any logged-in role), and already match BaseService's
@@ -20,11 +21,7 @@ export class ShippingAddressesService extends BaseService {
       const response = await this.request({ auth: true }).get(`${this.entity}/fetch`)
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      if (error.response && error.response.status === 404) {
-        return this.responseWrapper(error.response, [])
-      }
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 }

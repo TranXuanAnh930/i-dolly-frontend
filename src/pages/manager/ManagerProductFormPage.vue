@@ -11,12 +11,14 @@
           <img v-if="imagePreviewUrl" :src="imagePreviewUrl" class="image-preview" alt="">
           <input type="file" accept="image/*" @change="onImageChange">
           <span class="field__hint" v-if="isEditing && !imageFile">{{ $t('common.imageKeptHint') }}</span>
+          <span v-if="fieldError('image')" class="field__error">{{ fieldError('image') }}</span>
         </label>
 
         <div class="field-grid">
           <label class="field">
             <span class="field__label">{{ $t('common.name') }}</span>
             <input v-model="form.name" required>
+            <span v-if="fieldError('name')" class="field__error">{{ fieldError('name') }}</span>
           </label>
           <label class="field">
             <span class="field__label">{{ $t('managerProducts.category') }}</span>
@@ -24,21 +26,25 @@
               <option value="" disabled>{{ $t('managerProductForm.selectCategoryPlaceholder') }}</option>
               <option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option>
             </select>
+            <span v-if="fieldError('category_id')" class="field__error">{{ fieldError('category_id') }}</span>
           </label>
           <label class="field">
             <span class="field__label">{{ $t('managerProducts.price') }}</span>
             <input type="number" min="0.01" step="0.01" v-model.number="form.price" required :disabled="isEditing">
             <span class="field__hint" v-if="isEditing">{{ $t('managerProductForm.priceLocked') }}</span>
+            <span v-if="fieldError('price')" class="field__error">{{ fieldError('price') }}</span>
           </label>
           <label class="field">
             <span class="field__label">{{ $t('managerProducts.quantity') }}</span>
             <input type="number" min="0" v-model.number="form.quantity" required>
+            <span v-if="fieldError('quantity')" class="field__error">{{ fieldError('quantity') }}</span>
           </label>
         </div>
 
         <label class="field">
           <span class="field__label">{{ $t('common.description') }}</span>
           <textarea v-model="form.description" rows="4" required></textarea>
+          <span v-if="fieldError('description')" class="field__error">{{ fieldError('description') }}</span>
         </label>
 
         <!-- A product is always created together with its album/merch
@@ -64,6 +70,7 @@
                   <option value="idol">{{ $t('managerProductForm.ownerTypeIdol') }}</option>
                   <option value="group">{{ $t('managerProductForm.ownerTypeGroup') }}</option>
                 </select>
+                <span v-if="fieldError('ownerType')" class="field__error">{{ fieldError('ownerType') }}</span>
               </label>
               <label class="field" v-if="detail.ownerType === 'idol'">
                 <span class="field__label">{{ $t('managerProductForm.idol') }}</span>
@@ -71,6 +78,7 @@
                   <option value="" disabled>{{ $t('managerProductForm.selectIdolPlaceholder') }}</option>
                   <option v-for="idol in myIdols" :key="idol.id" :value="idol.id">{{ idol.name }}</option>
                 </select>
+                <span v-if="fieldError('idol_id')" class="field__error">{{ fieldError('idol_id') }}</span>
               </label>
               <label class="field" v-else>
                 <span class="field__label">{{ $t('managerProductForm.group') }}</span>
@@ -78,6 +86,7 @@
                   <option value="" disabled>{{ $t('managerProductForm.selectGroupPlaceholder') }}</option>
                   <option v-for="group in myGroups" :key="group.id" :value="group.id">{{ group.name }}</option>
                 </select>
+                <span v-if="fieldError('group_id')" class="field__error">{{ fieldError('group_id') }}</span>
               </label>
             </template>
 
@@ -85,10 +94,12 @@
               <label class="field">
                 <span class="field__label">{{ $t('managerProductForm.releaseDate') }}</span>
                 <input type="date" v-model="detail.release_date">
+                <span v-if="fieldError('release_date')" class="field__error">{{ fieldError('release_date') }}</span>
               </label>
               <label class="field">
                 <span class="field__label">{{ $t('managerProductForm.trackCount') }}</span>
                 <input type="number" min="1" v-model.number="detail.track_count">
+                <span v-if="fieldError('track_count')" class="field__error">{{ fieldError('track_count') }}</span>
               </label>
               <label class="field">
                 <span class="field__label">{{ $t('managerProductForm.format') }}</span>
@@ -96,12 +107,14 @@
                   <option value="physical">{{ $t('managerProductForm.formatPhysical') }}</option>
                   <option value="digital">{{ $t('managerProductForm.formatDigital') }}</option>
                 </select>
+                <span v-if="fieldError('format')" class="field__error">{{ fieldError('format') }}</span>
               </label>
             </template>
             <template v-else>
               <label class="field">
                 <span class="field__label">{{ $t('managerProductForm.edition') }}</span>
                 <input v-model="detail.edition">
+                <span v-if="fieldError('edition')" class="field__error">{{ fieldError('edition') }}</span>
               </label>
               <label class="field">
                 <span class="field__label">{{ $t('managerProductForm.color') }}</span>
@@ -109,12 +122,13 @@
                   <option value="">{{ $t('managerProductForm.noColor') }}</option>
                   <option v-for="color in colors" :key="color.id" :value="color.id">{{ color.name }}</option>
                 </select>
+                <span v-if="fieldError('color_id')" class="field__error">{{ fieldError('color_id') }}</span>
               </label>
             </template>
           </div>
         </template>
 
-        <p class="form-error" v-if="error">{{ error }}</p>
+        <p class="form-error" v-if="error">{{ error }}<span v-if="apiErrorDetail" class="form-error__detail">{{ apiErrorDetail }}</span></p>
 
         <div class="form-actions">
           <router-link :to="{ name: 'manager-products' }" class="cancel-btn">{{ $t('common.cancel') }}</router-link>
@@ -131,6 +145,7 @@ import { AlbumDetailsService } from '@/services/store/albumDetails.service'
 import { MerchDetailsService } from '@/services/store/merchDetails.service'
 import { useToastStore } from '@/store/toast'
 import { resolveMediaUrl } from '@/utils/media'
+import apiFormErrors from '@/mixins/apiFormErrors'
 
 function emptyForm () {
   return { name: '', category_id: '', price: '', quantity: '', description: '' }
@@ -151,6 +166,8 @@ function emptyDetailForm () {
 
 export default {
   name: 'ManagerProductFormPage',
+
+  mixins: [apiFormErrors],
 
   props: {
     id: { type: String, default: null }
@@ -257,7 +274,7 @@ export default {
         this.groups = response.data.groups
         this.colors = response.data.colors
       } catch (error) {
-        this.error = error.message
+        this.error = this.applyApiError(error)
       }
     },
     // Prefills detail with the product's existing album/merch row so
@@ -303,6 +320,7 @@ export default {
       }
       this.saving = true
       this.error = ''
+      this.clearApiErrors()
       const fields = {
         name: this.form.name,
         category_id: this.form.category_id,
@@ -347,8 +365,9 @@ export default {
         }
         this.$router.push({ name: 'manager-products' })
       } catch (error) {
-        this.error = error.message
-        if (this.isEditing) useToastStore().add({ type: 'error', message: error.message })
+        this.error = this.applyApiError(error)
+        // applyApiError already toasted a permission error.
+        if (this.isEditing && !error.is('forbidden', 'fan_only_purchase')) useToastStore().add({ type: 'error', message: error.message })
       } finally {
         this.saving = false
       }
@@ -551,5 +570,20 @@ export default {
     opacity: .6;
     cursor: default;
   }
+}
+
+// Per-field API errors (422 fieldErrors, invalid_image) — see
+// mixins/apiFormErrors.js.
+.field__error {
+  font-family: $font-content;
+  font-size: 12px;
+  font-weight: 700;
+  color: $color-error;
+}
+
+.form-error__detail {
+  display: block;
+  margin-top: 4px;
+  font-weight: 400;
 }
 </style>

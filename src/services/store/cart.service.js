@@ -1,4 +1,5 @@
 import { BaseService } from '../base.service'
+import { toApiError } from '../apiError'
 
 // POST /Cart/add_cart, GET /Cart/see_cart, DELETE /Cart/delete_cart/{cart_id}
 // — all require auth, and are fan-account-only server-side (anything else
@@ -20,23 +21,17 @@ export class CartService extends BaseService {
       const response = await this.request({ auth: true }).post(`${this.entity}/add_cart`, { product_id: productId, quantity })
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
-  // 404s on an empty cart — treated as an empty list rather than an error,
-  // matching every other list endpoint's 404-tolerant convention here.
+  // An empty cart is 200 {"items": [], "total_price": 0}, not an error.
   static async fetch () {
     try {
       const response = await this.request({ auth: true }).get(`${this.entity}/see_cart`)
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      if (error.response && error.response.status === 404) {
-        return this.responseWrapper(error.response, { items: [], total_price: 0 })
-      }
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
@@ -47,8 +42,7 @@ export class CartService extends BaseService {
       const response = await this.request({ auth: true }).delete(`${this.entity}/delete_cart/${cartId}`)
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 }

@@ -1,5 +1,6 @@
 import { BaseService } from '../base.service'
-import { ErrorWrapper, ResponseWrapper } from '../util'
+import { ResponseWrapper } from '../util'
+import { toApiError } from '../apiError'
 
 // Contact form (お問い合わせ) — docs/api-spec.md §8 in the backend repo.
 // Both endpoints are auth-optional: pass `auth: true` when someone's
@@ -9,16 +10,6 @@ import { ErrorWrapper, ResponseWrapper } from '../util'
 export class InquiriesService extends BaseService {
   static get entity () {
     return 'inquiries'
-  }
-
-  // Keeps the raw `detail` alongside the usual message: a 422's detail is a
-  // list of { loc, msg, type } the page maps back onto individual fields,
-  // and a 429's is the "try again after N seconds" string shown as-is.
-  static _error (error) {
-    const detail = error.response && error.response.data ? error.response.data.detail : undefined
-    const wrapped = new ErrorWrapper(error, typeof detail === 'string' ? detail : undefined)
-    wrapped.detail = detail
-    return wrapped
   }
 
   // POST /inquiries/instant-answer — { answerable, answer } drawn only from
@@ -37,7 +28,7 @@ export class InquiriesService extends BaseService {
       })
       return new ResponseWrapper(response, response.data)
     } catch (error) {
-      throw this._error(error)
+      throw toApiError(error)
     }
   }
 
@@ -48,7 +39,7 @@ export class InquiriesService extends BaseService {
       const response = await this.request({ auth }).post(`${this.entity}/submit`, { email, topic, content })
       return new ResponseWrapper(response, response.data)
     } catch (error) {
-      throw this._error(error)
+      throw toApiError(error)
     }
   }
 }

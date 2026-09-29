@@ -23,13 +23,14 @@
 
         <label class="field">
           <span class="field__label">{{ $t('common.email') }}</span>
-          <div class="field__control">
+          <div class="field__control" :class="{ 'field__control--error': emailError }">
             <svg class="field__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
               <rect x="2" y="4" width="16" height="12" rx="2.5" stroke="currentColor" stroke-width="1.6"/>
               <path d="M3 5.5 10 11 17 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
             <input id="email" type="text" v-model="email" placeholder="you@example.com" autocomplete="username">
           </div>
+          <span v-if="emailError" class="field__error">{{ emailError }}</span>
         </label>
 
         <label class="field">
@@ -96,8 +97,14 @@ export default {
       confirmPassword: '',
       showPassword: false,
       submitting: false,
-      error: ''
+      error: '',
+      // Server-side field errors: email_taken, or a 422 on the email field.
+      emailError: ''
     }
+  },
+
+  watch: {
+    email () { this.emailError = '' }
   },
 
   methods: {
@@ -126,7 +133,13 @@ export default {
         useToastStore().add({ type: 'success', message: this.$t('register.successMessage', { name: this.name }) })
         await this.$router.push({ path: '/login' })
       } catch (error) {
-        this.error = error.message
+        if (error.code === 'email_taken') {
+          this.emailError = error.message
+        } else if (error.fieldErrors && error.fieldErrors.email) {
+          this.emailError = this.$t('register.errorEmail')
+        } else {
+          this.error = error.message
+        }
       } finally {
         this.submitting = false
       }
@@ -353,5 +366,19 @@ export default {
       text-decoration: underline;
     }
   }
+}
+
+// Server-side email error (email_taken) — same red treatment as Login's
+// invalid-credentials state.
+.field__control--error {
+  background: #fdeaf1;
+  border-color: $color-error;
+}
+
+.field__error {
+  font-family: $font-content;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: $color-error;
 }
 </style>

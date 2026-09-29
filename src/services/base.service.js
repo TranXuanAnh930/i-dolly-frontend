@@ -2,7 +2,8 @@ import qs from 'qs'
 import { assert } from '@/core'
 
 import { Http } from './http.init'
-import { ResponseWrapper, ErrorWrapper } from './util'
+import { ResponseWrapper } from './util'
+import { toApiError } from './apiError'
 
 export class BaseService {
   static get entity () {
@@ -22,10 +23,6 @@ export class BaseService {
     return new ResponseWrapper(...rest)
   }
 
-  static errorWrapper (...rest) {
-    return new ErrorWrapper(...rest)
-  }
-
   static querystring (obj) {
     return qs.stringify(obj, {
       encode: false
@@ -40,21 +37,16 @@ export class BaseService {
 
   /**
    * GET {entity}/all — this backend's "list everything" convention (see
-   * docs/api-spec.md in the E-commerce backend repo): unpaginated, no auth,
-   * and — unlike a typical REST list endpoint — an EMPTY collection responds
-   * 404 rather than `[]`. Treat that specific 404 as an empty list instead
-   * of an error so callers don't have to special-case it themselves.
+   * docs/api-spec.md in the E-commerce backend repo): unpaginated, no auth.
+   * An empty collection is 200 [] (§0: empty is never an error — a 404
+   * always means a specific resource is missing).
    */
   static async getAllPublic () {
     try {
       const response = await this.request().get(`${this.entity}/all`)
       return new ResponseWrapper(response, response.data)
     } catch (error) {
-      if (error.response && error.response.status === 404) {
-        return new ResponseWrapper(error.response, [])
-      }
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw new ErrorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
@@ -72,8 +64,7 @@ export class BaseService {
 
       return new ResponseWrapper(response, data)
     } catch (error) {
-      const message = error.response.data ? error.response.data.error : error.response.statusText
-      throw new ErrorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
@@ -84,8 +75,7 @@ export class BaseService {
       const response = await this.request().get(`${this.entity}/${id}`)
       return new ResponseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw new ErrorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
@@ -102,8 +92,7 @@ export class BaseService {
       const response = await this.request({ auth: true }).get(`${this.entity}/${id}`)
       return new ResponseWrapper(response, response.data.data)
     } catch (error) {
-      const message = error.response.data ? error.response.data.error : error.response.statusText
-      throw new ErrorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
@@ -119,8 +108,7 @@ export class BaseService {
       const response = await this.request({ auth: true }).post(`${this.entity}/add`, data)
       return new ResponseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw new ErrorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
@@ -132,8 +120,7 @@ export class BaseService {
       const response = await this.request({ auth: true }).put(`${this.entity}/update/${id}`, data)
       return new ResponseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw new ErrorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
@@ -144,8 +131,7 @@ export class BaseService {
       const response = await this.request({ auth: true }).delete(`${this.entity}/delete/${id}`)
       return new ResponseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw new ErrorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 }

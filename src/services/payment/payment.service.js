@@ -1,4 +1,5 @@
 import { BaseService } from '../base.service'
+import { toApiError } from '../apiError'
 
 // Wraps /payment — only the bits a "paypal" gateway checkout needs once
 // order.service.js's checkout() / ticket.service.js's checkout() has
@@ -18,8 +19,7 @@ export class PaymentService extends BaseService {
       const response = await this.request({ auth: true }).get(`${this.entity}/status/order/${orderId}`)
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
@@ -30,8 +30,7 @@ export class PaymentService extends BaseService {
       const response = await this.request({ auth: true }).get(`${this.entity}/status/ticket/${ticketId}`)
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
@@ -45,8 +44,7 @@ export class PaymentService extends BaseService {
       const response = await this.request({ auth: true }).post(`${this.entity}/paypal/capture/${pgOrderId}`)
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 }

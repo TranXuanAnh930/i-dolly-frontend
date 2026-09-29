@@ -1,5 +1,6 @@
 import { BaseService } from '../base.service'
 import { toFormData } from '@/utils/formData'
+import { toApiError } from '../apiError'
 
 // GET /idols/all, GET /idols/{id} — public, no auth. See docs/api-spec.md
 // §3 (Talent) in the E-commerce backend repo for the full IdolRead shape:
@@ -18,8 +19,7 @@ export class IdolsService extends BaseService {
       const response = await this.request({ auth: true }).post(`${this.entity}/add`, toFormData(fields))
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
@@ -30,8 +30,7 @@ export class IdolsService extends BaseService {
       const response = await this.request({ auth: true }).post(`${this.entity}/${id}/image`, toFormData({ image: file }))
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
@@ -44,8 +43,7 @@ export class IdolsService extends BaseService {
       const response = await this.request().get(`${this.entity}/members-page`)
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
@@ -57,8 +55,7 @@ export class IdolsService extends BaseService {
       const response = await this.request().get(`${this.entity}/${id}/detail`)
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
@@ -71,8 +68,7 @@ export class IdolsService extends BaseService {
       const response = await this.request().get(`${this.entity}/manager-idols-page`)
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
@@ -84,8 +80,7 @@ export class IdolsService extends BaseService {
       const response = await this.request().get(`${this.entity}/manager-idol-form-page`)
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
@@ -97,8 +92,7 @@ export class IdolsService extends BaseService {
       const response = await this.request({ auth: true }).patch(`${this.entity}/activate/${id}`)
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 }
