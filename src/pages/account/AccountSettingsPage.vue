@@ -181,21 +181,33 @@ export default {
     // Backend only stores one shipping address per user (no "default" flag
     // or multiple-address support) — this page manages that single row,
     // creating it the first time and updating it on every save after.
+    // The list only supplies the id; the form is prefilled from fetch_byid,
+    // which is scoped to the caller's own address and 404s anything else.
     async fetchAddress () {
       try {
-        const response = await ShippingAddressesService.fetchAll()
-        const existing = response.data[0]
-        if (!existing) return
+        const list = await ShippingAddressesService.fetchAll()
+        const existing = list.data[0]
+        if (!existing) {
+          this.address = emptyAddress()
+          return
+        }
+        const response = await ShippingAddressesService.fetchById(existing.id)
+        const found = response.data
         this.address = {
-          id: existing.id,
-          street: existing.address_line1,
-          street2: existing.address_line2 || '',
-          city: existing.city,
-          state: existing.state,
-          country: existing.country,
-          postalCode: existing.postal_code
+          id: found.id,
+          street: found.address_line1,
+          street2: found.address_line2 || '',
+          city: found.city,
+          state: found.state,
+          country: found.country,
+          postalCode: found.postal_code
         }
       } catch (error) {
+        if (error.status === 404) {
+          this.address = emptyAddress()
+          this.addressError = this.$t('account.addressNotFound')
+          return
+        }
         this.addressError = error.message
       }
     },
@@ -227,6 +239,14 @@ export default {
         }
         useToastStore().add({ type: 'success', message: this.$t('account.addressSaved') })
       } catch (error) {
+        // update 404s an address that isn't (or is no longer) this fan's —
+        // reload what they actually have instead of retrying the same id.
+        if (error.status === 404) {
+          await this.fetchAddress()
+          this.addressError = this.$t('account.addressNotFound')
+          useToastStore().add({ type: 'error', message: this.addressError })
+          return
+        }
         this.addressError = error.message
         useToastStore().add({ type: 'error', message: error.message })
       } finally {

@@ -47,8 +47,8 @@
       </table>
     </div>
     <div class="empty-state" v-else>
-      <p class="empty-note">{{ myEvents.length ? $t('managerEvents.noSearchResults') : $t('managerEvents.noResults') }}</p>
-      <button v-if="myEvents.length && search" type="button" class="clear-search-btn" @click="search = ''">{{ $t('common.clearSearch') }}</button>
+      <p class="empty-note">{{ concerts.length ? $t('managerEvents.noSearchResults') : $t('managerEvents.noResults') }}</p>
+      <button v-if="concerts.length && search" type="button" class="clear-search-btn" @click="search = ''">{{ $t('common.clearSearch') }}</button>
     </div>
 
     <p class="form-error" v-if="error">{{ error }}</p>
@@ -76,18 +76,10 @@ export default {
   },
 
   computed: {
-    // A manager only ever manages their own company — see AdminEventsPage
-    // for the admin equivalent, which picks a company via a dropdown.
-    companyId () {
-      return this.$currentUser.company_id
-    },
-    myEvents () {
-      return this.concerts.filter(concert => concert.company_id === this.companyId)
-    },
     filteredEvents () {
       const query = this.search.trim().toLowerCase()
-      if (!query) return this.myEvents
-      return this.myEvents.filter(concert => `${concert.title} ${this.venueName(concert.venue_id)}`.toLowerCase().includes(query))
+      if (!query) return this.concerts
+      return this.concerts.filter(concert => `${concert.title} ${this.venueName(concert.venue_id)}`.toLowerCase().includes(query))
     }
   },
 
@@ -98,11 +90,14 @@ export default {
   methods: {
     async fetchPage () {
       try {
-        const response = await ConcertsService.getManagerEventsPagePublic()
+        // Already just this manager's company — the server scopes it; see
+        // AdminEventsPage for the admin equivalent, which picks a company
+        // via a dropdown.
+        const response = await ConcertsService.getManagerEventsPage()
         this.concerts = response.data.concerts
         this.venues = response.data.venues
       } catch (error) {
-        this.error = error.message
+        if (!error.redirected) this.error = error.message
       }
     },
     venueName (venueId) {

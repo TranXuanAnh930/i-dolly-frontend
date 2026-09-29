@@ -75,12 +75,13 @@ export default {
         // Products carry no direct company_id — the backend resolves one
         // via album_details/lightstick_details when it can, and treats
         // plain merch with neither as manageable by anyone. An admin isn't
-        // scoped, unlike a manager (see ManagerProductsPage), so no
-        // company filter is passed here.
-        const response = await ProductsService.getManagerProductsPagePublic(null)
+        // scoped, unlike a manager (see ManagerProductsPage); this page
+        // lists every company, so no company_id is passed (the service
+        // takes one for an admin screen that narrows to a company).
+        const response = await ProductsService.getManagerProductsPage()
         this.products = response.data.products
       } catch (error) {
-        this.error = error.message
+        if (!error.redirected) this.error = error.message
       }
     },
     onImageError (productId) {

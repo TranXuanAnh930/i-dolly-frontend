@@ -150,11 +150,11 @@ export default {
   methods: {
     async fetchPage () {
       try {
-        const response = await ConcertsService.getManagerEventsPagePublic()
+        const response = await ConcertsService.getManagerEventsPage()
         this.concerts = response.data.concerts
         this.venues = response.data.venues
       } catch (error) {
-        this.error = error.message
+        if (!error.redirected) this.error = error.message
       }
     },
     statusLabel (status) {

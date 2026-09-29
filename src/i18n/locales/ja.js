@@ -338,7 +338,8 @@ export default {
     shippingAddress: '配送先住所',
     saveAddress: '住所を保存',
     addressSaved: '配送先住所を保存しました。',
-    errorAddress: '住所・市区町村・都道府県・国・郵便番号を入力してください。'
+    errorAddress: '住所・市区町村・都道府県・国・郵便番号を入力してください。',
+    addressNotFound: '配送先住所が見つかりませんでした。削除された可能性があります。保存済みの住所を再読み込みしました。'
   },
 
   guidelines: {

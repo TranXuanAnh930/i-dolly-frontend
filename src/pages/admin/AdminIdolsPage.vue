@@ -107,11 +107,11 @@ export default {
     resolveMediaUrl,
     async fetchPage () {
       try {
-        const response = await IdolsService.getManagerIdolsPagePublic()
+        const response = await IdolsService.getManagerIdolsPage()
         this.idols = response.data.idols
         this.groups = response.data.groups
       } catch (error) {
-        this.error = error.message
+        if (!error.redirected) this.error = error.message
       }
     },
     onImageError (idolId) {

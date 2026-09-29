@@ -83,36 +83,26 @@ export class ProductsService extends BaseService {
     }
   }
 
-  // GET /products/manager-products-page — public, no auth. One bundled
-  // response for ManagerProductsPage's table: plain product rows only, no
-  // album_details. companyId, when given, scopes the result to that
-  // company's products plus any ownerless merch (matching the backend's
-  // "ownerless = manageable by anyone" rule) — a manager passes their own,
-  // an admin viewing everything passes none.
-  static async getManagerProductsPagePublic (companyId) {
-    try {
-      const params = companyId ? { company_id: companyId } : {}
-      const response = await this.request().get(`${this.entity}/manager-products-page`, { params })
-      return this.responseWrapper(response, response.data)
-    } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
-    }
+  // GET /products/manager-products-page — manager/admin only (see
+  // BaseService.getStaffPage). One bundled response for
+  // ManagerProductsPage's table: plain product rows only, no album_details.
+  // A manager always gets their own company's products plus any ownerless
+  // merch (the backend's "ownerless = manageable by anyone" rule), so
+  // manager screens pass no companyId — the server ignores one from a
+  // manager anyway. companyId is for admin screens only: it narrows to that
+  // company (plus ownerless merch); omit it for every company.
+  static getManagerProductsPage (companyId) {
+    return this.getStaffPage('manager-products-page', companyId ? { company_id: companyId } : {})
   }
 
-  // GET /products/manager-product-form-page — public, no auth. One bundled
-  // response for ManagerProductFormPage: products (for the isEditing
-  // lookup) plus categories (the category <select>). companyId scopes the
-  // products list the same way getManagerProductsPagePublic does.
-  static async getManagerProductFormPagePublic (companyId) {
-    try {
-      const params = companyId ? { company_id: companyId } : {}
-      const response = await this.request().get(`${this.entity}/manager-product-form-page`, { params })
-      return this.responseWrapper(response, response.data)
-    } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
-    }
+  // GET /products/manager-product-form-page — manager/admin only (see
+  // BaseService.getStaffPage). One bundled response for
+  // ManagerProductFormPage: products (for the isEditing lookup) and the
+  // idol/group owner pickers, scoped like getManagerProductsPage, plus
+  // categories and colors (unscoped reference data). companyId is
+  // admin-only, same as getManagerProductsPage.
+  static getManagerProductFormPage (companyId) {
+    return this.getStaffPage('manager-product-form-page', companyId ? { company_id: companyId } : {})
   }
 
   // GET /products/{id}/sales — manager/admin only. Paginated

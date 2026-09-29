@@ -62,31 +62,22 @@ export class IdolsService extends BaseService {
     }
   }
 
-  // GET /idols/manager-idols-page — public, no auth. One bundled response
-  // for ManagerIdolsPage's table: every idol, plus the group list its
-  // "Group" column resolves against. No idol_colors — this table never
-  // shows a color.
-  static async getManagerIdolsPagePublic () {
-    try {
-      const response = await this.request().get(`${this.entity}/manager-idols-page`)
-      return this.responseWrapper(response, response.data)
-    } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
-    }
+  // GET /idols/manager-idols-page — manager/admin only (see
+  // BaseService.getStaffPage). One bundled response for ManagerIdolsPage's
+  // table: idols, plus the group list its "Group" column resolves against —
+  // both already scoped to a manager's own company. No idol_colors — this
+  // table never shows a color.
+  static getManagerIdolsPage () {
+    return this.getStaffPage('manager-idols-page')
   }
 
-  // GET /idols/manager-idol-form-page — public, no auth. One bundled
-  // response for ManagerIdolFormPage: idols (for the isEditing lookup),
-  // groups (the group <select>), and colors (the color <select>).
-  static async getManagerIdolFormPagePublic () {
-    try {
-      const response = await this.request().get(`${this.entity}/manager-idol-form-page`)
-      return this.responseWrapper(response, response.data)
-    } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
-    }
+  // GET /idols/manager-idol-form-page — manager/admin only (see
+  // BaseService.getStaffPage). One bundled response for
+  // ManagerIdolFormPage: idols (for the isEditing lookup) and groups (the
+  // group <select>), both scoped to a manager's own company, plus colors
+  // (the color <select>, unscoped reference data).
+  static getManagerIdolFormPage () {
+    return this.getStaffPage('manager-idol-form-page')
   }
 
   // PATCH /idols/activate/{id} — manager/admin only. `remove()` (DELETE)
