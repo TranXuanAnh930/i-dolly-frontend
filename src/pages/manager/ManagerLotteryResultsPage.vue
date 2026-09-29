@@ -59,6 +59,7 @@ import { format, parseISO } from 'date-fns'
 
 import { LotteryService } from '@/services/events/lottery.service'
 import { useLotteryDrawStore } from '@/store/events/lotteryDraw'
+import { tierLabel } from '@/utils/labels'
 
 export default {
   name: 'ManagerLotteryResultsPage',
@@ -131,7 +132,7 @@ export default {
       return format(parseISO(iso), 'MMM d, yyyy · h:mm a')
     },
     tierLabel (tier) {
-      return tier ? tier.charAt(0).toUpperCase() + tier.slice(1) : ''
+      return tierLabel(tier)
     },
     paymentStatusLabel (status) {
       const key = 'status' + status.split('_').map(part => part[0].toUpperCase() + part.slice(1)).join('')
