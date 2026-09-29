@@ -173,6 +173,7 @@ import VenueSeatMap from '@/components/VenueSeatMap.vue'
 import UiPageLoader from '@/components/progress-loaders/UiPageLoader.vue'
 import NotFound from '@/pages/static/NotFound.vue'
 import { setPageTitle } from '@/utils/pageTitle'
+import { tierLabel } from '@/utils/labels'
 
 export default {
   name: 'EventDetailPage',
@@ -419,7 +420,7 @@ export default {
       return { id: group.id, name: group.name, color: hex, textColor: contrastTextColor(hex) }
     },
     tierLabel (tier) {
-      return tier.tier.charAt(0).toUpperCase() + tier.tier.slice(1)
+      return tierLabel(tier.tier)
     },
     remaining (tier) {
       return Math.max(0, tier.total_quantity - tier.sold_quantity)
@@ -484,15 +485,9 @@ export default {
   font-style: italic;
   font-size: clamp(20px, 4.6vw, 44px);
   line-height: 1.3;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-
-  @include media_mobile {
-    white-space: normal;
-    overflow: visible;
-    text-overflow: clip;
-  }
+  // Wrap rather than truncate: this is the one place the full concert title
+  // is shown, so an ellipsis here would hide part of it with no way to read it.
+  overflow-wrap: anywhere;
 }
 
 .hero__meta {

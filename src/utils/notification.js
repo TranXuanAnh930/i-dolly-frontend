@@ -1,3 +1,5 @@
+import { tierLabel } from '@/utils/labels'
+
 // Maps a real NotificationRead (api-spec.md §7 in the backend repo) down
 // to what NotificationDropdown.vue and NotificationsPage.vue both need to
 // render one — icon, link, and i18n keys — so neither duplicates this
@@ -94,5 +96,5 @@ export function lotteryResultTier (item, lotteryEntriesStore) {
   if (item.type !== 'lottery_result') return ''
   const entry = lotteryEntriesStore.byId(item.lottery_entry_id)
   const tier = entry && entry.campaign && entry.campaign.ticket_type && entry.campaign.ticket_type.tier
-  return tier ? tier.charAt(0).toUpperCase() + tier.slice(1) : ''
+  return tierLabel(tier)
 }

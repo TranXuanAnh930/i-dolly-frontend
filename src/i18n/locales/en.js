@@ -231,7 +231,8 @@ export default {
     sortPriceDesc: 'Price: high to low',
     resultCount: '{count} events',
     noResults: 'No events match those filters.',
-    noResultsHint: 'Try clearing the search or picking a different unit.',
+    noResultsHint: 'Try a different search, or clear it to see every event.',
+    noEvents: 'No events scheduled yet — check back soon.',
     clearFilters: 'Clear filters',
     capacity: '{count} capacity',
     doorsAt: 'Doors {time}',
@@ -262,11 +263,10 @@ export default {
     sub: 'Every unit\'s discography, plus lightsticks and merch, straight from the label. Your wallet has been warned.',
     typeLabel: 'Type',
     typeAll: 'All',
-    typeAlbum: 'Album',
-    typeSingle: 'Single',
     unitLabel: 'Unit',
     resultCount: '{count} items',
     noResults: 'No items match those filters.',
+    noItems: 'Nothing in the store yet — check back soon.',
     addToCart: 'Add to Cart',
     addedToCart: 'Added ✓',
     viewDetails: 'Details',
@@ -311,7 +311,7 @@ export default {
     gatewayMock: 'Mock (test payment)',
     gatewayPaypal: 'PayPal',
     paymentMock: 'Payment (mock gateway)',
-    paymentMockHint: 'No real payment gateway is connected yet — enter any card details and choose how the mock payment should behave.',
+    paymentMockHint: 'This mock gateway never charges anything — enter any card details and choose how the payment should behave. Pick PayPal above to pay through the PayPal sandbox instead.',
     paypalHint: 'You\'ll be redirected to PayPal to approve your payment, then brought back here to finish.',
     cardNumber: 'Card number',
     expiry: 'Expiry',
@@ -398,7 +398,8 @@ export default {
     shippingAddress: 'Shipping Address',
     saveAddress: 'Save address',
     addressSaved: 'Shipping address saved.',
-    errorAddress: 'Fill in your address, city, state, country, and postal code.'
+    errorAddress: 'Fill in your address, city, state, country, and postal code.',
+    addressNotFound: 'That shipping address could not be found. It may have been removed — your saved address has been reloaded.'
   },
 
   guidelines: {
@@ -408,7 +409,7 @@ export default {
     directSaleTitle: 'Direct sale tickets',
     directSaleBody: 'Events marked "On Sale" are first-come, first-served. Pick your seats on the event page, add them to your cart, and check out — your seats are yours the moment payment goes through.',
     lotteryTitle: 'Lottery tickets',
-    lotteryBody: 'High-demand shows sell through a lottery instead. Submit an entry before the window closes — entering costs nothing up front. Winners are charged and notified by email (and in your notification bell) about two weeks before the show. If you\'re not selected, you\'ll see that in your History too, and you\'re welcome to try the next show.',
+    lotteryBody: 'High-demand shows sell through a lottery instead. Submit an entry before the window closes — entering costs nothing up front. Once entries close and the draw runs, you\'ll see your result in your notification bell and History. Winners then pay for their ticket from the payment page before the deadline shown there, and get a confirmation email once paid. If you\'re not selected, you\'re welcome to try the next show.',
     releasesTitle: 'Albums & singles',
     releasesBody: 'Everything in the Store ships separately from tickets. Add releases to your cart alongside — or instead of — tickets; checkout handles both in one order.',
     venueTitle: 'At the venue',
@@ -429,13 +430,13 @@ export default {
     featureShopTitle: 'Tickets & store',
     featureShopBody: 'Direct-sale seats or lottery entries for every show, plus albums, singles and merch — all in one place.',
     featurePaypalTitle: 'PayPal',
-    featurePaypalBody: 'Real PayPal checkout alongside a mock gateway, for both orders and tickets.',
+    featurePaypalBody: 'PayPal checkout (sandbox mode) alongside a mock gateway, for both orders and tickets.',
     featureEmailTitle: 'Email',
-    featureEmailBody: 'Confirmations, password resets, and reminders land straight in your inbox.',
+    featureEmailBody: 'Account verification, password resets, and order and ticket confirmations land straight in your inbox.',
     featureAiFaqTitle: 'AI FAQ answers',
     featureAiFaqBody: 'Ask on the contact page and get an instant, AI-generated answer from our FAQ — in English or Japanese.',
     noteTitle: 'A note on this build',
-    noteBody: 'I-Dolly is a demo booking site — the units, idols, venues, and releases are all fictional, and checkout is mocked (nothing is ever actually charged). Login is the one connection to a real backend; everything else runs on data stored right in your browser.'
+    noteBody: 'I-Dolly is a demo booking site — the units, idols, venues, and releases are all fictional. Everything runs on a real backend, but no real money ever changes hands: checkout uses either a mock gateway or PayPal in sandbox mode.'
   },
 
   contact: {
@@ -569,7 +570,7 @@ export default {
     qaTransferQ: 'Can I transfer my ticket to someone else?',
     qaTransferA: 'Not through I-Dolly directly — the name on the ticket must match the attendee\'s ID at entry.',
     qaLotteryQ: 'When will I know if I won the lottery?',
-    qaLotteryA: 'Winners are notified by email roughly two weeks before the show.',
+    qaLotteryA: 'Results appear in your notification bell and History once the draw runs after entries close. Winners pay from the payment page before the deadline shown there.',
     qaAgeQ: 'Is there an age restriction?',
     qaAgeA: 'Most shows are all-ages. Late-night sets that aren\'t are always noted on the event page.',
     notFound: 'We couldn\'t find that event.',
@@ -671,7 +672,7 @@ export default {
     updateReviewTitle: 'Review your changes',
     updateReviewHint: 'Double-check your updated ranking before saving — you can come back and adjust it again as long as entries are still open.',
     rankLabel: 'Choice {rank}',
-    confirmNote: 'You\'ll be notified here and by email the moment the draw happens.',
+    confirmNote: 'You\'ll be notified in your notification bell and History the moment the draw happens.',
     confirmEntry: 'Confirm entry',
     updateEntry: 'Save changes',
     successNote: 'Your ranked entry for {title} is in. We\'ll let you know the moment the draw happens.',
@@ -768,7 +769,7 @@ export default {
     contactPayment: 'Contact & payment',
     fullName: 'Full name',
     paymentMock: 'Payment (mock)',
-    mockNotice: 'No real payment gateway is connected yet — enter any card details and choose how the mock payment should behave.',
+    mockNotice: 'This mock gateway never charges anything — enter any card details and choose how the payment should behave. Pick PayPal above to pay through the PayPal sandbox instead.',
     cardNumber: 'Card number',
     expiry: 'Expiry',
     cvc: 'CVC',
@@ -1038,5 +1039,20 @@ export default {
     creating: 'Creating…',
     errorRequired: 'Name, email and a password of at least 6 characters are required.',
     successMessage: 'Manager account created for {email}.'
+  },
+  // Backend enum values (ticket_types.tier, product category names) mapped to
+  // display labels — see utils/labels.js.
+  labels: {
+    tier: {
+      vip: 'VIP',
+      premium: 'Premium',
+      regular: 'Regular'
+    },
+    category: {
+      album: 'Album',
+      single: 'Single',
+      ep: 'EP',
+      merch: 'Merch'
+    }
   }
 }

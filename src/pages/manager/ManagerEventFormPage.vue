@@ -192,6 +192,7 @@ import { DirectSaleCampaignService } from '@/services/events/directSaleCampaign.
 import { useToastStore } from '@/store/toast'
 import { useLotteryDrawStore } from '@/store/events/lotteryDraw'
 import { formatNumber } from '@/utils/format'
+import { tierLabel } from '@/utils/labels'
 import apiFormErrors from '@/mixins/apiFormErrors'
 
 const STATUS_OPTIONS = ['scheduled', 'on_sale', 'sold_out', 'completed', 'cancelled']
@@ -358,11 +359,11 @@ export default {
     formatNumber,
     async fetchPage () {
       try {
-        const response = await ConcertsService.getManagerEventsPagePublic()
+        const response = await ConcertsService.getManagerEventsPage()
         this.concerts = response.data.concerts
         this.venues = response.data.venues
       } catch (error) {
-        this.error = this.applyApiError(error)
+        if (!error.redirected) this.error = this.applyApiError(error)
       }
     },
     // The concert-detail bundle already carries ticket_types and every
@@ -382,7 +383,7 @@ export default {
       }
     },
     tierLabel (tier) {
-      return tier ? tier.charAt(0).toUpperCase() + tier.slice(1) : ''
+      return tierLabel(tier)
     },
     formatDate (iso) {
       return iso ? format(parseISO(iso), 'MMM d, yyyy · h:mm a') : '—'

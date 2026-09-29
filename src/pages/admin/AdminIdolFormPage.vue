@@ -172,12 +172,12 @@ export default {
   methods: {
     async fetchPage () {
       try {
-        const response = await IdolsService.getManagerIdolFormPagePublic()
+        const response = await IdolsService.getManagerIdolFormPage()
         this.idols = response.data.idols
         this.groups = response.data.groups
         this.colors = response.data.colors
       } catch (error) {
-        this.error = this.applyApiError(error)
+        if (!error.redirected) this.error = this.applyApiError(error)
       }
     },
     onImageChange (event) {

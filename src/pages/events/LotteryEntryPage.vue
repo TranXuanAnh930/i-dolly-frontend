@@ -130,6 +130,7 @@ import { formatNumber } from '@/utils/format'
 import { withTax } from '@/utils/tax'
 import UiPageLoader from '@/components/progress-loaders/UiPageLoader.vue'
 import { setPageTitle } from '@/utils/pageTitle'
+import { tierLabel } from '@/utils/labels'
 
 export default {
   name: 'LotteryEntryPage',
@@ -208,7 +209,7 @@ export default {
       return { 'is-active': this.step === n, 'is-done': this.step > n }
     },
     tierLabel (tier) {
-      return tier ? tier.tier.charAt(0).toUpperCase() + tier.tier.slice(1) : ''
+      return tier ? tierLabel(tier.tier) : ''
     },
     tierById (id) {
       const entry = this.lotteryTiers.find(entry => entry.tier.id === id)

@@ -120,11 +120,11 @@ export default {
       try {
         // An admin isn't scoped to a company, unlike a manager (see
         // ManagerProductFormPage) — no company filter is passed here.
-        const response = await ProductsService.getManagerProductFormPagePublic(null)
+        const response = await ProductsService.getManagerProductFormPage()
         this.products = response.data.products
         this.categories = response.data.categories
       } catch (error) {
-        this.error = this.applyApiError(error)
+        if (!error.redirected) this.error = this.applyApiError(error)
       }
     },
     onImageChange (event) {

@@ -116,10 +116,10 @@ export default {
   methods: {
     async fetchPage () {
       try {
-        const response = await GroupsService.getManagerGroupsPagePublic()
+        const response = await GroupsService.getManagerGroupsPage()
         this.groups = response.data.groups
       } catch (error) {
-        this.error = this.applyApiError(error)
+        if (!error.redirected) this.error = this.applyApiError(error)
       }
     },
     async save () {

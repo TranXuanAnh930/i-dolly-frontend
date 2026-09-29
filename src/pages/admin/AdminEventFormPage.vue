@@ -160,11 +160,11 @@ export default {
   methods: {
     async fetchPage () {
       try {
-        const response = await ConcertsService.getManagerEventsPagePublic()
+        const response = await ConcertsService.getManagerEventsPage()
         this.concerts = response.data.concerts
         this.venues = response.data.venues
       } catch (error) {
-        this.error = this.applyApiError(error)
+        if (!error.redirected) this.error = this.applyApiError(error)
       }
     },
     statusLabel (status) {

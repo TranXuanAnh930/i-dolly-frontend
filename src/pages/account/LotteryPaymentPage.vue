@@ -207,6 +207,7 @@ import { TicketService } from '@/services/events/ticket.service'
 import { PaymentService } from '@/services/payment/payment.service'
 import { formatNumber } from '@/utils/format'
 import { withTax } from '@/utils/tax'
+import { tierLabel } from '@/utils/labels'
 
 export default {
   name: 'LotteryPaymentPage',
@@ -275,7 +276,7 @@ export default {
     },
     tierLabel () {
       if (!this.context) return ''
-      return this.context.ticketType.tier.charAt(0).toUpperCase() + this.context.ticketType.tier.slice(1)
+      return tierLabel(this.context.ticketType.tier)
     },
     concertTitle () {
       return this.context && this.context.concert ? this.context.concert.title : ''

@@ -38,18 +38,13 @@ export class ConcertsService extends BaseService {
     }
   }
 
-  // GET /concerts/manager-events-page — public, no auth. One bundled
-  // response for ManagerEventsPage's table and ManagerEventFormPage's venue
-  // <select>: concerts and venues as separate lists (not embedded per-
-  // concert) since the form's dropdown needs every venue, not just ones
-  // already booked.
-  static async getManagerEventsPagePublic () {
-    try {
-      const response = await this.request().get(`${this.entity}/manager-events-page`)
-      return this.responseWrapper(response, response.data)
-    } catch (error) {
-      throw toApiError(error)
-    }
+  // GET /concerts/manager-events-page — manager/admin only (see
+  // BaseService.getStaffPage). One bundled response for ManagerEventsPage's
+  // table and ManagerEventFormPage's venue <select>: concerts (a manager's
+  // own company's only) and venues (always every venue — the form's
+  // dropdown needs all of them, not just ones already booked).
+  static getManagerEventsPage () {
+    return this.getStaffPage('manager-events-page')
   }
 
   // PUT /concerts/lottery-draw/{id} — manager/admin only. Enqueues the

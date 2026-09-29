@@ -231,7 +231,8 @@ export default {
     sortPriceDesc: '価格が高い順',
     resultCount: '{count}件のイベント',
     noResults: '条件に一致するイベントが見つかりません。',
-    noResultsHint: '検索条件をリセットするか、別のユニットを選んでみてください。',
+    noResultsHint: '別のキーワードで検索するか、検索をリセットしてすべてのイベントを表示してください。',
+    noEvents: '予定されているイベントはまだありません。またチェックしてください。',
     clearFilters: 'フィルターをリセット',
     capacity: '収容人数 {count}人',
     doorsAt: '開場 {time}',
@@ -262,11 +263,10 @@ export default {
     sub: '全ユニットのディスコグラフィーに加え、ペンライトやグッズもレーベルから直接。財布の準備はいいですか。',
     typeLabel: '種類',
     typeAll: 'すべて',
-    typeAlbum: 'アルバム',
-    typeSingle: 'シングル',
     unitLabel: 'ユニット',
     resultCount: '{count}件のアイテム',
     noResults: '条件に一致するアイテムが見つかりません。',
+    noItems: 'ストアにはまだアイテムがありません。またチェックしてください。',
     addToCart: 'カートに入れる',
     addedToCart: '追加しました ✓',
     viewDetails: '詳細',
@@ -311,7 +311,7 @@ export default {
     gatewayMock: 'モック（テスト決済）',
     gatewayPaypal: 'PayPal',
     paymentMock: 'お支払い（モックゲートウェイ）',
-    paymentMockHint: '実際の決済ゲートウェイはまだ接続されていません — カード情報を入力し、このモック決済の結果を選んでください。',
+    paymentMockHint: 'モック決済では実際の請求は発生しません — カード情報を入力し、このモック決済の結果を選んでください。PayPal（サンドボックス環境）で支払う場合は、上でPayPalを選択してください。',
     paypalHint: 'PayPalに移動して決済を承認し、完了後にこのページへ戻ります。',
     cardNumber: 'カード番号',
     expiry: '有効期限',
@@ -398,7 +398,8 @@ export default {
     shippingAddress: '配送先住所',
     saveAddress: '住所を保存',
     addressSaved: '配送先住所を保存しました。',
-    errorAddress: '住所・市区町村・都道府県・国・郵便番号を入力してください。'
+    errorAddress: '住所・市区町村・都道府県・国・郵便番号を入力してください。',
+    addressNotFound: '配送先住所が見つかりませんでした。削除された可能性があります。保存済みの住所を再読み込みしました。'
   },
 
   guidelines: {
@@ -408,7 +409,7 @@ export default {
     directSaleTitle: '先着販売チケット',
     directSaleBody: '「発売中」のイベントは先着順です。イベントページで座席を選んでカートに追加し、そのままチェックアウトへ — お支払いが完了した時点で座席が確保されます。',
     lotteryTitle: '抽選チケット',
-    lotteryBody: '人気公演は抽選での販売となります。応募期間中にエントリーしてください（応募時点での費用はかかりません）。当選された方は公演の約2週間前に決済とメール・通知ベルでのお知らせを行います。落選した場合も履歴に結果が表示されますので、ぜひ次の公演にもご応募ください。',
+    lotteryBody: '人気公演は抽選での販売となります。応募期間中にエントリーしてください（応募時点での費用はかかりません）。応募締切後に抽選が行われると、結果が通知ベルと履歴に表示されます。当選された方は、お支払いページに表示される期限までにチケット代をお支払いください。お支払い完了後に確認メールをお送りします。落選した場合も、ぜひ次の公演にもご応募ください。',
     releasesTitle: 'アルバム＆シングル',
     releasesBody: 'ストアの商品はチケットとは別便で発送されます。チケットと一緒に、またはリリース単体でもカートに追加でき、チェックアウトはまとめて1回で完了します。',
     venueTitle: '会場にて',
@@ -429,13 +430,13 @@ export default {
     featureShopTitle: 'チケット・ストア',
     featureShopBody: '各公演のチケットを先着販売・抽選で。アルバム・シングル・グッズもまとめてひとつの場所で購入できます。',
     featurePaypalTitle: 'PayPal',
-    featurePaypalBody: 'モック決済に加えて、注文・チケットどちらも実際のPayPal決済に対応しています。',
+    featurePaypalBody: 'モック決済に加えて、注文・チケットどちらもPayPal決済（サンドボックス環境）に対応しています。',
     featureEmailTitle: 'メール',
-    featureEmailBody: '確認メール・パスワード再設定・お支払いリマインダーが直接メールで届きます。',
+    featureEmailBody: 'アカウント認証・パスワード再設定・注文やチケットの確認メールが直接届きます。',
     featureAiFaqTitle: 'AIによるFAQ回答',
     featureAiFaqBody: 'お問い合わせページで質問すると、よくあるご質問をもとにAIがすぐに回答します（日本語・英語対応）。',
     noteTitle: 'このデモについて',
-    noteBody: 'I-Dollyはデモ用の予約サイトです。登場するユニット・アイドル・会場・リリースはすべて架空のもので、チェックアウトもモックのため実際の請求は発生しません。実際のバックエンドと接続しているのはログインのみで、それ以外はすべてお使いのブラウザ内にデータを保存しています。'
+    noteBody: 'I-Dollyはデモ用の予約サイトです。登場するユニット・アイドル・会場・リリースはすべて架空のものです。すべての機能は実際のバックエンドで動いていますが、決済はモック決済またはサンドボックス環境のPayPalを使うため、実際にお金が動くことはありません。'
   },
 
   contact: {
@@ -569,7 +570,7 @@ export default {
     qaTransferQ: 'チケットを他の人に譲渡できますか？',
     qaTransferA: 'I-Dolly経由での譲渡はできません — 入場時にチケットのお名前と来場者のIDが一致している必要があります。',
     qaLotteryQ: '抽選結果はいつわかりますか？',
-    qaLotteryA: '当選者には公演の約2週間前にメールでお知らせします。',
+    qaLotteryA: '応募締切後に抽選が行われると、結果が通知ベルと履歴に表示されます。当選された方は、お支払いページに表示される期限までにお支払いください。',
     qaAgeQ: '年齢制限はありますか？',
     qaAgeA: 'ほとんどの公演は全年齢対象です。対象外の深夜公演は必ずイベントページに記載されます。',
     notFound: 'そのイベントが見つかりませんでした。',
@@ -671,7 +672,7 @@ export default {
     updateReviewTitle: '変更内容の確認',
     updateReviewHint: '保存前に更新後の希望順位をご確認ください — 応募が受付中であれば、後からまた変更できます。',
     rankLabel: '第{rank}希望',
-    confirmNote: '抽選が行われ次第、こちらとメールでお知らせします。',
+    confirmNote: '抽選が行われ次第、通知ベルと履歴でお知らせします。',
     confirmEntry: '応募を確定する',
     updateEntry: '変更を保存',
     successNote: '{title} への希望順位付き応募を受け付けました。抽選結果が出次第お知らせします。',
@@ -768,7 +769,7 @@ export default {
     contactPayment: '連絡先とお支払い',
     fullName: 'お名前',
     paymentMock: 'お支払い（モック）',
-    mockNotice: '実際の決済ゲートウェイはまだ接続されていません — カード情報を入力し、このモック決済の結果を選んでください。',
+    mockNotice: 'モック決済では実際の請求は発生しません — カード情報を入力し、このモック決済の結果を選んでください。PayPal（サンドボックス環境）で支払う場合は、上でPayPalを選択してください。',
     cardNumber: 'カード番号',
     expiry: '有効期限',
     cvc: 'セキュリティコード',
@@ -1038,5 +1039,20 @@ export default {
     creating: '作成中…',
     errorRequired: '名前・メールアドレス・6文字以上のパスワードが必要です。',
     successMessage: '{email}宛にマネージャーアカウントを作成しました。'
+  },
+  // Backend enum values (ticket_types.tier, product category names) mapped to
+  // display labels — see utils/labels.js.
+  labels: {
+    tier: {
+      vip: 'VIP',
+      premium: 'プレミアム',
+      regular: 'レギュラー'
+    },
+    category: {
+      album: 'アルバム',
+      single: 'シングル',
+      ep: 'EP',
+      merch: 'グッズ'
+    }
   }
 }

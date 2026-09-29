@@ -76,7 +76,7 @@
                 <span class="field__label">{{ $t('managerProductForm.idol') }}</span>
                 <select v-model="detail.idol_id" required>
                   <option value="" disabled>{{ $t('managerProductForm.selectIdolPlaceholder') }}</option>
-                  <option v-for="idol in myIdols" :key="idol.id" :value="idol.id">{{ idol.name }}</option>
+                  <option v-for="idol in idols" :key="idol.id" :value="idol.id">{{ idol.name }}</option>
                 </select>
                 <span v-if="fieldError('idol_id')" class="field__error">{{ fieldError('idol_id') }}</span>
               </label>
@@ -84,7 +84,7 @@
                 <span class="field__label">{{ $t('managerProductForm.group') }}</span>
                 <select v-model="detail.group_id" required>
                   <option value="" disabled>{{ $t('managerProductForm.selectGroupPlaceholder') }}</option>
-                  <option v-for="group in myGroups" :key="group.id" :value="group.id">{{ group.name }}</option>
+                  <option v-for="group in groups" :key="group.id" :value="group.id">{{ group.name }}</option>
                 </select>
                 <span v-if="fieldError('group_id')" class="field__error">{{ fieldError('group_id') }}</span>
               </label>
@@ -204,12 +204,6 @@ export default {
     product () {
       return this.isEditing ? this.products.find(p => p.id === this.id) : null
     },
-    // Same scoping as ManagerProductsPage — a manager only ever edits their
-    // own company's products (plus ownerless merch) — see
-    // AdminProductFormPage for the unscoped admin equivalent.
-    companyId () {
-      return this.$currentUser.company_id
-    },
     selectedCategory () {
       return this.categories.find(c => c.id === this.form.category_id) || null
     },
@@ -219,12 +213,6 @@ export default {
     // name here is safe.
     detailKind () {
       return this.selectedCategory && this.selectedCategory.name === 'Merch' ? 'merch' : 'album'
-    },
-    myIdols () {
-      return this.idols.filter(idol => idol.company_id === this.companyId)
-    },
-    myGroups () {
-      return this.groups.filter(group => group.company_id === this.companyId)
     },
     // A freshly picked file previews over the product's existing image —
     // so a manager editing can see what's currently set without having to
@@ -267,14 +255,17 @@ export default {
   methods: {
     async fetchPage () {
       try {
-        const response = await ProductsService.getManagerProductFormPagePublic(this.companyId)
+        // products and the idol/group pickers come back already scoped to
+        // this manager's company (plus ownerless merch) by the server — see
+        // AdminProductFormPage for the unscoped admin equivalent.
+        const response = await ProductsService.getManagerProductFormPage()
         this.products = response.data.products
         this.categories = response.data.categories
         this.idols = response.data.idols
         this.groups = response.data.groups
         this.colors = response.data.colors
       } catch (error) {
-        this.error = this.applyApiError(error)
+        if (!error.redirected) this.error = this.applyApiError(error)
       }
     },
     // Prefills detail with the product's existing album/merch row so

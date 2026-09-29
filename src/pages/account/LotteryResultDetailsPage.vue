@@ -64,6 +64,7 @@ import { parseISO } from 'date-fns'
 import { useLotteryEntriesStore } from '@/store/events/lotteryEntries'
 import { useTicketsStore } from '@/store/events/tickets'
 import { formatDate } from '@/utils/format'
+import { tierLabel } from '@/utils/labels'
 
 export default {
   name: 'LotteryResultDetailsPage',
@@ -106,7 +107,7 @@ export default {
     },
     tierLabel () {
       if (!this.context) return ''
-      return this.context.ticketType.tier.charAt(0).toUpperCase() + this.context.ticketType.tier.slice(1)
+      return tierLabel(this.context.ticketType.tier)
     },
     concertTitle () {
       return this.context && this.context.concert ? this.context.concert.title : ''

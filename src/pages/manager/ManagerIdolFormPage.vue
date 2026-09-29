@@ -127,14 +127,15 @@ export default {
       if (this.isEditing) return this.idol ? this.idol.company_id : ''
       return this.$currentUser.company_id
     },
-    // Deactivated groups are hidden from selection (the backend rejects a
-    // NEW assignment into one), except the idol's own current group so an
-    // existing membership stays visible/selectable even if it later became
-    // inactive — see idol_service.update_idol's group_inactive carve-out.
+    // groups is already just this manager's company (the server scopes
+    // it). Deactivated groups are hidden from selection (the backend
+    // rejects a NEW assignment into one), except the idol's own current
+    // group so an existing membership stays visible/selectable even if it
+    // later became inactive — see idol_service.update_idol's
+    // group_inactive carve-out.
     myGroups () {
       return this.groups.filter(group =>
-        group.company_id === this.companyId &&
-        (group.is_active || (this.idol && group.id === this.idol.group_id))
+        group.is_active || (this.idol && group.id === this.idol.group_id)
       )
     },
     // A freshly picked file previews over the idol's existing photo — so a
@@ -176,12 +177,12 @@ export default {
   methods: {
     async fetchPage () {
       try {
-        const response = await IdolsService.getManagerIdolFormPagePublic()
+        const response = await IdolsService.getManagerIdolFormPage()
         this.idols = response.data.idols
         this.groups = response.data.groups
         this.colors = response.data.colors
       } catch (error) {
-        this.error = this.applyApiError(error)
+        if (!error.redirected) this.error = this.applyApiError(error)
       }
     },
     onImageChange (event) {
