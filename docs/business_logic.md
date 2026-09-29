@@ -28,9 +28,12 @@ customer), **manager** (runs one management company's own idols/groups/concerts/
   `AdminCompaniesPage`/`AdminCompanyFormPage`/`AdminManagerAccountFormPage` manage companies and
   manager accounts themselves — entities with no manager-facing equivalent at all, since a manager
   can't create another company or another manager.
-- Route-level enforcement is `meta.roles` + `checkAccessMiddleware` (see `architecture.md` §3) —
-  but the frontend doesn't re-derive company scoping beyond that; it trusts whatever the backend's
-  bundled `getManagerXPagePublic` endpoints return for the logged-in manager's own company.
+- Route-level enforcement is `meta.roles` + `checkAccessMiddleware` (see `architecture.md` §3).
+  Company scoping is the backend's job: the bundled `getManagerXPage` endpoints are
+  manager/admin-only (they need the bearer token) and return only the logged-in manager's own
+  company's rows, so manager pages show the response as-is — no client-side `company_id` filter,
+  and no `?company_id=` sent (the server ignores it from a manager). Admin pages still receive
+  every company's rows and keep their client-side filtering by the company picked in the form.
 
 ## 3. Core domain model (as the frontend consumes it)
 

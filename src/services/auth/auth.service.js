@@ -135,6 +135,29 @@ export class AuthService {
     localStorage.setItem('refreshToken', status)
   }
 
+  // Drops the local session and sends the visitor to login — for a request
+  // that still 401s after a refresh, or 401s with no refresh token to try
+  // (see BaseService.getStaffPage).
+  static expireSession () {
+    _resetAuthData()
+    $router.push({ name: 'login' }).catch(() => {})
+  }
+
+  // A 403 from a manager/admin-only endpoint means the server doesn't see
+  // this session as staff, while the route guard (which only lets a manager/
+  // admin role in) still did — i.e. currentUser.role is stale. Reload it and
+  // send the visitor out of the staff area. Stays put if the server still
+  // reports a staff role, since 'events' would just bounce a manager
+  // straight back here (redirectManagerHomeMiddleware) in a loop. Resolves
+  // true if it navigated away.
+  static async leaveStaffArea () {
+    const userStore = useUserStore()
+    await userStore.getCurrent()
+    if (['manager', 'admin'].includes(userStore.currentUser.role)) return false
+    $router.push({ name: 'events' }).catch(() => {})
+    return true
+  }
+
   static getBearer () {
     return BEARER
   }

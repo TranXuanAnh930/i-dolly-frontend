@@ -4,6 +4,64 @@ import { assert } from '@/core'
 import { Http } from './http.init'
 import { ResponseWrapper, ErrorWrapper } from './util'
 
+// The rate limiter's 429 detail reads "... try again after N seconds." —
+// wait that long before the one retry. Capped at the limiter's own 60s
+// window; the fallback covers a detail without a number in it.
+const RATE_LIMIT_FALLBACK_SECONDS = 5
+const RATE_LIMIT_MAX_SECONDS = 60
+
+function _retryAfterMs (error) {
+  const detail = error.response && error.response.data ? error.response.data.detail : ''
+  const match = typeof detail === 'string' ? detail.match(/(\d+)\s*seconds?/) : null
+  const seconds = match ? Number(match[1]) : RATE_LIMIT_FALLBACK_SECONDS
+  return Math.min(Math.max(seconds, 1), RATE_LIMIT_MAX_SECONDS) * 1000
+}
+
+/**
+ * Sends a staff-only request (`send` must build a fresh `auth: true`
+ * request each call, so a retry picks up a refreshed bearer) and recovers
+ * from the errors those endpoints add:
+ * - 401: refresh the access token and retry once; if that's impossible or
+ *   the retry still 401s, drop the session and go to login.
+ * - 403: the server doesn't consider this session staff — leave the staff
+ *   area (AuthService.leaveStaffArea).
+ * - 429: wait out the rate limit, then retry once.
+ * An error that caused a redirect is flagged `redirected` so the page
+ * doesn't flash its message on the way out.
+ */
+async function _sendStaffRequest (send, attempt = { refreshed: false, backedOff: false }) {
+  try {
+    return await send()
+  } catch (error) {
+    const status = error.response && error.response.status
+    if (status === 429 && !attempt.backedOff) {
+      await new Promise(resolve => setTimeout(resolve, _retryAfterMs(error)))
+      return _sendStaffRequest(send, { ...attempt, backedOff: true })
+    }
+    if (status !== 401 && status !== 403) throw error
+
+    // dynamic import for the same module-cycle reason as http.init.js
+    const { AuthService } = await import('@/services/auth/auth.service')
+    if (status === 403) {
+      error.redirected = await AuthService.leaveStaffArea()
+      throw error
+    }
+    if (!attempt.refreshed && AuthService.hasRefreshToken()) {
+      try {
+        await AuthService.refreshTokensOnce()
+      } catch {
+        // refreshTokens() has already reset the session and gone to login
+        error.redirected = true
+        throw error
+      }
+      return _sendStaffRequest(send, { ...attempt, refreshed: true })
+    }
+    AuthService.expireSession()
+    error.redirected = true
+    throw error
+  }
+}
+
 export class BaseService {
   static get entity () {
     throw new Error('entity getter not defined')
@@ -94,6 +152,26 @@ export class BaseService {
    * @API_CALLS_PRIVATE
    * ------------------------------
    */
+
+  /**
+   * GET {entity}/{page} — the manager/admin settings-page bundles
+   * (manager-idols-page, manager-events-page, ...). Manager/admin only and
+   * company-scoped server-side: a manager always gets their own company's
+   * rows, an admin every company's. 401/403/429 are handled by
+   * _sendStaffRequest above; the thrown error carries `redirected` when
+   * the visitor has already been sent elsewhere.
+   */
+  static async getStaffPage (page, params = {}) {
+    try {
+      const response = await _sendStaffRequest(() => this.request({ auth: true }).get(`${this.entity}/${page}`, { params }))
+      return new ResponseWrapper(response, response.data)
+    } catch (error) {
+      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
+      const wrapped = new ErrorWrapper(error, message)
+      wrapped.redirected = Boolean(error.redirected)
+      throw wrapped
+    }
+  }
 
   static async getById (id) {
     assert.id(id, { required: true })

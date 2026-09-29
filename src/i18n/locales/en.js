@@ -338,7 +338,8 @@ export default {
     shippingAddress: 'Shipping Address',
     saveAddress: 'Save address',
     addressSaved: 'Shipping address saved.',
-    errorAddress: 'Fill in your address, city, state, country, and postal code.'
+    errorAddress: 'Fill in your address, city, state, country, and postal code.',
+    addressNotFound: 'That shipping address could not be found. It may have been removed — your saved address has been reloaded.'
   },
 
   guidelines: {

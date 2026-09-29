@@ -340,11 +340,11 @@ export default {
     formatNumber,
     async fetchPage () {
       try {
-        const response = await ConcertsService.getManagerEventsPagePublic()
+        const response = await ConcertsService.getManagerEventsPage()
         this.concerts = response.data.concerts
         this.venues = response.data.venues
       } catch (error) {
-        this.error = error.message
+        if (!error.redirected) this.error = error.message
       }
     },
     // The concert-detail bundle already carries ticket_types and every

@@ -10,7 +10,7 @@ let inFlight = null
 // The generic product collection — every customer-facing page and the
 // manager/admin settings pages all have their own page-shaped endpoint
 // instead (services/products.service.js's getStorePagePublic/getDetailPublic/
-// getManagerProductsPagePublic/getManagerProductFormPagePublic, etc.), so this
+// getManagerProductsPage/getManagerProductFormPage, etc.), so this
 // store's only remaining consumers are Cart/Checkout/OrderDetails resolving a
 // cart line's product and theming it.
 //

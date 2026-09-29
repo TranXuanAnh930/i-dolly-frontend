@@ -170,6 +170,12 @@ Every service extends `BaseService` (`base.service.js`), which provides:
   success; a `.message`/`.status` `Error` subclass on failure).
 - Generic inherited methods: `getAllPublic()` (`GET {entity}/all`, 404→`[]`), `getListPublic()`,
   `getByIdPublic(id)` (`GET {entity}/{id}`), and the auth-required `create`/`update`/`remove`.
+- `getStaffPage(page, params)` — `GET {entity}/{page}` for the manager/admin settings-page
+  bundles (`manager-idols-page`, `manager-events-page`, ...). Sends the bearer token, and on
+  `401` refreshes once and retries (then drops the session and goes to login), on `403` reloads
+  the current user and leaves the staff area, and on `429` waits the seconds the `detail` names
+  (capped at 60) before one retry. An error that already redirected carries `redirected: true`,
+  so pages skip showing it.
 - **404-as-empty-list convention**: any list endpoint that 404s on an empty result (rather than
   returning `[]`) has its own try/catch translating that specific 404 into
   `this.responseWrapper(error.response, [])` — see `lottery.service.js`'s `getMyEntries`,
@@ -180,8 +186,8 @@ Every service extends `BaseService` (`base.service.js`), which provides:
   `response.data.{concert,venue,ticket_types,lineup,performing_groups,lottery_campaigns,
   direct_sale_campaigns,has_ticket,has_won_lottery,entered_campaign_ids,my_lottery_preferences}`).
   The same convention exists for `getEventsPagePublic`, `getStorePagePublic`,
-  `getMembersPagePublic`, `getGroupsPagePublic`, and every manager/admin `getManagerXPagePublic` /
-  `getManagerXFormPagePublic` method. **When a page needs data from more than one place, check for
+  `getMembersPagePublic`, `getGroupsPagePublic`, and every manager/admin `getManagerXPage` /
+  `getManagerXFormPage` method. **When a page needs data from more than one place, check for
   an existing bundled endpoint (or ask whether one should be added) before reaching for several
   parallel service calls** — this is a deliberate, established convention, not just an
   optimization.
