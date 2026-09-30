@@ -1,4 +1,5 @@
 import { useUserStore } from '@/store/auth/user'
+import { useAuthStore } from '@/store/auth/auth'
 import { AuthService } from '@/services/auth/auth.service'
 import { setRouteTitle } from '@/utils/pageTitle'
 
@@ -10,24 +11,25 @@ export async function initCurrentUserStateMiddleware (to, from, next) {
   const userStore = useUserStore()
   const currentUserId = userStore.currentUser.id
 
-  if (AuthService.hasRefreshToken() && !currentUserId) {
-    try {
-      await AuthService.refreshTokensOnce()
-      await userStore.getCurrent()
-    } catch (e) {
-      // A cold/slow backend (or a genuinely expired token) rejects here —
-      // refreshTokens() itself already resets the stale session and
-      // redirects to login on failure. Either way, next() must still run:
-      // never calling it leaves this navigation hanging forever, which
-      // renders as a permanently blank <router-view> under a fine header
-      // (the header lives outside <router-view>, so it renders fine)
-      // rather than ever reaching a real page or a loading state.
-      console.error(e)
-    }
-    next()
-  } else {
-    next()
+  // Skipped while a failed restore is still inside its wait (e.g. the
+  // refresh rate limit's window) — trying again then would only spend
+  // another request on the same 429.
+  if (AuthService.hasRefreshToken() && !currentUserId && !useAuthStore().isSessionRestoreBackingOff()) {
+    // Never throws: a rejected refresh token ends the session (-> login);
+    // any other failure keeps it and is recorded in authStore.sessionRestore
+    // (see checkAccessMiddleware). next() must always run — never calling
+    // it leaves this navigation hanging forever, which renders as a
+    // permanently blank <router-view> under a fine header.
+    await AuthService.restoreSession()
   }
+  next()
+}
+
+// A stored session that couldn't be loaded yet (rate limited, offline,
+// server error) — the fan may well still be logged in, so this is not a
+// logout.
+function isRestoringSession () {
+  return !useUserStore().currentUser.id && useAuthStore().sessionRestore.error !== null
 }
 
 /**
@@ -37,8 +39,10 @@ export async function initCurrentUserStateMiddleware (to, from, next) {
  * on currentUser.role actually being loaded, including on a hard reload.
  */
 export function redirectSettingsRootMiddleware (to, from, next) {
-  if (to.name === 'settings-root') {
-    const role = useUserStore().currentUser.role
+  // No role yet while a session restore is pending: stay put (the layout
+  // shows the reconnect notice) and route by role once it's loaded.
+  const role = useUserStore().currentUser.role
+  if (to.name === 'settings-root' && role) {
     return next({ name: role === 'admin' ? 'admin-companies' : 'manager-events' })
   }
   next()
@@ -71,6 +75,10 @@ export function checkAccessMiddleware (to, from, next) {
   const requiredRoles = to.matched.flatMap(item => item.meta.roles || [])
   const excludedRoles = to.matched.flatMap(item => item.meta.excludeRoles || [])
 
+  // While a session restore is pending, let a route that needs a user
+  // resolve anyway: AppLayout shows SessionRestoreNotice in place of the
+  // page (so nothing on it runs without a user) until the session loads.
+  if ((isAuthRoute || requiredRoles.length) && isRestoringSession()) return next()
   if (isAuthRoute && !currentUser.id) return next({ name: 'login' })
   if (requiredRoles.length && !requiredRoles.includes(currentUser.role)) return next({ name: 'events' })
   // Back to each role's own home: an admin's is Companies; 'events' itself

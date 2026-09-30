@@ -109,6 +109,17 @@ export default {
     editCompany: '会社を編集',
     addManagerAccount: 'マネージャーアカウントを追加'
   },
+  sessionRestore: {
+    eyebrow: '少々お待ちください',
+    title: 'アカウントに再接続しています',
+    reasonBusy: 'サーバーが混み合っているため、アカウント情報を読み込めませんでした。ログイン状態は保たれています。',
+    reasonOffline: 'サーバーに接続できず、アカウント情報を読み込めませんでした。通信環境をご確認ください。ログイン状態は保たれています。',
+    reasonGeneric: 'アカウント情報の読み込み中に問題が発生しました。ログイン状態は保たれています。',
+    retryingIn: '{seconds}秒後に再試行します…',
+    retrying: '再試行しています…',
+    retryNow: '今すぐ再試行',
+    logInAgain: 'もう一度ログイン'
+  },
   common: {
     save: '保存',
     submit: '送信',
