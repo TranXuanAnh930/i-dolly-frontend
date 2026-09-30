@@ -18,11 +18,17 @@
 
       <UiPageLoader v-if="loading"/>
 
-      <template v-else>
+      <!-- A failed load already shows fetch-error above — no count or
+           "no matches" state, which would blame filters that aren't set. -->
+      <template v-else-if="!error">
         <p class="result-count">{{ $t('events.resultCount', { count: filteredEvents.length }) }}</p>
 
         <div v-if="filteredEvents.length" class="grid">
           <EventCard v-for="event in filteredEvents" :key="event.id" :event="event"/>
+        </div>
+
+        <div v-else-if="!concerts.length" class="empty-state">
+          <p class="empty-state__title">{{ $t('events.noEvents') }}</p>
         </div>
 
         <div v-else class="empty-state">

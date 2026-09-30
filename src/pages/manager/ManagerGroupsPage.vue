@@ -5,7 +5,7 @@
       <router-link :to="{ name: 'manager-groups-new' }" class="add-btn">{{ $t('managerGroups.addGroup') }}</router-link>
     </div>
 
-    <div class="table-card" v-if="myGroups.length">
+    <div class="table-card" v-if="groups.length">
       <table class="table">
         <thead>
           <tr>
@@ -17,7 +17,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="group in myGroups" :key="group.id" :class="{ 'is-inactive': !group.is_active }">
+          <tr v-for="group in groups" :key="group.id" :class="{ 'is-inactive': !group.is_active }">
             <td :data-label="$t('common.name')">{{ group.name }}</td>
             <td :data-label="$t('managerGroups.debutDate')">{{ group.debut_date || '—' }}</td>
             <td class="description-cell" :data-label="$t('common.description')">{{ group.description || '—' }}</td>
@@ -59,17 +59,6 @@ export default {
     }
   },
 
-  computed: {
-    // A manager only ever manages their own company — see AdminGroupsPage
-    // for the admin equivalent, which picks a company via a dropdown.
-    companyId () {
-      return this.$currentUser.company_id
-    },
-    myGroups () {
-      return this.groups.filter(group => group.company_id === this.companyId)
-    }
-  },
-
   created () {
     this.fetchPage()
   },
@@ -77,10 +66,13 @@ export default {
   methods: {
     async fetchPage () {
       try {
-        const response = await GroupsService.getManagerGroupsPagePublic()
+        // Already just this manager's company — the server scopes it; see
+        // AdminGroupsPage for the admin equivalent, which picks a company
+        // via a dropdown.
+        const response = await GroupsService.getManagerGroupsPage()
         this.groups = response.data.groups
       } catch (error) {
-        this.error = error.message
+        if (!error.redirected) this.error = error.message
       }
     },
     // "Delete" is a soft delete server-side (sets is_active=false — see

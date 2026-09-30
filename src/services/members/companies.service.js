@@ -1,4 +1,5 @@
 import { BaseService } from '../base.service'
+import { toApiError } from '../apiError'
 
 // GET /management_companies/all — public, no auth. Write endpoints
 // (POST add, PUT update/{id}, DELETE delete/{id}) are admin-only. See
@@ -19,8 +20,7 @@ export class CompaniesService extends BaseService {
       const response = await this.request({ auth: true }).post('profile/create-manager', { name, email, password, company_id })
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 }

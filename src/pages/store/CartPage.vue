@@ -72,6 +72,7 @@ import { useCatalogStore } from '@/store/store/catalog'
 import { resolveMediaUrl } from '@/utils/media'
 import { formatNumber } from '@/utils/format'
 import { withTax } from '@/utils/tax'
+import { redirectIfStaff } from '@/utils/fanOnly'
 
 export default {
   name: 'CartPage',
@@ -95,6 +96,7 @@ export default {
   },
 
   created () {
+    if (redirectIfStaff(this)) return
     this.catalogStore.fetchAll()
     // Refreshes a logged-in fan's real cart — a no-op for guests/non-fan
     // roles (see cartStore.isServerBacked), who already have their local

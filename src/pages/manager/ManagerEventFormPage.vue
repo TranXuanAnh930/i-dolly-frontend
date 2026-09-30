@@ -10,6 +10,7 @@
           <label class="field">
             <span class="field__label">{{ $t('managerEvents.titleLabel') }}</span>
             <input v-model="form.title" required>
+            <span v-if="fieldError('title')" class="field__error">{{ fieldError('title') }}</span>
           </label>
           <label class="field">
             <span class="field__label">{{ $t('managerEvents.venue') }}</span>
@@ -17,24 +18,29 @@
               <option value="" disabled>{{ $t('managerEventForm.selectVenuePlaceholder') }}</option>
               <option v-for="venue in venues" :key="venue.id" :value="venue.id">{{ venue.name }} · {{ venue.city }}</option>
             </select>
+            <span v-if="fieldError('venue_id')" class="field__error">{{ fieldError('venue_id') }}</span>
           </label>
           <label class="field">
             <span class="field__label">{{ $t('managerEventForm.capacity') }}</span>
             <input type="number" min="1" v-model.number="form.capacity" required :disabled="isEventLocked">
+            <span v-if="fieldError('capacity')" class="field__error">{{ fieldError('capacity') }}</span>
           </label>
           <label class="field" v-if="isEditing">
             <span class="field__label">{{ $t('managerEvents.status') }}</span>
             <select v-model="form.status">
               <option v-for="status in statusOptions" :key="status" :value="status">{{ statusLabel(status) }}</option>
             </select>
+            <span v-if="fieldError('status')" class="field__error">{{ fieldError('status') }}</span>
           </label>
           <label class="field">
             <span class="field__label">{{ $t('managerEventForm.eventDateTime') }}</span>
             <input type="datetime-local" v-model="form.event_datetime" required :disabled="isEventLocked">
+            <span v-if="fieldError('event_datetime')" class="field__error">{{ fieldError('event_datetime') }}</span>
           </label>
           <label class="field">
             <span class="field__label">{{ $t('managerEventForm.doorsOpen') }}</span>
             <input type="datetime-local" v-model="form.doors_open_at" :disabled="isEventLocked">
+            <span v-if="fieldError('doors_open_at')" class="field__error">{{ fieldError('doors_open_at') }}</span>
           </label>
         </div>
 
@@ -43,9 +49,10 @@
         <label class="field">
           <span class="field__label">{{ $t('common.description') }}</span>
           <textarea v-model="form.description" rows="4"></textarea>
+          <span v-if="fieldError('description')" class="field__error">{{ fieldError('description') }}</span>
         </label>
 
-        <p class="form-error" v-if="error">{{ error }}</p>
+        <p class="form-error" v-if="error">{{ error }}<span v-if="apiErrorDetail" class="form-error__detail">{{ apiErrorDetail }}</span></p>
 
         <div class="form-actions">
           <router-link :to="{ name: 'manager-events' }" class="cancel-btn">{{ $t('common.cancel') }}</router-link>
@@ -86,24 +93,29 @@
                 <label class="field">
                   <span class="field__label">{{ $t('managerEventForm.entryStart') }}</span>
                   <input type="datetime-local" v-model="newCampaign.entry_start_at" required>
+                  <span v-if="fieldError('entry_start_at')" class="field__error">{{ fieldError('entry_start_at') }}</span>
                 </label>
                 <label class="field">
                   <span class="field__label">{{ $t('managerEventForm.entryEnd') }}</span>
                   <input type="datetime-local" v-model="newCampaign.entry_end_at" required>
+                  <span v-if="fieldError('entry_end_at')" class="field__error">{{ fieldError('entry_end_at') }}</span>
                 </label>
                 <label class="field">
                   <span class="field__label">{{ $t('managerEventForm.paymentDeadlineHours') }}</span>
                   <input type="number" min="1" v-model.number="newCampaign.payment_deadline_hours">
+                  <span v-if="fieldError('payment_deadline_hours')" class="field__error">{{ fieldError('payment_deadline_hours') }}</span>
                 </label>
               </template>
               <template v-else>
                 <label class="field">
                   <span class="field__label">{{ $t('managerEventForm.saleStart') }}</span>
                   <input type="datetime-local" v-model="newCampaign.sale_start_at" required>
+                  <span v-if="fieldError('sale_start_at')" class="field__error">{{ fieldError('sale_start_at') }}</span>
                 </label>
                 <label class="field">
                   <span class="field__label">{{ $t('managerEventForm.saleEnd') }}</span>
                   <input type="datetime-local" v-model="newCampaign.sale_end_at" required>
+                  <span v-if="fieldError('sale_end_at')" class="field__error">{{ fieldError('sale_end_at') }}</span>
                 </label>
               </template>
               <div class="form-actions campaign-form__actions">
@@ -115,7 +127,7 @@
         </div>
         <p class="empty-note" v-else>{{ $t('managerEventForm.noTicketTypes') }}</p>
 
-        <p class="form-error" v-if="campaignError">{{ campaignError }}</p>
+        <p class="form-error" v-if="campaignError">{{ campaignError }}<span v-if="apiErrorDetail" class="form-error__detail">{{ apiErrorDetail }}</span></p>
 
         <button v-if="!showAddTicketType" type="button" class="add-link" @click="openAddTicketType">{{ $t('managerEventForm.addTicketType') }}</button>
 
@@ -128,6 +140,7 @@
                 <option value="premium">{{ $t('managerEventForm.tierPremium') }}</option>
                 <option value="regular">{{ $t('managerEventForm.tierRegular') }}</option>
               </select>
+              <span v-if="fieldError('tier')" class="field__error">{{ fieldError('tier') }}</span>
             </label>
             <label class="field">
               <span class="field__label">{{ $t('managerEventForm.saleMethod') }}</span>
@@ -135,17 +148,20 @@
                 <option value="direct">{{ $t('eventDetail.directSaleLabel') }}</option>
                 <option value="lottery">{{ $t('eventDetail.lotteryLabel') }}</option>
               </select>
+              <span v-if="fieldError('sale_method')" class="field__error">{{ fieldError('sale_method') }}</span>
             </label>
             <label class="field">
               <span class="field__label">{{ $t('managerEventForm.price') }}</span>
               <input type="number" min="0" step="1" v-model.number="newTicketType.price" required>
+              <span v-if="fieldError('price')" class="field__error">{{ fieldError('price') }}</span>
             </label>
             <label class="field">
               <span class="field__label">{{ $t('managerEventForm.totalQuantity') }}</span>
               <input type="number" min="1" v-model.number="newTicketType.total_quantity" required>
+              <span v-if="fieldError('total_quantity')" class="field__error">{{ fieldError('total_quantity') }}</span>
             </label>
           </div>
-          <p class="form-error" v-if="ticketTypeError">{{ ticketTypeError }}</p>
+          <p class="form-error" v-if="ticketTypeError">{{ ticketTypeError }}<span v-if="apiErrorDetail" class="form-error__detail">{{ apiErrorDetail }}</span></p>
           <div class="form-actions">
             <button type="button" class="cancel-btn" @click="showAddTicketType = false">{{ $t('common.cancel') }}</button>
             <button type="submit" class="save-btn" :disabled="savingTicketType">{{ savingTicketType ? $t('common.saving') : $t('common.save') }}</button>
@@ -176,6 +192,8 @@ import { DirectSaleCampaignService } from '@/services/events/directSaleCampaign.
 import { useToastStore } from '@/store/toast'
 import { useLotteryDrawStore } from '@/store/events/lotteryDraw'
 import { formatNumber } from '@/utils/format'
+import { tierLabel } from '@/utils/labels'
+import apiFormErrors from '@/mixins/apiFormErrors'
 
 const STATUS_OPTIONS = ['scheduled', 'on_sale', 'sold_out', 'completed', 'cancelled']
 
@@ -219,6 +237,8 @@ function emptyCampaignForm (saleMethod) {
 
 export default {
   name: 'ManagerEventFormPage',
+
+  mixins: [apiFormErrors],
 
   props: {
     id: { type: String, default: null }
@@ -339,11 +359,11 @@ export default {
     formatNumber,
     async fetchPage () {
       try {
-        const response = await ConcertsService.getManagerEventsPagePublic()
+        const response = await ConcertsService.getManagerEventsPage()
         this.concerts = response.data.concerts
         this.venues = response.data.venues
       } catch (error) {
-        this.error = error.message
+        if (!error.redirected) this.error = this.applyApiError(error)
       }
     },
     // The concert-detail bundle already carries ticket_types and every
@@ -359,11 +379,11 @@ export default {
         this.lotteryCampaigns = response.data.lottery_campaigns
         this.directSaleCampaigns = response.data.direct_sale_campaigns
       } catch (error) {
-        this.ticketTypeError = error.message
+        this.ticketTypeError = this.applyApiError(error)
       }
     },
     tierLabel (tier) {
-      return tier ? tier.charAt(0).toUpperCase() + tier.slice(1) : ''
+      return tierLabel(tier)
     },
     formatDate (iso) {
       return iso ? format(parseISO(iso), 'MMM d, yyyy · h:mm a') : '—'
@@ -393,6 +413,7 @@ export default {
       this.showAddTicketType = true
       this.newTicketType = emptyTicketTypeForm()
       this.ticketTypeError = ''
+      this.clearApiErrors()
     },
     async addTicketType () {
       if (!this.newTicketType.price || !this.newTicketType.total_quantity) {
@@ -401,6 +422,7 @@ export default {
       }
       this.savingTicketType = true
       this.ticketTypeError = ''
+      this.clearApiErrors()
       try {
         await TicketTypesService.create({
           concert_id: this.id,
@@ -413,7 +435,7 @@ export default {
         await this.fetchTicketData()
         useToastStore().add({ type: 'success', message: this.$t('managerEventForm.ticketTypeAdded') })
       } catch (error) {
-        this.ticketTypeError = error.message
+        this.ticketTypeError = this.applyApiError(error)
       } finally {
         this.savingTicketType = false
       }
@@ -422,10 +444,12 @@ export default {
       this.campaignFormTierId = tier.id
       this.newCampaign = emptyCampaignForm(tier.sale_method)
       this.campaignError = ''
+      this.clearApiErrors()
     },
     async addCampaign (tier) {
       this.savingCampaign = true
       this.campaignError = ''
+      this.clearApiErrors()
       try {
         if (tier.sale_method === 'lottery') {
           await LotteryService.create({
@@ -445,7 +469,7 @@ export default {
         await this.fetchTicketData()
         useToastStore().add({ type: 'success', message: this.$t('managerEventForm.campaignAdded') })
       } catch (error) {
-        this.campaignError = error.message
+        this.campaignError = this.applyApiError(error)
       } finally {
         this.savingCampaign = false
       }
@@ -479,6 +503,7 @@ export default {
       }
       this.saving = true
       this.error = ''
+      this.clearApiErrors()
       // When locked, echo back the concert's own event_datetime/
       // doors_open_at untouched rather than round-tripping through the
       // <input type="datetime-local"> fields — that input truncates to
@@ -512,8 +537,9 @@ export default {
         }
         this.$router.push({ name: 'manager-events' })
       } catch (error) {
-        this.error = error.message
-        if (this.isEditing) useToastStore().add({ type: 'error', message: error.message })
+        this.error = this.applyApiError(error)
+        // applyApiError already toasted a permission error.
+        if (this.isEditing && !error.is('forbidden', 'fan_only_purchase')) useToastStore().add({ type: 'error', message: error.message })
       } finally {
         this.saving = false
       }
@@ -824,5 +850,20 @@ export default {
 
 .campaign-form__actions {
   grid-column: 1 / -1;
+}
+
+// Per-field API errors (422 fieldErrors, invalid_image) — see
+// mixins/apiFormErrors.js.
+.field__error {
+  font-family: $font-content;
+  font-size: 12px;
+  font-weight: 700;
+  color: $color-error;
+}
+
+.form-error__detail {
+  display: block;
+  margin-top: 4px;
+  font-weight: 400;
 }
 </style>

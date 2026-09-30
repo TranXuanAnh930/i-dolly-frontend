@@ -64,6 +64,7 @@ import { useTicketsStore } from '@/store/events/tickets'
 import { useLotteryEntriesStore } from '@/store/events/lotteryEntries'
 import { formatDate, formatNumber } from '@/utils/format'
 import { withTax } from '@/utils/tax'
+import { tierLabel } from '@/utils/labels'
 
 export default {
   name: 'HistoryPage',
@@ -135,7 +136,7 @@ export default {
         .map(entry => {
           const context = this.lotteryContexts[entry.id]
           if (!context) return null
-          const tier = context.ticketType.tier.charAt(0).toUpperCase() + context.ticketType.tier.slice(1)
+          const tier = tierLabel(context.ticketType.tier)
           const title = context.concert ? context.concert.title : ''
           const iconType = entry.status === 'won' ? 'lottery-won' : (entry.status === 'lost' || entry.status === 'expired') ? 'lottery-lost' : 'lottery-pending'
           const outcomeKey = entry.status === 'won' ? 'Won' : (entry.status === 'lost' || entry.status === 'expired') ? 'Lost' : 'Pending'

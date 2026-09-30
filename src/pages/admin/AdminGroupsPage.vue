@@ -96,10 +96,10 @@ export default {
   methods: {
     async fetchPage () {
       try {
-        const response = await GroupsService.getManagerGroupsPagePublic()
+        const response = await GroupsService.getManagerGroupsPage()
         this.groups = response.data.groups
       } catch (error) {
-        this.error = error.message
+        if (!error.redirected) this.error = error.message
       }
     },
     // "Delete" is a soft delete server-side (sets is_active=false — see

@@ -1,5 +1,6 @@
 import { BaseService } from '../base.service'
-import { ErrorWrapper, ResponseWrapper } from '../util'
+import { ResponseWrapper } from '../util'
+import { toApiError } from '../apiError'
 
 export class UsersService extends BaseService {
   static get entity () {
@@ -14,8 +15,7 @@ export class UsersService extends BaseService {
       const response = await this.request({ auth: true }).get(`${this.entity}/me`)
       return new ResponseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw new ErrorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
@@ -27,8 +27,7 @@ export class UsersService extends BaseService {
       const response = await this.request({ auth: true }).put(`${this.entity}/change-password`, { old_password: oldPassword, new_password: newPassword })
       return new ResponseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw new ErrorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
@@ -40,8 +39,7 @@ export class UsersService extends BaseService {
       const response = await this.request().post(`${this.entity}/forgot-password`, { email })
       return new ResponseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw new ErrorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
@@ -52,8 +50,7 @@ export class UsersService extends BaseService {
       const response = await this.request().post(`${this.entity}/set-password`, { token, new_password: newPassword })
       return new ResponseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw new ErrorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 }

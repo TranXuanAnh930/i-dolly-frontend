@@ -1,18 +1,32 @@
 import axios from 'axios'
 
-import { Http } from '../http.init'
-import { ResponseWrapper, ErrorWrapper } from '../util'
+import { Http, requestTimeout } from '../http.init'
+import { ResponseWrapper } from '../util'
 import { useAuthStore } from '@/store/auth/auth'
 import { useUserStore } from '@/store/auth/user'
 import $router from '@/router'
 
 import { API_URL } from '@/env'
+import { toApiError } from '../apiError'
 
 let BEARER = ''
 // The one refresh currently in flight, shared by every caller until it
 // settles — see refreshTokensOnce(). Module-level rather than store state: a
 // promise isn't reactive data, and there's only ever one session per app.
 let refreshInFlight = null
+// Set while an expired session is already being torn down, so a burst of
+// failing requests produces one logout + one redirect, not one each.
+let sessionExpiring = false
+
+// A rate-limited refresh (429) is retried once, but only if the limiter's
+// wait is short — a longer one would hold the page on a loader for that
+// long, so it's left to restoreSession()'s caller to retry later instead.
+const REFRESH_RETRY_MAX_WAIT_SECONDS = 10
+// Used when a 429 doesn't say how long to wait.
+const RATE_LIMIT_FALLBACK_SECONDS = 5
+// How long to wait before retrying a session restore that failed for any
+// other reason (offline, timeout, server error).
+const SESSION_RESTORE_RETRY_SECONDS = 10
 
 export class AuthService {
   /**
@@ -28,12 +42,10 @@ export class AuthService {
   // of per-field validation errors — flatten that to a readable message.
   static async register ({ name, email, password }) {
     try {
-      const response = await axios.post(`${API_URL}/account/register`, { name, email, password })
+      const response = await axios.post(`${API_URL}/account/register`, { name, email, password }, { timeout: requestTimeout() })
       return new ResponseWrapper(response, response.data)
     } catch (error) {
-      const detail = error.response && error.response.data ? error.response.data.detail : undefined
-      const message = Array.isArray(detail) ? detail.map(d => d.msg).join(' ') : detail
-      throw new ErrorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
@@ -49,14 +61,14 @@ export class AuthService {
       // JSON body — the browser needs to be told to accept/store it.
       const response = await axios.post(`${API_URL}/account/login`,
         payload,
-        { withCredentials: true })
+        { withCredentials: true, timeout: requestTimeout() })
       _setAuthData({
         accessToken: response.data.access_token,
         exp: _parseTokenData(response.data.access_token).exp
       })
       return new ResponseWrapper(response, response.data)
     } catch (error) {
-      throw new ErrorWrapper(error, error.response && error.response.data ? error.response.data.detail : undefined)
+      throw toApiError(error)
     }
   }
 
@@ -65,7 +77,7 @@ export class AuthService {
       const response = await new Http({ auth: true }).post('profile/logout', {}, { withCredentials: true })
       return new ResponseWrapper(response, response.data)
     } catch (error) {
-      throw new ErrorWrapper(error, error.response && error.response.data ? error.response.data.detail : undefined)
+      throw toApiError(error)
     } finally {
       // clear the local session and redirect even if the logout request
       // itself failed (e.g. network error, already-expired token)
@@ -75,21 +87,62 @@ export class AuthService {
   }
 
   static async refreshTokens () {
-    try {
-      // POST /account/refresh reads the refresh token straight off the
-      // httpOnly cookie set at login — nothing to send in the body, just
-      // withCredentials so the cookie rides along.
-      const response = await axios.post(`${API_URL}/account/refresh`, {}, { withCredentials: true })
+    for (let attempt = 1; ; attempt++) {
+      try {
+        // POST /account/refresh reads the refresh token straight off the
+        // httpOnly cookie set at login — nothing to send in the body, just
+        // withCredentials so the cookie rides along.
+        const response = await axios.post(`${API_URL}/account/refresh`, {}, { withCredentials: true, timeout: requestTimeout() })
 
-      _setAuthData({
-        accessToken: response.data.access_token,
-        exp: _parseTokenData(response.data.access_token).exp
-      })
-      return new ResponseWrapper(response, response.data)
+        _setAuthData({
+          accessToken: response.data.access_token,
+          exp: _parseTokenData(response.data.access_token).exp
+        })
+        return new ResponseWrapper(response, response.data)
+      } catch (error) {
+        const apiError = toApiError(error)
+        // invalid_refresh_token (or any other 401): the session is really
+        // gone. Anything else — rate limited, offline, timeout, a server
+        // error — is not a reason to log the fan out; the caller just sees
+        // the error.
+        if (apiError.status === 401) {
+          AuthService.expireSession()
+          throw apiError
+        }
+        if (apiError.status === 429) {
+          apiError.retryAfter = _retryAfterSeconds(error, apiError)
+          if (attempt === 1 && apiError.retryAfter <= REFRESH_RETRY_MAX_WAIT_SECONDS) {
+            await new Promise(resolve => setTimeout(resolve, apiError.retryAfter * 1000))
+            continue
+          }
+        }
+        throw apiError
+      }
+    }
+  }
+
+  // Loads the session a stored refresh token points at — on app boot
+  // (initCurrentUserStateMiddleware) and from SessionRestoreNotice's retry.
+  // Never throws. Resolves true once the user is loaded. On failure: a
+  // rejected refresh token has already ended the session (refreshTokens ->
+  // expireSession); anything else keeps it and is recorded in
+  // authStore.sessionRestore, with when to try again, so the route guard
+  // doesn't mistake it for a logout.
+  static async restoreSession () {
+    const authStore = useAuthStore()
+    try {
+      await AuthService.refreshTokensOnce()
+      await useUserStore().getCurrent({ throwOnError: true })
+      authStore.clearSessionRestore()
+      return true
     } catch (error) {
-      _resetAuthData()
-      $router.push({ name: 'login' }).catch(() => {})
-      throw new ErrorWrapper(error, error.response && error.response.data ? error.response.data.detail : undefined)
+      if (!AuthService.hasRefreshToken()) {
+        authStore.clearSessionRestore()
+        return false
+      }
+      const seconds = error.status === 429 ? (error.retryAfter || RATE_LIMIT_FALLBACK_SECONDS) : SESSION_RESTORE_RETRY_SECONDS
+      authStore.setSessionRestoreFailed(error, Date.now() + seconds * 1000)
+      return false
     }
   }
 
@@ -103,6 +156,20 @@ export class AuthService {
   // flight started a second one. Sharing the promise until it settles means
   // exactly one refresh per expiry no matter how many requests pile up behind
   // it, and no artificial delay on the first one.
+  // Ends a session the server no longer accepts: clears it locally and
+  // sends the fan to login with ?redirect= back to where they were — once,
+  // however many in-flight requests discover it at the same moment.
+  static expireSession () {
+    if (sessionExpiring) return
+    sessionExpiring = true
+    _resetAuthData()
+    const current = $router.currentRoute.value
+    const redirect = current.name === 'login' ? current.query.redirect : current.fullPath
+    $router.push({ name: 'login', query: redirect && redirect !== '/' ? { redirect } : {} })
+      .catch(() => {})
+      .finally(() => { sessionExpiring = false })
+  }
+
   static refreshTokensOnce () {
     if (!refreshInFlight) {
       refreshInFlight = this.refreshTokens().finally(() => { refreshInFlight = null })
@@ -135,6 +202,21 @@ export class AuthService {
     localStorage.setItem('refreshToken', status)
   }
 
+  // A 403 from a manager/admin-only endpoint means the server doesn't see
+  // this session as staff, while the route guard (which only lets a manager/
+  // admin role in) still did — i.e. currentUser.role is stale. Reload it and
+  // send the visitor out of the staff area. Stays put if the server still
+  // reports a staff role, since 'events' would just bounce a manager
+  // straight back here (redirectManagerHomeMiddleware) in a loop. Resolves
+  // true if it navigated away.
+  static async leaveStaffArea () {
+    const userStore = useUserStore()
+    await userStore.getCurrent()
+    if (['manager', 'admin'].includes(userStore.currentUser.role)) return false
+    $router.push({ name: 'events' }).catch(() => {})
+    return true
+  }
+
   static getBearer () {
     return BEARER
   }
@@ -165,7 +247,18 @@ function _parseTokenData (accessToken) {
   return tokenData
 }
 
+// Seconds to wait before retrying a 429: the standard Retry-After header
+// when the server sends one, else the number in the limiter's own detail
+// ("... try again after N seconds.", already parsed into apiError.retryAfter).
+function _retryAfterSeconds (error, apiError) {
+  const header = error && error.response && error.response.headers && error.response.headers['retry-after']
+  const fromHeader = Number(header)
+  if (header && Number.isFinite(fromHeader) && fromHeader >= 0) return fromHeader
+  return apiError.retryAfter != null ? apiError.retryAfter : RATE_LIMIT_FALLBACK_SECONDS
+}
+
 function _resetAuthData () {
+  useAuthStore().clearSessionRestore()
   // reset userData in store
   useUserStore().setCurrentUser({})
   useAuthStore().setAccessTokenExpDate(null)

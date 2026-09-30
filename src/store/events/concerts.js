@@ -10,7 +10,7 @@ const inFlightById = new Map()
 
 // A by-id cache of individual concerts, and nothing else. Every list view has
 // its own page-shaped endpoint (concerts.service.js's getEventsPagePublic /
-// getDetailPublic / getManagerEventsPagePublic), and the settings pages call
+// getDetailPublic / getManagerEventsPage), and the settings pages call
 // ConcertsService directly for mutations — so the only job left for this store
 // is answering "which concert is this ticket/lottery entry for?", a single-row
 // lookup. That's TicketDetailsPage and lotteryEntries.resolveContext; it used

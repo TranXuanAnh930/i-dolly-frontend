@@ -13,7 +13,7 @@
         <div class="cover" :style="!coverPhoto ? { background: `linear-gradient(155deg, ${color.hex} 0%, rgba(0,0,0,.38) 115%)` } : null">
           <img v-if="coverPhoto" :src="coverPhoto" :alt="product.name" class="cover__photo">
           <span v-else class="cover__watermark" :style="{ color: color.text }">{{ product.name.charAt(0) }}</span>
-          <span class="cover__type">{{ product.category }}</span>
+          <span class="cover__type">{{ categoryText }}</span>
         </div>
 
         <div class="info">
@@ -97,7 +97,8 @@ import { useOrdersStore } from '@/store/store/orders'
 import { useToastStore } from '@/store/toast'
 import { paletteColorForId, contrastTextColor } from '@/utils/palette'
 import { resolveMediaUrl } from '@/utils/media'
-import { formatDate, formatNumber } from '@/utils/format'
+import { formatCalendarDate, formatNumber } from '@/utils/format'
+import { categoryLabel } from '@/utils/labels'
 import { stockStatus } from '@/utils/stock'
 import { withTax } from '@/utils/tax'
 import UiPageLoader from '@/components/progress-loaders/UiPageLoader.vue'
@@ -143,6 +144,9 @@ export default {
       if (!this.product) return null
       return resolveMediaUrl(this.product.image_url)
     },
+    categoryText () {
+      return this.product ? categoryLabel(this.product.category) : ''
+    },
     metaLine () {
       if (!this.product) return ''
       const album = this.product.album || {}
@@ -151,7 +155,7 @@ export default {
         const key = album.track_count === 1 ? 'store.trackCountOne' : 'store.trackCountOther'
         parts.push(this.$t(key, { count: album.track_count }))
       }
-      if (album.release_date) parts.push(formatDate(parseISO(album.release_date), 'MMM d, yyyy'))
+      if (album.release_date) parts.push(formatCalendarDate(parseISO(album.release_date)))
       return parts.join(' · ')
     },
     formattedPrice () {

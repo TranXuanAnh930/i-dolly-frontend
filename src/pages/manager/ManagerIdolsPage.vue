@@ -5,7 +5,7 @@
       <router-link :to="{ name: 'manager-idols-new' }" class="add-btn">{{ $t('managerIdols.addIdol') }}</router-link>
     </div>
 
-    <div class="table-card" v-if="myIdols.length">
+    <div class="table-card" v-if="idols.length">
       <table class="table">
         <thead>
           <tr>
@@ -18,7 +18,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="idol in myIdols" :key="idol.id" :class="{ 'is-inactive': !idol.is_active }">
+          <tr v-for="idol in idols" :key="idol.id" :class="{ 'is-inactive': !idol.is_active }">
             <td class="thumb-cell">
               <img v-if="resolveMediaUrl(idol.profile_image_url) && !brokenImageIds.has(idol.id)" :src="resolveMediaUrl(idol.profile_image_url)" :alt="idol.name" class="thumb" @error="onImageError(idol.id)">
               <span v-else class="thumb thumb--empty" aria-hidden="true"></span>
@@ -71,17 +71,6 @@ export default {
     }
   },
 
-  computed: {
-    // A manager only ever manages their own company — see AdminIdolsPage
-    // for the admin equivalent, which picks a company via a dropdown.
-    companyId () {
-      return this.$currentUser.company_id
-    },
-    myIdols () {
-      return this.idols.filter(idol => idol.company_id === this.companyId)
-    }
-  },
-
   created () {
     this.fetchPage()
   },
@@ -90,11 +79,14 @@ export default {
     resolveMediaUrl,
     async fetchPage () {
       try {
-        const response = await IdolsService.getManagerIdolsPagePublic()
+        // Already just this manager's company — the server scopes it; see
+        // AdminIdolsPage for the admin equivalent, which picks a company
+        // via a dropdown.
+        const response = await IdolsService.getManagerIdolsPage()
         this.idols = response.data.idols
         this.groups = response.data.groups
       } catch (error) {
-        this.error = error.message
+        if (!error.redirected) this.error = error.message
       }
     },
     onImageError (idolId) {

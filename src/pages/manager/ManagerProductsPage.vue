@@ -81,14 +81,6 @@ export default {
   },
 
   computed: {
-    // Products carry no direct company_id — the backend resolves one via
-    // album_details/lightstick_details when it can, and treats plain merch
-    // with neither as manageable by anyone. A manager is scoped to their
-    // own company (plus that ownerless merch) — see AdminProductsPage for
-    // the unscoped admin equivalent.
-    companyId () {
-      return this.$currentUser.company_id
-    },
     filteredProducts () {
       const query = this.search.trim().toLowerCase()
       if (!query) return this.products
@@ -104,10 +96,15 @@ export default {
     resolveMediaUrl,
     async fetchPage () {
       try {
-        const response = await ProductsService.getManagerProductsPagePublic(this.companyId)
+        // Products carry no direct company_id — the backend resolves one via
+        // album_details/lightstick_details when it can, and treats plain
+        // merch with neither as manageable by anyone. The server scopes a
+        // manager to their own company (plus that ownerless merch) — see
+        // AdminProductsPage for the unscoped admin equivalent.
+        const response = await ProductsService.getManagerProductsPage()
         this.products = response.data.products
       } catch (error) {
-        this.error = error.message
+        if (!error.redirected) this.error = error.message
       }
     },
     onImageError (productId) {

@@ -207,6 +207,7 @@ import { TicketService } from '@/services/events/ticket.service'
 import { PaymentService } from '@/services/payment/payment.service'
 import { formatNumber } from '@/utils/format'
 import { withTax } from '@/utils/tax'
+import { tierLabel } from '@/utils/labels'
 
 export default {
   name: 'LotteryPaymentPage',
@@ -231,6 +232,9 @@ export default {
       simulateSucc: true,
       paying: false,
       error: '',
+      // One key per payment attempt (minted on reaching the confirm step,
+      // reused on a retry) — see CheckoutPage.vue for why.
+      idempotencyKey: null,
       outcome: null,
       paypalApprovalUrl: null
     }
@@ -262,6 +266,9 @@ export default {
       return !!this.entry && this.entry.status === 'won' && !!this.ticket && (this.ticket.status === 'pending_payment' || this.ticket.status === 'paid')
     },
     ineligibleMessage () {
+      // A payment attempt that just failed for a reason that ended
+      // eligibility (e.g. payment_deadline_passed) says exactly why.
+      if (this.error) return this.error
       if (!this.entry) return this.$t('lotteryPayment.notFound')
       if (this.entry.status !== 'won') return this.$t('lotteryPayment.notWon')
       if (!this.ticket) return this.$t('lotteryPayment.noTicket')
@@ -269,7 +276,7 @@ export default {
     },
     tierLabel () {
       if (!this.context) return ''
-      return this.context.ticketType.tier.charAt(0).toUpperCase() + this.context.ticketType.tier.slice(1)
+      return tierLabel(this.context.ticketType.tier)
     },
     concertTitle () {
       return this.context && this.context.concert ? this.context.concert.title : ''
@@ -314,6 +321,7 @@ export default {
         return
       }
       this.error = ''
+      this.idempotencyKey = crypto.randomUUID()
       this.step = 2
     },
     // POST /tickets/{ticket_id}/checkout (ticket_service.checkout_won_ticket)
@@ -321,6 +329,7 @@ export default {
     // CheckoutPage/TicketPurchasePage, just for a ticket a lottery draw
     // already created rather than a brand-new one.
     async confirmPayment () {
+      if (this.paying) return
       this.error = ''
       this.paying = true
 
@@ -329,40 +338,67 @@ export default {
           amount: this.total,
           gateway: this.gateway,
           simulate_succ: this.gateway === 'mock' ? this.simulateSucc : undefined,
-          idempotency_key: crypto.randomUUID(),
+          idempotency_key: this.idempotencyKey
         })
-        const ticket = response.data
-        useTicketsStore().add(ticket)
-
-        if (this.gateway === 'paypal') {
-          // docs/api-spec.md §6: checkout returns the ticket still
-          // "pending_payment" — fetch the Payment row it created to read
-          // PayPal's buyer-facing approval link, then send the fan there
-          // with a full page redirect.
-          const paymentResponse = await PaymentService.getTicketStatus(ticket.id)
-          this.paypalApprovalUrl = paymentResponse.data.pg_approval_url
-          this.outcome = 'redirecting'
-          this.step = 3
-          if (this.paypalApprovalUrl) {
-            window.location.href = this.paypalApprovalUrl
-          } else {
-            this.error = this.$t('checkout.paypalError')
-          }
-          return
-        }
-
-        this.outcome = ticket.status === 'paid' ? 'purchase' : 'declined'
-        this.step = 3
-
-        useToastStore().add({
-          type: this.outcome === 'purchase' ? 'success' : 'error',
-          message: this.$t(this.outcome === 'purchase' ? 'lotteryPayment.paidTitle' : 'lotteryPayment.declinedTitle')
-        })
+        await this.showPaymentResult(response.data, this.gateway)
       } catch (err) {
-        this.error = err.message
+        await this.handlePaymentError(err)
       } finally {
         this.paying = false
       }
+    },
+    // Payment outcomes are 200s (docs/api-spec.md §0): "paid", "cancelled"
+    // (declined mock payment — the win is forfeited), or still
+    // "pending_payment" after a PayPal checkout (go approve it).
+    async showPaymentResult (ticket, gateway) {
+      useTicketsStore().add(ticket)
+
+      if (gateway === 'paypal' && ticket.status !== 'paid' && ticket.status !== 'cancelled') {
+        // docs/api-spec.md §6: checkout returns the ticket still
+        // "pending_payment" — fetch the Payment row it created to read
+        // PayPal's buyer-facing approval link, then send the fan there
+        // with a full page redirect.
+        const paymentResponse = await PaymentService.getTicketStatus(ticket.id)
+        this.paypalApprovalUrl = paymentResponse.data.pg_approval_url
+        this.outcome = 'redirecting'
+        this.step = 3
+        if (this.paypalApprovalUrl) {
+          window.location.href = this.paypalApprovalUrl
+        } else {
+          this.error = this.$t('checkout.paypalError')
+        }
+        return
+      }
+
+      this.outcome = ticket.status === 'paid' ? 'purchase' : 'declined'
+      this.step = 3
+
+      useToastStore().add({
+        type: this.outcome === 'purchase' ? 'success' : 'error',
+        message: this.$t(this.outcome === 'purchase' ? 'lotteryPayment.paidTitle' : 'lotteryPayment.declinedTitle')
+      })
+    },
+    async handlePaymentError (err) {
+      const ticketsStore = useTicketsStore()
+      // A double submit: the first request already settled this ticket —
+      // re-read it and show where it stands, not an error.
+      if (err.code === 'duplicate_idempotency_key') {
+        await ticketsStore.fetchAll({ force: true })
+        const current = this.entry ? ticketsStore.byLotteryEntryId(this.entry.id) : null
+        if (current) {
+          await this.showPaymentResult(current, this.gateway)
+          return
+        }
+      }
+      // The deadline passed (ticket now expired) or it was otherwise
+      // settled: refresh so the page falls back to its "can't pay this"
+      // state, with the specific reason shown above it.
+      if (err.is('payment_deadline_passed', 'ticket_not_payable', 'ticket_not_found')) {
+        await ticketsStore.fetchAll({ force: true })
+        this.step = 1
+      }
+      if (err.code === 'amount_mismatch') this.idempotencyKey = crypto.randomUUID()
+      this.error = err.message
     }
   }
 }

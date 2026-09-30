@@ -1,4 +1,5 @@
 import { BaseService } from '../base.service'
+import { toApiError } from '../apiError'
 
 // GET /groups/all, GET /groups/{id} — public, no auth. See
 // docs/api-spec.md §3 (Talent) in the E-commerce backend repo for the full
@@ -16,8 +17,7 @@ export class GroupsService extends BaseService {
       const response = await this.request().get(`${this.entity}/groups-page`)
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
@@ -30,22 +30,16 @@ export class GroupsService extends BaseService {
       const response = await this.request().get(`${this.entity}/${id}/detail`)
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 
-  // GET /groups/manager-groups-page — public, no auth. One bundled response
-  // for ManagerGroupsPage's table and ManagerGroupFormPage's groupById
-  // lookup: plain group rows only, no members/events/products.
-  static async getManagerGroupsPagePublic () {
-    try {
-      const response = await this.request().get(`${this.entity}/manager-groups-page`)
-      return this.responseWrapper(response, response.data)
-    } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
-    }
+  // GET /groups/manager-groups-page — manager/admin only (see
+  // BaseService.getStaffPage). One bundled response for ManagerGroupsPage's
+  // table and ManagerGroupFormPage's groupById lookup: plain group rows
+  // only (a manager's own company's), no members/events/products.
+  static getManagerGroupsPage () {
+    return this.getStaffPage('manager-groups-page')
   }
 
   // PATCH /groups/activate/{id} — manager/admin only. `remove()` (DELETE)
@@ -56,8 +50,7 @@ export class GroupsService extends BaseService {
       const response = await this.request({ auth: true }).patch(`${this.entity}/activate/${id}`)
       return this.responseWrapper(response, response.data)
     } catch (error) {
-      const message = error.response && error.response.data ? error.response.data.detail : error.response && error.response.statusText
-      throw this.errorWrapper(error, message)
+      throw toApiError(error)
     }
   }
 }

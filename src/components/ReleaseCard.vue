@@ -3,7 +3,7 @@
     <div class="cover" :style="!coverPhoto ? { background: `linear-gradient(155deg, ${color.hex} 0%, rgba(0,0,0,.38) 115%)` } : null">
       <img v-if="coverPhoto" :src="coverPhoto" :alt="release.name" class="cover__photo">
       <span v-else class="cover__watermark" :style="{ color: color.text }">{{ release.name.charAt(0) }}</span>
-      <span class="cover__type">{{ release.category }}</span>
+      <span class="cover__type">{{ categoryText }}</span>
       <span v-if="stockStatus !== 'in'" class="cover__stock" :class="`cover__stock--${stockStatus}`">
         {{ stockStatus === 'out' ? $t('store.outOfStock') : $t('store.lowStock', { count: release.quantity }) }}
       </span>
@@ -34,7 +34,8 @@ import { parseISO } from 'date-fns'
 
 import { paletteColorForId, contrastTextColor } from '@/utils/palette'
 import { resolveMediaUrl } from '@/utils/media'
-import { formatDate, formatNumber } from '@/utils/format'
+import { formatCalendarDate, formatNumber } from '@/utils/format'
+import { categoryLabel } from '@/utils/labels'
 import { stockStatus } from '@/utils/stock'
 import { withTax } from '@/utils/tax'
 
@@ -71,6 +72,9 @@ export default {
     coverPhoto () {
       return resolveMediaUrl(this.release.image_url)
     },
+    categoryText () {
+      return categoryLabel(this.release.category)
+    },
     metaLine () {
       const album = this.release.album || {}
       const parts = []
@@ -78,7 +82,7 @@ export default {
         const key = album.track_count === 1 ? 'store.trackCountOne' : 'store.trackCountOther'
         parts.push(this.$t(key, { count: album.track_count }))
       }
-      if (album.release_date) parts.push(formatDate(parseISO(album.release_date), 'MMM d, yyyy'))
+      if (album.release_date) parts.push(formatCalendarDate(parseISO(album.release_date)))
       return parts.join(' · ')
     },
     formattedPrice () {
