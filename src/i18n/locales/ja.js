@@ -608,6 +608,7 @@ export default {
   },
 
   ticketPurchase: {
+    viewLotteryEntry: '応募内容を見る',
     lotteryEntry: '抽選応募',
     directSaleCheckout: 'チケット購入（先着販売）',
     getTickets: 'チケットを取得',

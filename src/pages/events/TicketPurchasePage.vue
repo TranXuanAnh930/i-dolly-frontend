@@ -74,7 +74,11 @@
           </div>
           <!-- e.g. sold_out / not_on_sale sending the fan back here to pick again -->
           <p class="form-error" v-if="error" :key="error">{{ error }}</p>
-          <button type="button" class="continue-btn" @click="proceed">{{ isLotteryTier ? $t('ticketPurchase.applyLottery') : $t('ticketPurchase.continueCheckout') }}</button>
+          <p class="form-error" v-else-if="directSaleBlocked">
+            {{ $t('errors.lottery_entry_unresolved') }}
+            <router-link :to="`/history/lottery/${unresolvedLotteryEntry.id}`" class="form-error__link">{{ $t('ticketPurchase.viewLotteryEntry') }} &rarr;</router-link>
+          </p>
+          <button type="button" class="continue-btn" :disabled="directSaleBlocked" @click="proceed">{{ isLotteryTier ? $t('ticketPurchase.applyLottery') : $t('ticketPurchase.continueCheckout') }}</button>
         </div>
       </div>
 
@@ -243,6 +247,7 @@
 import { parseISO } from 'date-fns'
 
 import { useTicketsStore } from '@/store/events/tickets'
+import { useLotteryEntriesStore } from '@/store/events/lotteryEntries'
 import { useToastStore } from '@/store/toast'
 import { ConcertsService } from '@/services/events/concerts.service'
 import { TicketTypesService } from '@/services/events/ticketTypes.service'
@@ -322,6 +327,21 @@ export default {
     isLotteryTier () {
       return !!this.selectedTier && this.selectedTier.sale_method === 'lottery'
     },
+    // The fan's pending or won lottery entry for this concert, if any — the
+    // same rule POST /tickets/checkout enforces (lottery_entry_unresolved),
+    // checked here so a direct-sale tier is refused at selection instead of
+    // after the fan has filled in payment details.
+    unresolvedLotteryEntry () {
+      if (!this.concert) return null
+      return useLotteryEntriesStore().items.find(entry =>
+        ['pending', 'won'].includes(entry.status) &&
+        entry.campaign && entry.campaign.ticket_type &&
+        entry.campaign.ticket_type.concert_id === this.concert.id
+      ) || null
+    },
+    directSaleBlocked () {
+      return !!this.selectedTier && !this.isLotteryTier && !!this.unresolvedLotteryEntry
+    },
     total () {
       return this.selectedTier ? withTax(this.selectedTier.price) : 0
     },
@@ -368,6 +388,8 @@ export default {
   created () {
     if (this.$currentUser.name) this.form.name = this.$currentUser.name
     if (this.$currentUser.email) this.form.email = this.$currentUser.email
+    // Cached app-wide (Header loads it too); a no-op for non-fans.
+    useLotteryEntriesStore().fetchAll()
   },
 
   methods: {
@@ -418,6 +440,7 @@ export default {
     // of asking the fan to pick a tier a second time.
     proceed () {
       this.error = ''
+      if (this.directSaleBlocked) return
       if (this.isLotteryTier) {
         this.$router.push({ name: 'event-lottery-entry', params: { id: this.concert.id }, query: { tier: this.selectedTierId } })
       } else {
@@ -1060,6 +1083,21 @@ export default {
     background: $color-brand-deep;
     transform: translateY(-2px);
   }
+
+  &:disabled {
+    background: $color-brand;
+    opacity: .45;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+.form-error__link {
+  display: inline-block;
+  margin-top: 4px;
+  color: inherit;
+  text-decoration: underline;
 }
 
 .confirmation {

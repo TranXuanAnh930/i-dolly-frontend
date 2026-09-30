@@ -608,6 +608,7 @@ export default {
   },
 
   ticketPurchase: {
+    viewLotteryEntry: 'View your entry',
     lotteryEntry: 'Lottery entry',
     directSaleCheckout: 'Buy tickets',
     getTickets: 'Get tickets',
