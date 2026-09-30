@@ -109,6 +109,17 @@ export default {
     editCompany: 'Edit company',
     addManagerAccount: 'Add manager account'
   },
+  sessionRestore: {
+    eyebrow: 'Hang tight',
+    title: 'Reconnecting to your account',
+    reasonBusy: 'The server is busy right now, so we couldn\'t load your account. You\'re still signed in.',
+    reasonOffline: 'We couldn\'t reach the server to load your account. Check your connection — you\'re still signed in.',
+    reasonGeneric: 'Something went wrong loading your account. You\'re still signed in.',
+    retryingIn: 'Trying again in {seconds}s…',
+    retrying: 'Trying again…',
+    retryNow: 'Retry now',
+    logInAgain: 'Log in again'
+  },
   common: {
     save: 'Save',
     submit: 'Submit',

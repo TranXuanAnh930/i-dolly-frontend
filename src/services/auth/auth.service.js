@@ -18,6 +18,16 @@ let refreshInFlight = null
 // failing requests produces one logout + one redirect, not one each.
 let sessionExpiring = false
 
+// A rate-limited refresh (429) is retried once, but only if the limiter's
+// wait is short — a longer one would hold the page on a loader for that
+// long, so it's left to restoreSession()'s caller to retry later instead.
+const REFRESH_RETRY_MAX_WAIT_SECONDS = 10
+// Used when a 429 doesn't say how long to wait.
+const RATE_LIMIT_FALLBACK_SECONDS = 5
+// How long to wait before retrying a session restore that failed for any
+// other reason (offline, timeout, server error).
+const SESSION_RESTORE_RETRY_SECONDS = 10
+
 export class AuthService {
   /**
    ******************************
@@ -77,24 +87,62 @@ export class AuthService {
   }
 
   static async refreshTokens () {
-    try {
-      // POST /account/refresh reads the refresh token straight off the
-      // httpOnly cookie set at login — nothing to send in the body, just
-      // withCredentials so the cookie rides along.
-      const response = await axios.post(`${API_URL}/account/refresh`, {}, { withCredentials: true, timeout: requestTimeout() })
+    for (let attempt = 1; ; attempt++) {
+      try {
+        // POST /account/refresh reads the refresh token straight off the
+        // httpOnly cookie set at login — nothing to send in the body, just
+        // withCredentials so the cookie rides along.
+        const response = await axios.post(`${API_URL}/account/refresh`, {}, { withCredentials: true, timeout: requestTimeout() })
 
-      _setAuthData({
-        accessToken: response.data.access_token,
-        exp: _parseTokenData(response.data.access_token).exp
-      })
-      return new ResponseWrapper(response, response.data)
+        _setAuthData({
+          accessToken: response.data.access_token,
+          exp: _parseTokenData(response.data.access_token).exp
+        })
+        return new ResponseWrapper(response, response.data)
+      } catch (error) {
+        const apiError = toApiError(error)
+        // invalid_refresh_token (or any other 401): the session is really
+        // gone. Anything else — rate limited, offline, timeout, a server
+        // error — is not a reason to log the fan out; the caller just sees
+        // the error.
+        if (apiError.status === 401) {
+          AuthService.expireSession()
+          throw apiError
+        }
+        if (apiError.status === 429) {
+          apiError.retryAfter = _retryAfterSeconds(error, apiError)
+          if (attempt === 1 && apiError.retryAfter <= REFRESH_RETRY_MAX_WAIT_SECONDS) {
+            await new Promise(resolve => setTimeout(resolve, apiError.retryAfter * 1000))
+            continue
+          }
+        }
+        throw apiError
+      }
+    }
+  }
+
+  // Loads the session a stored refresh token points at — on app boot
+  // (initCurrentUserStateMiddleware) and from SessionRestoreNotice's retry.
+  // Never throws. Resolves true once the user is loaded. On failure: a
+  // rejected refresh token has already ended the session (refreshTokens ->
+  // expireSession); anything else keeps it and is recorded in
+  // authStore.sessionRestore, with when to try again, so the route guard
+  // doesn't mistake it for a logout.
+  static async restoreSession () {
+    const authStore = useAuthStore()
+    try {
+      await AuthService.refreshTokensOnce()
+      await useUserStore().getCurrent({ throwOnError: true })
+      authStore.clearSessionRestore()
+      return true
     } catch (error) {
-      const apiError = toApiError(error)
-      // invalid_refresh_token (or any other 401): the session is really
-      // gone. No response at all (offline, timeout) is not a reason to log
-      // the fan out — the caller just sees a network error.
-      if (apiError.status === 401) AuthService.expireSession()
-      throw apiError
+      if (!AuthService.hasRefreshToken()) {
+        authStore.clearSessionRestore()
+        return false
+      }
+      const seconds = error.status === 429 ? (error.retryAfter || RATE_LIMIT_FALLBACK_SECONDS) : SESSION_RESTORE_RETRY_SECONDS
+      authStore.setSessionRestoreFailed(error, Date.now() + seconds * 1000)
+      return false
     }
   }
 
@@ -199,7 +247,18 @@ function _parseTokenData (accessToken) {
   return tokenData
 }
 
+// Seconds to wait before retrying a 429: the standard Retry-After header
+// when the server sends one, else the number in the limiter's own detail
+// ("... try again after N seconds.", already parsed into apiError.retryAfter).
+function _retryAfterSeconds (error, apiError) {
+  const header = error && error.response && error.response.headers && error.response.headers['retry-after']
+  const fromHeader = Number(header)
+  if (header && Number.isFinite(fromHeader) && fromHeader >= 0) return fromHeader
+  return apiError.retryAfter != null ? apiError.retryAfter : RATE_LIMIT_FALLBACK_SECONDS
+}
+
 function _resetAuthData () {
+  useAuthStore().clearSessionRestore()
   // reset userData in store
   useUserStore().setCurrentUser({})
   useAuthStore().setAccessTokenExpDate(null)

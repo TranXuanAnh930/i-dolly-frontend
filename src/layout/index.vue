@@ -11,6 +11,10 @@
            <router-view> renders nothing at all under an otherwise fine
            header. -->
       <UiPageLoader v-if="!routerReady"/>
+      <!-- A page that needs a signed-in user, while the stored session
+           couldn't be loaded yet (see SessionRestoreNotice.vue) — shown
+           instead of the page, which would otherwise run without a user. -->
+      <SessionRestoreNotice v-else-if="sessionRestorePending"/>
       <router-view v-else v-slot="{ Component }">
         <transition name="fade">
           <component :is="Component"></component>
@@ -28,7 +32,10 @@ import AppFooter from './Footer.vue'
 import ConfettiStars from '@/components/ConfettiStars.vue'
 import NotificationBar from '@/components/NotificationBar.vue'
 import UiPageLoader from '@/components/progress-loaders/UiPageLoader.vue'
+import SessionRestoreNotice from '@/components/SessionRestoreNotice.vue'
 import { useDomStore } from '@/store/dom'
+import { useAuthStore } from '@/store/auth/auth'
+import { useUserStore } from '@/store/auth/user'
 
 export default {
   name: 'AppLayout',
@@ -37,7 +44,8 @@ export default {
     AppFooter,
     ConfettiStars,
     NotificationBar,
-    UiPageLoader
+    UiPageLoader,
+    SessionRestoreNotice
   },
   data () {
     return {
@@ -46,6 +54,12 @@ export default {
       // this only ever covers app boot, not normal SPA navigation between
       // pages (each page already shows its own loading state for that).
       routerReady: false
+    }
+  },
+  computed: {
+    sessionRestorePending () {
+      const needsUser = this.$route.matched.some(record => record.meta.isAuth || (record.meta.roles && record.meta.roles.length))
+      return needsUser && !useUserStore().currentUser.id && useAuthStore().sessionRestore.error !== null
     }
   },
   created () {
