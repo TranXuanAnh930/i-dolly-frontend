@@ -68,6 +68,26 @@ npm run preview
 npm run lint
 ```
 
+### Docker
+
+The [`Dockerfile`](Dockerfile) is a multi-stage build: Node 22 runs `npm run build`, then the
+static `dist/` is served by nginx (config in [`docker/nginx.conf`](docker/nginx.conf), with the same
+SPA fallback as `vercel.json`).
+
+```bash
+# with docker compose — served on http://localhost:8080
+VITE_API_URL=https://i-dolly-backend.onrender.com docker compose up --build
+
+# or plain docker
+docker build --build-arg VITE_API_URL=https://i-dolly-backend.onrender.com -t i-dolly-frontend .
+docker run --rm -p 8080:80 i-dolly-frontend
+```
+
+`VITE_API_URL` is inlined by Vite **at build time**, so it is a build arg rather than a runtime env
+var; rebuild the image to point at a different backend. Compose defaults it to
+`http://localhost:8000`, and that URL is resolved by the user's browser, not inside the
+container.
+
 ## Project structure
 
 ```
