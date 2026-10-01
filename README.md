@@ -90,6 +90,30 @@ var; rebuild the image to point at a different backend. Compose defaults it to
 `http://localhost:8000`, and that URL is resolved by the user's browser, not inside the
 container.
 
+### Makefile
+
+A [`Makefile`](Makefile) wraps the npm scripts and Docker commands above. Run `make` to list
+every target.
+
+| Target | What it does |
+| --- | --- |
+| `make install` | `npm ci` |
+| `make dev` / `build` / `preview` | Vite dev server, production build, preview of that build |
+| `make lint` / `test` | ESLint, vitest |
+| `make clean` | Remove `dist/` and `node_modules/` |
+| `make docker-build` / `docker-run` / `docker-stop` | Build the image, run it detached on `PORT`, stop it |
+| `make up` / `down` / `logs` | `docker compose` up (with rebuild), down, follow logs |
+
+`dev`, `build`, `lint` and `test` run `npm ci` first if `node_modules/` is missing or older than
+`package.json` / `package-lock.json`. Variables can be overridden on the command line, e.g.:
+
+```bash
+make build VITE_API_URL=https://i-dolly-backend.onrender.com
+make docker-build docker-run VITE_API_URL=https://i-dolly-backend.onrender.com PORT=3000
+```
+
+`VITE_API_URL` is passed on only when set, so `make build` without it still picks up `.env.local`.
+
 ## Project structure
 
 ```
@@ -115,7 +139,7 @@ src/
 └── main.js            App entry point
 ```
 
-Docker-related files live at the repo root: [`Dockerfile`](Dockerfile) (multi-stage build),
+Docker-related files and the [`Makefile`](Makefile) live at the repo root: [`Dockerfile`](Dockerfile) (multi-stage build),
 [`docker-compose.yml`](docker-compose.yml), [`.dockerignore`](.dockerignore), and
 [`docker/nginx.conf`](docker/nginx.conf) (nginx config for serving the built SPA).
 
