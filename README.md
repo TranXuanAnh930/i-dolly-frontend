@@ -18,13 +18,15 @@ Built with Vue 3, Vite, Pinia and vue-i18n. Talks to a separate FastAPI backend
 - [Axios](https://axios-http.com/) (pre-1.0, `^0.19.2`) — HTTP client, via a small `Http`/
   `BaseService` wrapper
 - Sass (`@use` module API)
+- Docker + nginx — optional containerized production build (see [Docker](#docker))
 - No test suite — correctness is verified by lint + build + manual/live browser checks
 
 ## Getting started
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 22+ (required by `vue-i18n` 11)
+- Docker (optional — only for the [containerized build](#docker))
 - A running instance of the [`i-dolly-backend`](../i-dolly-backend) API
 
 ### Install
@@ -112,6 +114,10 @@ src/
 ├── env.js             Runtime environment config (API URL, domain title)
 └── main.js            App entry point
 ```
+
+Docker-related files live at the repo root: [`Dockerfile`](Dockerfile) (multi-stage build),
+[`docker-compose.yml`](docker-compose.yml), [`.dockerignore`](.dockerignore), and
+[`docker/nginx.conf`](docker/nginx.conf) (nginx config for serving the built SPA).
 
 For a deeper, source-verified walkthrough of how the code is organized (routing conventions,
 store/service patterns, i18n setup, styling) see [`docs/architecture.md`](docs/architecture.md).
