@@ -18,13 +18,15 @@ Built with Vue 3, Vite, Pinia and vue-i18n. Talks to a separate FastAPI backend
 - [Axios](https://axios-http.com/) (pre-1.0, `^0.19.2`) — HTTP client, via a small `Http`/
   `BaseService` wrapper
 - Sass (`@use` module API)
+- Docker + nginx — optional containerized production build (see [Docker](#docker))
 - No test suite — correctness is verified by lint + build + manual/live browser checks
 
 ## Getting started
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 22+ (required by `vue-i18n` 11)
+- Docker (optional — only for the [containerized build](#docker))
 - A running instance of the [`i-dolly-backend`](../i-dolly-backend) API
 
 ### Install
@@ -68,6 +70,50 @@ npm run preview
 npm run lint
 ```
 
+### Docker
+
+The [`Dockerfile`](Dockerfile) is a multi-stage build: Node 22 runs `npm run build`, then the
+static `dist/` is served by nginx (config in [`docker/nginx.conf`](docker/nginx.conf), with the same
+SPA fallback as `vercel.json`).
+
+```bash
+# with docker compose — served on http://localhost:8080
+VITE_API_URL=https://i-dolly-backend.onrender.com docker compose up --build
+
+# or plain docker
+docker build --build-arg VITE_API_URL=https://i-dolly-backend.onrender.com -t i-dolly-frontend .
+docker run --rm -p 8080:80 i-dolly-frontend
+```
+
+`VITE_API_URL` is inlined by Vite **at build time**, so it is a build arg rather than a runtime env
+var; rebuild the image to point at a different backend. Compose defaults it to
+`http://localhost:8000`, and that URL is resolved by the user's browser, not inside the
+container.
+
+### Makefile
+
+A [`Makefile`](Makefile) wraps the npm scripts and Docker commands above. Run `make` to list
+every target.
+
+| Target | What it does |
+| --- | --- |
+| `make install` | `npm ci` |
+| `make dev` / `build` / `preview` | Vite dev server, production build, preview of that build |
+| `make lint` / `test` | ESLint, vitest |
+| `make clean` | Remove `dist/` and `node_modules/` |
+| `make docker-build` / `docker-run` / `docker-stop` | Build the image, run it detached on `PORT`, stop it |
+| `make up` / `down` / `logs` | `docker compose` up (with rebuild), down, follow logs |
+
+`dev`, `build`, `lint` and `test` run `npm ci` first if `node_modules/` is missing or older than
+`package.json` / `package-lock.json`. Variables can be overridden on the command line, e.g.:
+
+```bash
+make build VITE_API_URL=https://i-dolly-backend.onrender.com
+make docker-build docker-run VITE_API_URL=https://i-dolly-backend.onrender.com PORT=3000
+```
+
+`VITE_API_URL` is passed on only when set, so `make build` without it still picks up `.env.local`.
+
 ## Project structure
 
 ```
@@ -92,6 +138,10 @@ src/
 ├── env.js             Runtime environment config (API URL, domain title)
 └── main.js            App entry point
 ```
+
+Docker-related files and the [`Makefile`](Makefile) live at the repo root: [`Dockerfile`](Dockerfile) (multi-stage build),
+[`docker-compose.yml`](docker-compose.yml), [`.dockerignore`](.dockerignore), and
+[`docker/nginx.conf`](docker/nginx.conf) (nginx config for serving the built SPA).
 
 For a deeper, source-verified walkthrough of how the code is organized (routing conventions,
 store/service patterns, i18n setup, styling) see [`docs/architecture.md`](docs/architecture.md).
