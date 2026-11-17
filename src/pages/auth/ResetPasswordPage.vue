@@ -128,8 +128,8 @@ export default {
         this.done = true
         useToastStore().add({ type: 'success', message: this.$t('resetPassword.successToast') })
       } catch (error) {
-        // invalid_token → "This link has expired, request a new one" (the
-        // request link sits right below the form).
+        // invalid_token → expired or already used (links are single-use),
+        // "request a new one" (the request link sits right below the form).
         this.error = error.message
       } finally {
         this.saving = false
