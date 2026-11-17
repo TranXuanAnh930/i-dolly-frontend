@@ -145,7 +145,8 @@ export const routes = [
     meta: { isAuth: true, titleKey: 'pageTitle.payment' }
   },
   {
-    // PayPal's cancel_url — informational only, no capture call.
+    // PayPal's cancel_url — cancels the abandoned checkout (see
+    // PaypalCancelPage.vue). isAuth for the same reason as paypal-return.
     path: '/payment/paypal/cancel',
     name: 'paypal-cancel',
     component: paypalCancelPage,

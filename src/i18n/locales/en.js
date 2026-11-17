@@ -370,7 +370,7 @@ export default {
 
   paypalCancel: {
     title: 'Payment cancelled',
-    note: 'You cancelled before approving on PayPal, so nothing was charged. Your order is saved as pending — check History for its status, or start over.'
+    note: 'You cancelled before approving on PayPal, so nothing was charged and this checkout was cancelled. You can start over at any time.'
   },
 
   history: {
