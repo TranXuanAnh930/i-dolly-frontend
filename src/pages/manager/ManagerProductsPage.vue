@@ -24,11 +24,12 @@
             <th>{{ $t('managerProducts.category') }}</th>
             <th>{{ $t('managerProducts.price') }}</th>
             <th>{{ $t('managerProducts.quantity') }}</th>
+            <th>{{ $t('common.status') }}</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="product in filteredProducts" :key="product.id">
+          <tr v-for="product in filteredProducts" :key="product.id" :class="{ 'is-inactive': !product.is_active }">
             <td class="thumb-cell">
               <img v-if="resolveMediaUrl(product.image_url) && !brokenImageIds.has(product.id)" :src="resolveMediaUrl(product.image_url)" :alt="product.name" class="thumb" @error="onImageError(product.id)">
               <span v-else class="thumb thumb--empty" aria-hidden="true"></span>
@@ -37,10 +38,17 @@
             <td :data-label="$t('managerProducts.category')">{{ product.category }}</td>
             <td :data-label="$t('managerProducts.price')">&yen;{{ product.price.toLocaleString('en-US') }}</td>
             <td :data-label="$t('managerProducts.quantity')">{{ product.quantity }}</td>
+            <td :data-label="$t('common.status')">
+              <span class="status-badge" :class="{ 'status-badge--inactive': !product.is_active }">
+                {{ product.is_active ? $t('common.statusActive') : $t('common.statusInactive') }}
+              </span>
+            </td>
             <td class="actions">
               <UiRowActions>
                 <router-link :to="{ name: 'manager-products-edit', params: { id: product.id } }">{{ $t('common.edit') }}</router-link>
                 <router-link :to="{ name: 'manager-products-sales', params: { id: product.id }, query: { name: product.name } }">{{ $t('managerProducts.viewSales') }}</router-link>
+                <button v-if="product.is_active" type="button" class="danger" @click="deactivate(product)">{{ $t('common.deactivate') }}</button>
+                <button v-else type="button" @click="reactivate(product)">{{ $t('common.reactivate') }}</button>
               </UiRowActions>
             </td>
           </tr>
@@ -109,6 +117,27 @@ export default {
     },
     onImageError (productId) {
       this.brokenImageIds.add(productId)
+    },
+    // "Delete" is a soft delete server-side (is_active=false) — the product
+    // leaves the store and fans' carts, but its row and order history stay,
+    // so it's offered as deactivate with reactivate as its undo (same as
+    // ManagerGroupsPage).
+    async deactivate (product) {
+      if (!window.confirm(this.$t('managerProducts.confirmDeactivate', { name: product.name }))) return
+      try {
+        await ProductsService.deactivate(product.id)
+        await this.fetchPage()
+      } catch (error) {
+        if (!error.redirected) this.error = error.message
+      }
+    },
+    async reactivate (product) {
+      try {
+        await ProductsService.reactivate(product.id)
+        await this.fetchPage()
+      } catch (error) {
+        if (!error.redirected) this.error = error.message
+      }
     }
   }
 }
@@ -280,9 +309,15 @@ export default {
     &:last-child {
       border-bottom: none;
     }
+
+    // Dims the row's data but not its actions cell — otherwise the phone
+    // dropdown menu opened from an inactive row renders see-through too.
+    &.is-inactive td:not(.actions) {
+      opacity: .55;
+    }
   }
 
-  // A 6-column table has no honest way to fit an iPhone's width — rather
+  // A 7-column table has no honest way to fit an iPhone's width — rather
   // than leave it as a horizontally-scrolling strip (easy to miss there's
   // more off to the right), each row becomes its own card: image filling
   // the left half, the remaining columns stacked label-over-value in the
@@ -304,13 +339,13 @@ export default {
       // a plain "tr { height: auto }" here would be one selector lighter
       // and get overridden right back to 64px.
       //
-      // 4 data rows sized to content, then a flexible last row for the
+      // 5 data rows sized to content, then a flexible last row for the
       // actions — whatever height the image has beyond the text goes there,
       // pinning the actions toggle to the image's bottom edge.
       tr {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        grid-template-rows: repeat(4, auto) 1fr;
+        grid-template-rows: repeat(5, auto) 1fr;
         column-gap: 14px;
         row-gap: 8px;
         height: auto;
@@ -372,6 +407,25 @@ td.thumb-cell {
   background: $color-gray-100;
 }
 
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-family: $font-content;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+  background: #e6f7ef;
+  color: #147a52;
+
+  &--inactive {
+    background: $color-gray-100;
+    color: $color-gray-500;
+  }
+}
+
 .actions {
   display: flex;
   align-items: center;
@@ -408,6 +462,11 @@ td.thumb-cell {
     &:hover {
       border-color: $color-brand;
       color: $color-brand;
+    }
+
+    &.danger:hover {
+      border-color: $color-error;
+      color: $color-error;
     }
   }
 }

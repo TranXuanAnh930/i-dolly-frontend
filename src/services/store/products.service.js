@@ -101,12 +101,26 @@ export class ProductsService extends BaseService {
     return this.getStaffPage('manager-product-form-page', companyId ? { company_id: companyId } : {})
   }
 
+  // DELETE /products/delete/{id} — manager/admin. A soft delete: sets
+  // is_active=false and keeps the row and every past order line. The
+  // product leaves every fan-facing read (store, search, detail 404s) and
+  // every fan's cart; it still shows on the manager pages and in order
+  // history. Same company scoping as update (403 for another company's).
+  static deactivate (id) {
+    return this.sendStaff(() => this.request({ auth: true }).delete(`${this.entity}/delete/${id}`))
+  }
+
+  // PATCH /products/activate/{id} — manager/admin. Undoes deactivate():
+  // back in the store, but not back in the carts it was removed from.
+  static reactivate (id) {
+    return this.sendStaff(() => this.request({ auth: true }).patch(`${this.entity}/activate/${id}`))
+  }
+
   // GET /products/{id}/sales — manager/admin only. Paginated
   // (page/limit), newest-first sales history for one product, `{page,
   // limit, count, data}` envelope. 403s if a manager doesn't own this
-  // product (via its idol's/group's company_id) — this replaces the old
-  // hard "Delete" action on the manager products page, which would have
-  // CASCADE-deleted this exact history.
+  // product (via its idol's/group's company_id). Still works for a
+  // deactivated product — that's why removal is a deactivate, not a delete.
   static async getSalesHistory (id, { page = 1, limit = 10 } = {}) {
     try {
       const response = await this.request({ auth: true }).get(`${this.entity}/${id}/sales`, { params: { page, limit } })

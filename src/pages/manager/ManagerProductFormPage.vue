@@ -4,6 +4,7 @@
 
     <div class="form-wrap">
       <h3 class="form-card__title">{{ isEditing ? $t('managerProductForm.editTitle') : $t('managerProductForm.addTitle') }}</h3>
+      <p v-if="product && product.is_active === false" class="inactive-note">{{ $t('managerProductForm.inactiveNote') }}</p>
 
       <form class="form-card" @submit.prevent="save">
         <label class="field field--image">
@@ -419,6 +420,18 @@ export default {
   font-weight: 900;
   font-size: 18px;
   color: $color-ink;
+}
+
+// A deactivated product can still be edited, but it isn't in the store —
+// say so, so a saved edit not showing up there isn't a surprise.
+.inactive-note {
+  background: $color-gray-100;
+  color: $color-gray-500;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-family: $font-content;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .section-title {

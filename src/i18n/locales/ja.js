@@ -24,6 +24,8 @@ export default {
     conflict: '既存のデータと競合しています。',
     rule_violation: '現在の設定ではこの操作は許可されていません。',
     insufficient_stock: '在庫が不足しています。数量を減らしてお試しください。',
+    product_unavailable: 'カート内の商品が現在ご購入いただけません。カートをご確認のうえ、もう一度お試しください。',
+    category_in_use: 'このカテゴリーにはまだ商品があります。削除する前に、商品を別のカテゴリーへ移動してください。',
     cart_empty: 'カートが空です。',
     address_not_found: '配送先住所が見つかりませんでした。アカウント設定をご確認ください。',
     amount_mismatch: 'お手続き中に価格が変更されました。新しい合計金額をご確認のうえ、もう一度確定してください。',
@@ -936,13 +938,15 @@ export default {
     noResults: '商品はまだありません。',
     searchPlaceholder: '商品名・カテゴリーで検索…',
     noSearchResults: '該当する商品が見つかりません。',
-    viewSales: '販売履歴'
+    viewSales: '販売履歴',
+    confirmDeactivate: '{name}を無効化しますか？ストアと全ファンのカートから外れます。注文履歴は保持され、後で再有効化できます。'
   },
 
   managerProductForm: {
     backToProducts: '商品一覧へ戻る',
     addTitle: '商品を追加',
     editTitle: '商品を編集',
+    inactiveNote: 'この商品は無効化されているため、ストアに表示されていません。編集内容は保存されますが、再有効化するまでファンには表示されません。'
     selectCategoryPlaceholder: 'カテゴリーを選択…',
     errorRequired: '名前・カテゴリー・説明は必須です。',
     priceLocked: '価格は商品作成時のみ設定できます — 変更が必要な場合は管理者に依頼してください。',
