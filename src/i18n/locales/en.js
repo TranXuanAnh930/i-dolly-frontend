@@ -8,7 +8,7 @@ export default {
     not_authenticated: 'Your session has expired. Please log in again.',
     invalid_credentials: 'Email or password is incorrect.',
     invalid_refresh_token: 'Your session has expired. Please log in again.',
-    invalid_token: 'This link has expired. Please request a new one.',
+    invalid_token: 'This link has expired or has already been used. Please request a new one.',
     incorrect_password: 'Your current password is incorrect.',
     email_taken: 'This email is already registered.',
     already_verified: 'This account is already verified.',

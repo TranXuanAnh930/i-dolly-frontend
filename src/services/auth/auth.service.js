@@ -217,6 +217,16 @@ export class AuthService {
     return true
   }
 
+  // Adopts an access token handed back by an endpoint other than login/
+  // refresh — PUT /profile/change-password revokes every refresh token and
+  // issues a fresh pair to the caller, so its token has to replace ours.
+  static applyAccessToken (accessToken) {
+    _setAuthData({
+      accessToken,
+      exp: _parseTokenData(accessToken).exp
+    })
+  }
+
   static getBearer () {
     return BEARER
   }

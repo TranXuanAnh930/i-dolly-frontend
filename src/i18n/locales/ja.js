@@ -8,7 +8,7 @@ export default {
     not_authenticated: 'セッションの有効期限が切れました。もう一度ログインしてください。',
     invalid_credentials: 'メールアドレスまたはパスワードが正しくありません。',
     invalid_refresh_token: 'セッションの有効期限が切れました。もう一度ログインしてください。',
-    invalid_token: 'このリンクの有効期限が切れています。新しいリンクをリクエストしてください。',
+    invalid_token: 'このリンクは有効期限が切れているか、すでに使用されています。新しいリンクをリクエストしてください。',
     incorrect_password: '現在のパスワードが正しくありません。',
     email_taken: 'このメールアドレスはすでに登録されています。',
     already_verified: 'このアカウントはすでに認証済みです。',
