@@ -361,7 +361,7 @@ export default {
     successTitle: 'お支払いが完了しました！',
     successNote: 'PayPalにて決済が承認されました。',
     failedTitle: 'お支払いを完了できませんでした',
-    failedNote: 'PayPalで決済が確認できませんでした — 請求は発生していません。',
+    failedNote: 'PayPalで決済が確認できなかったか、商品がすでにご購入いただけない状態です。請求は発生していません。',
     missingToken: 'PayPalの決済情報が見つかりませんでした。',
     viewDetails: '詳細を見る'
   },

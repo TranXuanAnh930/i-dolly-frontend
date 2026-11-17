@@ -87,7 +87,9 @@ export default {
       // snapshot until an unrelated full page reload happened to reset
       // the store — looking exactly like a delayed webhook update when
       // it was really just a cache never being told anything changed.
-      if (payment.status === 'success') {
+      // A failed capture changes it too: the backend cancels the order or
+      // ticket (declined, sold out, short on stock, or taken off sale).
+      if (payment.status === 'success' || payment.status === 'failed') {
         if (this.orderId) await useOrdersStore().fetchAll({ force: true })
         if (this.ticketId) await useTicketsStore().fetchAll({ force: true })
       }
