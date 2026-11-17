@@ -136,12 +136,15 @@ export default {
       return this.$t(`managerOrders.${key}`)
     },
     // The list itself is already company-scoped (every order shown here
-    // has at least one of this company's products in it), so the only real
-    // gate left is shipping status — a 403 from the endpoint's own scope
-    // check would only fire on some genuine edge case, handled defensively
-    // in shipOrder's catch rather than pre-checked here.
+    // has at least one of this company's products in it), so the gates left
+    // are payment and shipping status. A PayPal order gets a 'pending'
+    // shipping status at checkout, before capture, so shipping status alone
+    // would offer Ship on an unpaid/abandoned checkout — the backend refuses
+    // those (400 order_not_paid). A 403 or a stale-row order_not_paid is
+    // handled in shipOrder's catch rather than pre-checked here.
     canShip (order) {
-      return !!order.shippingstatus && SHIPPABLE_STATUSES.includes(order.shippingstatus.status)
+      return order.status === 'confirmed' &&
+        !!order.shippingstatus && SHIPPABLE_STATUSES.includes(order.shippingstatus.status)
     },
     async shipOrder (order) {
       if (!window.confirm(this.$t('managerOrders.confirmShip'))) return

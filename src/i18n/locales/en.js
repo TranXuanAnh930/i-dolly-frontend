@@ -17,6 +17,8 @@ export default {
     not_found: 'We couldn\'t find what you were looking for.',
     validation_error: 'Some fields need fixing. Please check your input.',
     rate_limited: 'Too many attempts. Try again in {seconds} s.',
+    too_many_login_attempts: 'Too many failed login attempts for this email. Try again in 15 minutes, or reset your password.',
+    too_many_reset_requests: 'Too many reset requests for this email. Try again in an hour, and check your inbox for a link already sent.',
     method_not_allowed: 'That action isn\'t supported.',
     internal_error: 'Something went wrong. Please try again.',
     invalid_image: 'That image can’t be used. Upload a JPEG, PNG, GIF or WebP file under 5 MB.',
@@ -53,6 +55,7 @@ export default {
     entries_not_ended: 'Entries haven\'t closed yet, so the draw can\'t run.',
     order_already_shipped: 'This order has already shipped.',
     order_cancelled: 'This order was cancelled.',
+    order_not_paid: 'This order hasn\'t been paid, so it can\'t be shipped.',
     invalid_shipping_transition: 'The shipping status can\'t change from its current state.',
     ticket_type_concert_mismatch: 'That ticket type doesn\'t belong to this event.',
     product_detail_kind_conflict: 'This product already has details of a different kind.',
@@ -505,6 +508,7 @@ export default {
     noAccount: 'Don\'t have an account?',
     register: 'Register',
     forgotPassword: 'Forgot password?',
+    resetPasswordLink: 'Reset your password',
     successMessage: 'Welcome back, {name}!'
   },
 
@@ -1014,7 +1018,9 @@ export default {
     total: 'Total',
     status: 'Status',
     noResults: 'No orders yet for this company.',
-    statusPending: 'Pending',
+    // order.status 'pending' = payment never captured (e.g. an abandoned
+    // PayPal checkout), not something waiting on the manager.
+    statusPending: 'Awaiting payment',
     statusConfirmed: 'Confirmed',
     statusCancelled: 'Cancelled',
     shippingStatus: 'Shipping',
