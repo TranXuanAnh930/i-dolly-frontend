@@ -47,4 +47,21 @@ export class PaymentService extends BaseService {
       throw toApiError(error)
     }
   }
+
+  // POST /payment/paypal/cancel/{pg_order_id} — fan only. Called from
+  // PayPal's cancel_url (?token= is the pg_order_id, as for capture).
+  // Cancels the caller's pending PayPal payment and what it was for: a
+  // direct-sale ticket or an order becomes "cancelled"; a lottery win's
+  // ticket stays pending_payment until its deadline. Returns the
+  // PaymentResponse (status "cancelled"). 404 when the payment isn't the
+  // caller's or was already captured/cancelled — e.g. a reload, or a later
+  // checkout in another tab already released it.
+  static async cancelPaypal (pgOrderId) {
+    try {
+      const response = await this.request({ auth: true }).post(`${this.entity}/paypal/cancel/${pgOrderId}`)
+      return this.responseWrapper(response, response.data)
+    } catch (error) {
+      throw toApiError(error)
+    }
+  }
 }

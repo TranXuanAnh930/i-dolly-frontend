@@ -15,12 +15,35 @@
 </template>
 
 <script>
+import { PaymentService } from '@/services/payment/payment.service'
+import { useOrdersStore } from '@/store/store/orders'
+import { useTicketsStore } from '@/store/events/tickets'
+
 // Lands here when the fan backs out on PayPal's own approval page instead
-// of finishing (docs/api-spec.md §6 step 6) — no capture call needed, the
-// order/ticket simply stays "pending" server-side (nothing auto-cancels
-// it), so this page is purely informational.
+// of finishing (docs/api-spec.md §6 steps 6-7). Tells the backend to cancel
+// the checkout right away, rather than leaving it pending until the fan's
+// next checkout cleans it up. The page shows the same thing whatever the
+// call returns: a 404 means the checkout was already resolved (a reload,
+// or a later checkout in another tab), and a network error still leaves
+// nothing charged.
 export default {
-  name: 'PaypalCancelPage'
+  name: 'PaypalCancelPage',
+
+  async created () {
+    const pgOrderId = this.$route.query.token
+    if (!pgOrderId) return
+    try {
+      await PaymentService.cancelPaypal(pgOrderId)
+    } catch (error) {
+      // 404 = already resolved; anything else is non-fatal here, see above.
+    }
+    // The orders/tickets stores are a once-per-session cache that may hold
+    // this checkout's pre-payment "pending" snapshot (see
+    // PaypalReturnPage.vue). Refetch whichever is loaded so History shows it
+    // cancelled; an unloaded one fetches fresh when History opens.
+    const stores = [useOrdersStore(), useTicketsStore()]
+    await Promise.all(stores.filter(store => store.loaded).map(store => store.fetchAll({ force: true })))
+  }
 }
 </script>
 
