@@ -26,6 +26,8 @@ export default {
     conflict: 'That conflicts with existing data.',
     rule_violation: 'That isn\'t allowed by the current settings.',
     insufficient_stock: 'There isn\'t enough stock left for that quantity.',
+    product_unavailable: 'An item in your cart is no longer available. Review your cart and try again.',
+    category_in_use: 'This category still has products. Move them to another category before deleting it.',
     cart_empty: 'Your cart is empty.',
     address_not_found: 'We couldn\'t find your shipping address. Please check it in Account Settings.',
     amount_mismatch: 'Prices changed since you started checkout. Review the new total and confirm again.',
@@ -940,13 +942,15 @@ export default {
     noResults: 'No products yet.',
     searchPlaceholder: 'Search products, categories…',
     noSearchResults: 'No products match that search.',
-    viewSales: 'Sales'
+    viewSales: 'Sales',
+    confirmDeactivate: 'Deactivate {name}? It leaves the store and every fan\'s cart. Order history is kept, and you can reactivate it later.'
   },
 
   managerProductForm: {
     backToProducts: 'Back to products',
     addTitle: 'Add product',
     editTitle: 'Edit product',
+    inactiveNote: 'This product is deactivated, so it isn\'t in the store. Edits are saved, but fans won\'t see them until it\'s reactivated.',
     selectCategoryPlaceholder: 'Select a category…',
     errorRequired: 'Name, category and description are required.',
     priceLocked: 'Price can only be set when a product is created — ask an admin to change it.',

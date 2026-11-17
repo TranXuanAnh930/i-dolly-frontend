@@ -353,6 +353,13 @@ export default {
       if (err.code === 'insufficient_stock' || err.code === 'resale_cap_exceeded' || err.code === 'cart_empty') {
         await this.cart.fetchCart()
       }
+      // A product in the cart was deactivated between loading the cart and
+      // paying: the refetched cart no longer has it, so the total changes —
+      // confirm again with a fresh key, as for amount_mismatch.
+      if (err.code === 'product_unavailable') {
+        await this.cart.fetchCart()
+        this.idempotencyKey = crypto.randomUUID()
+      }
       this.error = err.message
     }
   }

@@ -284,6 +284,9 @@ export default {
         await useCartStore().addItem(this.product.id, this.qty)
       } catch (error) {
         useToastStore().add({ type: 'error', message: error.message })
+        // 404: the product was deactivated since this page loaded — show
+        // the same not-found state a fresh load would.
+        if (error.status === 404) this.product = null
         return
       }
       useToastStore().add({ type: 'success', message: this.$t('cart.itemAdded', { name: this.product.name }) })

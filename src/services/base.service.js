@@ -154,9 +154,18 @@ export class BaseService {
    * _sendStaffRequest above; the thrown error carries `redirected` when
    * the visitor has already been sent elsewhere.
    */
-  static async getStaffPage (page, params = {}) {
+  static getStaffPage (page, params = {}) {
+    return this.sendStaff(() => this.request({ auth: true }).get(`${this.entity}/${page}`, { params }))
+  }
+
+  /**
+   * Any other manager/admin-only call, with the same 401/403/429 recovery
+   * as getStaffPage. `send` builds the request (fresh each call, so a
+   * retry picks up a refreshed bearer).
+   */
+  static async sendStaff (send) {
     try {
-      const response = await _sendStaffRequest(() => this.request({ auth: true }).get(`${this.entity}/${page}`, { params }))
+      const response = await _sendStaffRequest(send)
       return new ResponseWrapper(response, response.data)
     } catch (error) {
       const apiError = toApiError(error)
