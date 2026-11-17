@@ -946,7 +946,7 @@ export default {
     backToProducts: '商品一覧へ戻る',
     addTitle: '商品を追加',
     editTitle: '商品を編集',
-    inactiveNote: 'この商品は無効化されているため、ストアに表示されていません。編集内容は保存されますが、再有効化するまでファンには表示されません。'
+    inactiveNote: 'この商品は無効化されているため、ストアに表示されていません。編集内容は保存されますが、再有効化するまでファンには表示されません。',
     selectCategoryPlaceholder: 'カテゴリーを選択…',
     errorRequired: '名前・カテゴリー・説明は必須です。',
     priceLocked: '価格は商品作成時のみ設定できます — 変更が必要な場合は管理者に依頼してください。',
