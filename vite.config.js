@@ -1,6 +1,7 @@
 import { fileURLToPath, URL } from 'node:url'
 
 import { defineConfig } from 'vite'
+import { configDefaults } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
 
 // https://vitejs.dev/config/
@@ -36,5 +37,10 @@ export default defineConfig({
 
   server: {
     port: 8080
+  },
+
+  // e2e/ holds Playwright specs (npm run test:e2e), not vitest ones.
+  test: {
+    exclude: [...configDefaults.exclude, 'e2e/**']
   }
 })

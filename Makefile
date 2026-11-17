@@ -12,7 +12,7 @@ VITE_API_URL ?=
 API_ENV := $(if $(VITE_API_URL),VITE_API_URL=$(VITE_API_URL))
 
 .DEFAULT_GOAL := help
-.PHONY: help install dev build preview lint test clean \
+.PHONY: help install dev build preview lint test e2e clean \
         docker-build docker-run docker-stop up down logs
 
 help: ## Show this help
@@ -42,6 +42,14 @@ lint: node_modules ## Lint src/
 
 test: node_modules ## Run unit tests (vitest)
 	npm test
+
+# Runs in Microsoft's Playwright image (browsers preinstalled; keep its tag
+# in step with @playwright/test in package.json). node_modules lives in a
+# Docker volume so the Linux build never mixes with a host install.
+PLAYWRIGHT_IMAGE ?= mcr.microsoft.com/playwright:v1.49.1-noble
+e2e: ## Run Playwright end-to-end tests (mocked API) in Docker
+	docker run --rm --init --ipc=host -v "$(CURDIR)":/app -v i-dolly-frontend-e2e-node-modules:/app/node_modules \
+		-w /app -e CI=1 $(PLAYWRIGHT_IMAGE) sh -c "npm ci && npx playwright test $(ARGS)"
 
 clean: ## Remove dist/ and node_modules/
 	rm -rf dist node_modules
