@@ -358,7 +358,7 @@ export default {
     successTitle: 'Payment successful!',
     successNote: 'PayPal has confirmed your payment.',
     failedTitle: 'Payment couldn\'t be completed',
-    failedNote: 'PayPal didn\'t confirm this payment — nothing was charged.',
+    failedNote: 'PayPal didn\'t confirm this payment, or the item is no longer available. Nothing was charged.',
     missingToken: 'We couldn\'t find your PayPal payment details.',
     viewDetails: 'View details'
   },
