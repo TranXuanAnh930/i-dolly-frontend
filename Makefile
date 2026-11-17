@@ -12,7 +12,7 @@ VITE_API_URL ?=
 API_ENV := $(if $(VITE_API_URL),VITE_API_URL=$(VITE_API_URL))
 
 .DEFAULT_GOAL := help
-.PHONY: help install dev build preview lint test e2e clean \
+.PHONY: help install dev build preview lint test e2e e2e-live clean \
         docker-build docker-run docker-stop up down logs
 
 help: ## Show this help
@@ -50,6 +50,16 @@ PLAYWRIGHT_IMAGE ?= mcr.microsoft.com/playwright:v1.49.1-noble
 e2e: ## Run Playwright end-to-end tests (mocked API) in Docker
 	docker run --rm --init --ipc=host -v "$(CURDIR)":/app -v i-dolly-frontend-e2e-node-modules:/app/node_modules \
 		-w /app -e CI=1 $(PLAYWRIGHT_IMAGE) sh -c "npm ci && npx playwright test $(ARGS)"
+
+# Against a real backend stack (see e2e/live/README.md): joins its Docker
+# network, forwards localhost:8001 to its API, and reads its logs/DB
+# through the Docker socket.
+LIVE_NETWORK ?= idolly-e2e_default
+e2e-live: ## Run Playwright tests against the live backend stack in Docker
+	docker run --rm --init --ipc=host --network $(LIVE_NETWORK) -v /var/run/docker.sock:/var/run/docker.sock \
+		-v "$(CURDIR)":/app -v i-dolly-frontend-e2e-node-modules:/app/node_modules -w /app \
+		-e LIVE_API_PROXY_TARGET=app:8000 $(PLAYWRIGHT_IMAGE) \
+		sh -c "npm ci && npx playwright test -c playwright.live.config.js $(ARGS)"
 
 clean: ## Remove dist/ and node_modules/
 	rm -rf dist node_modules

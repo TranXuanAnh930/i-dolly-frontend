@@ -6,6 +6,8 @@ import { defineConfig, devices } from '@playwright/test'
 // needed. Run with `npm run test:e2e` (or `make e2e` to run in Docker).
 export default defineConfig({
   testDir: './e2e',
+  // e2e/live needs a real backend — see playwright.live.config.js.
+  testIgnore: 'live/**',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
