@@ -17,6 +17,8 @@ export default {
     not_found: 'お探しの情報が見つかりませんでした。',
     validation_error: '入力内容に誤りがあります。ご確認ください。',
     rate_limited: '操作回数が多すぎます。{seconds}秒後にもう一度お試しください。',
+    too_many_login_attempts: 'このメールアドレスでのログイン失敗が多すぎます。15分後にもう一度お試しいただくか、パスワードを再設定してください。',
+    too_many_reset_requests: 'このメールアドレスへの再設定リクエストが多すぎます。1時間後にもう一度お試しください。すでに届いているメールもご確認ください。',
     method_not_allowed: 'この操作はサポートされていません。',
     internal_error: '問題が発生しました。もう一度お試しください。',
     invalid_image: 'この画像は使用できません。5MB以下のJPEG・PNG・GIF・WebP形式の画像をアップロードしてください。',
@@ -53,6 +55,7 @@ export default {
     entries_not_ended: '応募受付が終了していないため、抽選を実行できません。',
     order_already_shipped: 'この注文はすでに発送済みです。',
     order_cancelled: 'この注文はキャンセルされています。',
+    order_not_paid: 'この注文は支払いが完了していないため、発送できません。',
     invalid_shipping_transition: '現在の配送ステータスからは変更できません。',
     ticket_type_concert_mismatch: 'この券種はこのイベントのものではありません。',
     product_detail_kind_conflict: 'この商品にはすでに別の種類の詳細情報があります。',
@@ -505,6 +508,7 @@ export default {
     noAccount: 'アカウントをお持ちでない方は',
     register: '新規登録',
     forgotPassword: 'パスワードをお忘れですか？',
+    resetPasswordLink: 'パスワードを再設定する',
     successMessage: 'おかえりなさい、{name}さん！'
   },
 
@@ -1014,7 +1018,7 @@ export default {
     total: '合計',
     status: 'ステータス',
     noResults: 'この会社の注文はまだありません。',
-    statusPending: '保留中',
+    statusPending: '支払い待ち',
     statusConfirmed: '確定',
     statusCancelled: 'キャンセル済み',
     shippingStatus: '配送状況',

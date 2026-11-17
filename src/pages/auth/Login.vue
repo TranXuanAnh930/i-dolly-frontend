@@ -46,7 +46,10 @@
 
         <router-link to="/forgot-password" class="forgot-link">{{ $t('login.forgotPassword') }}</router-link>
 
-        <p v-if="errorText" class="form-error" role="alert">{{ errorText }}</p>
+        <p v-if="errorText" class="form-error" role="alert">
+          {{ errorText }}
+          <router-link v-if="accountLocked" to="/forgot-password" class="form-error__link">{{ $t('login.resetPasswordLink') }}</router-link>
+        </p>
 
         <button type="submit" class="submit-btn" :disabled="loading || retryIn > 0">{{ loading ? $t('login.loggingIn') : $t('login.submit') }}</button>
       </form>
@@ -93,6 +96,12 @@ export default {
     credentialsError () {
       return !!this.error && this.error.code === 'invalid_credentials'
     },
+    // Per-email limit (5 failed logins / 15 min): refuses even the right
+    // password, so the fields aren't flagged red, and there's no countdown —
+    // the 429 carries no seconds. Points to a reset instead.
+    accountLocked () {
+      return !!this.error && this.error.code === 'too_many_login_attempts'
+    },
     errorText () {
       if (!this.error) return ''
       if (this.error.code === 'rate_limited') {
@@ -105,7 +114,8 @@ export default {
   watch: {
     // Clears the red error state as soon as the fan edits either field,
     // rather than leaving them stuck red until the next failed submit — but
-    // a rate-limit countdown stays until it runs out.
+    // a rate-limit countdown stays until it runs out. A per-email lockout
+    // clears too: a different email has its own count.
     email () { this.clearError() },
     password () { this.clearError() }
   },
@@ -126,7 +136,8 @@ export default {
         await this.$router.push(this.redirectTarget() || this.landingRouteFor(useUserStore().currentUser.role))
       } catch (error) {
         // invalid_credentials → "Email or password is incorrect"; everything
-        // else (rate limit, offline, server error) via its own message.
+        // else (per-IP rate limit, per-email lockout, offline, server error)
+        // via its own message. Only the per-IP rate_limited has a countdown.
         this.error = error
         if (error.code === 'rate_limited') this.startCountdown(error.retryAfter)
       } finally {
@@ -362,6 +373,13 @@ export default {
   font-family: $font-content;
   font-size: 13px;
   font-weight: 700;
+}
+
+.form-error__link {
+  display: block;
+  margin-top: 4px;
+  color: inherit;
+  text-decoration: underline;
 }
 
 .forgot-link {
