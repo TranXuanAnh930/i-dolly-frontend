@@ -4,14 +4,19 @@
   <div v-else class="paypal-return-page">
     <div class="wrapper content">
       <div class="confirmation" :class="{ 'confirmation--declined': outcome === 'failed' }">
-        <div class="confirmation__badge" :class="{ 'confirmation__badge--declined': outcome === 'failed' }">
+        <div class="confirmation__badge" :class="{ 'confirmation__badge--declined': outcome === 'failed', 'confirmation__badge--unconfirmed': outcome === 'unconfirmed' }">
           <template v-if="outcome === 'failed'">&times;</template>
+          <template v-else-if="outcome === 'unconfirmed'">!</template>
           <template v-else>&check;</template>
         </div>
 
         <template v-if="outcome === 'success'">
           <h1 class="confirmation__title">{{ $t('paypalReturn.successTitle') }}</h1>
           <p class="confirmation__note">{{ $t('paypalReturn.successNote') }}</p>
+        </template>
+        <template v-else-if="outcome === 'unconfirmed'">
+          <h1 class="confirmation__title">{{ $t('paypalReturn.unconfirmedTitle') }}</h1>
+          <p class="confirmation__note">{{ $t('paypalReturn.unconfirmedNote') }}</p>
         </template>
         <template v-else>
           <h1 class="confirmation__title confirmation__title--declined">{{ $t('paypalReturn.failedTitle') }}</h1>
@@ -94,8 +99,22 @@ export default {
         if (this.ticketId) await useTicketsStore().fetchAll({ force: true })
       }
     } catch (err) {
-      this.outcome = 'failed'
-      this.error = err.message
+      // A 5xx or no response at all doesn't mean the payment failed: the
+      // capture can go through on PayPal's side while our side times out or
+      // fails to record it (backend bugs.md #8). Don't say "nothing was
+      // charged" then. Point the fan at History, refetched so it shows
+      // whatever the backend recorded. A 4xx (e.g. 404 for a payment that
+      // isn't theirs or was already settled) is a definite answer.
+      if (err.isNetworkError || err.status >= 500) {
+        this.outcome = 'unconfirmed'
+        await Promise.all([
+          useOrdersStore().fetchAll({ force: true }),
+          useTicketsStore().fetchAll({ force: true })
+        ]).catch(() => {})
+      } else {
+        this.outcome = 'failed'
+        this.error = err.message
+      }
     } finally {
       this.capturing = false
     }
@@ -142,6 +161,10 @@ export default {
   align-items: center;
   justify-content: center;
   margin-bottom: 8px;
+
+  &--unconfirmed {
+    background: #d98e04;
+  }
 
   &--declined {
     background: $color-error;

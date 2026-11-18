@@ -365,6 +365,8 @@ export default {
     failedTitle: 'お支払いを完了できませんでした',
     failedNote: 'PayPalで決済が確認できなかったか、商品がすでにご購入いただけない状態です。請求は発生していません。',
     missingToken: 'PayPalの決済情報が見つかりませんでした。',
+    unconfirmedTitle: 'お支払いの結果を確認できませんでした',
+    unconfirmedNote: 'PayPalでの決済確認中に通信が途切れたため、お支払いが完了したかどうか確認できません。もう一度お試しになる前に、履歴をご確認ください。',
     viewDetails: '詳細を見る'
   },
 
