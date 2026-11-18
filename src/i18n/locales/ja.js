@@ -21,6 +21,8 @@ export default {
     too_many_reset_requests: 'このメールアドレスへの再設定リクエストが多すぎます。1時間後にもう一度お試しください。すでに届いているメールもご確認ください。',
     method_not_allowed: 'この操作はサポートされていません。',
     internal_error: '問題が発生しました。もう一度お試しください。',
+    bad_gateway: '連携先のサービスが応答していません。もう一度お試しください。',
+    payment_gateway_unavailable: 'PayPalが現在応答していません。請求や予約は発生していません。もう一度お試しください。',
     invalid_image: 'この画像は使用できません。5MB以下のJPEG・PNG・GIF・WebP形式の画像をアップロードしてください。',
     bad_request: 'この操作は完了できませんでした。',
     conflict: '既存のデータと競合しています。',
