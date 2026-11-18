@@ -53,17 +53,15 @@ test('deactivate → gone from the store, carts and detail; history kept; reacti
     await fanPage.goto('/cart')
     await expect(fanPage.getByText(other.name)).toBeVisible()
     await expect(fanPage.getByText(product.name)).toHaveCount(0)
-    // The past order keeps the line and its price. Its NAME can't be shown
-    // yet: the fan's order API returns only product_id/quantity/price and
-    // the page resolves names from the store catalog, which no longer has
-    // the product — tracked as a backend gap (see e2e/live/README.md).
+    // The past order keeps the line, its name (items[].product_name, backend
+    // bugs.md #34) and its price, and the line no longer links to the
+    // product's 404 detail page.
     await fanPage.goto(`/history/orders/${order.id}`)
     await expect(fanPage.locator('.line')).toHaveCount(1)
+    await expect(fanPage.locator('.line__name')).toHaveText(product.name)
+    await expect(fanPage.locator('a.line')).toHaveCount(0)
     // Order lines store the tax-included unit price.
     await expect(fanPage.locator('.line')).toContainText(Math.round(product.price * 1.1).toLocaleString('en-US'))
-    const shownName = await fanPage.locator('.line__name').innerText()
-    test.info().annotations.push({ type: 'known-gap', description: `order line shows "${shownName}" instead of "${product.name}"` })
-    console.log(`[known-gap] deactivated product's order line shows "${shownName}" instead of "${product.name}"`)
     await fanContext.close()
 
     // Admin sees the same state, with no "Delete" left.

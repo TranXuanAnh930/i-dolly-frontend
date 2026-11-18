@@ -42,7 +42,3 @@ Stop the stack with `docker compose -p idolly-e2e down` (add `-v` to drop its DB
 - The PayPal sandbox test skips unless `PAYPAL_CLIENT_ID`/`SECRET` are valid
   sandbox credentials. A successful or failed *capture* needs a person to
   approve on PayPal, so it isn't covered here (the mocked suite covers the UI).
-- A deactivated product's line in a fan's order details shows "Unknown
-  product": the fan order API returns only `product_id/quantity/price`, and
-  the page resolves names from the store catalog. Needs the backend to return
-  the product name on order items.

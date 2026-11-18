@@ -43,7 +43,7 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
  * - `routes`: { 'METHOD path': handler } where path is relative to the API
  *   root (e.g. 'GET order/manager-orders-page'), may end in '*' for a
  *   prefix match, and handler is a response object
- *   ({ status, body, headers, delay }) or a function (call) => response.
+ *   ({ status, body, headers, delay, abort }) or a function (call) => response.
  *   These win over the defaults.
  *
  * Returns { calls, callsTo(key) } — every request the app made, in order,
@@ -122,6 +122,8 @@ export async function mockApi (page, { user = null, routes = {} } = {}) {
     const response = (typeof handler === 'function' ? await handler(call) : handler) || {}
     if (response.delay) await sleep(response.delay)
     call.respondedAt = Date.now()
+    // { abort: true }: the request gets no response at all (network error).
+    if (response.abort) return route.abort('failed')
     return route.fulfill({
       status: response.status || 200,
       headers: { ...corsHeaders, ...(response.headers || {}) },

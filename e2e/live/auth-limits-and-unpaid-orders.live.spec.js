@@ -52,17 +52,16 @@ test.describe('login per-email limit', () => {
 
 test('forgot password: the 4th request for one email shows the per-email message', async ({ page }) => {
   const email = uniqueEmail('reset-limit')
-  await page.goto('/forgot-password')
+  // No clearing between requests (beforeEach already starts from zero): the
+  // per-IP limit is 8/minute (backend bugs.md #35), above the per-email
+  // 3/hour, so a 4th request from one network reaches the per-email message
+  // on its own.
   for (let i = 0; i < 3; i++) {
-    // The per-IP limit is also 3/minute; clear it so this exercises the
-    // per-email one (3/hour).
-    await resetRateLimits('rate:ip:*')
     await page.goto('/forgot-password')
     await page.locator('#email').fill(email)
     await page.locator('button[type="submit"]').click()
     await expect(page.locator('.form-error')).toHaveCount(0)
   }
-  await resetRateLimits('rate:ip:*')
   await page.goto('/forgot-password')
   await page.locator('#email').fill(email)
   await page.locator('button[type="submit"]').click()
