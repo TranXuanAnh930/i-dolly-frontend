@@ -2,6 +2,12 @@
 node_modules
 /dist
 
+# Playwright output
+/test-results/
+/playwright-report/
+/playwright-report-live/
+/playwright/.cache/
+
 # Claude Code local config
 .claude/
 
