@@ -21,6 +21,8 @@ export default {
     too_many_reset_requests: 'Too many reset requests for this email. Try again in an hour, and check your inbox for a link already sent.',
     method_not_allowed: 'That action isn\'t supported.',
     internal_error: 'Something went wrong. Please try again.',
+    bad_gateway: 'A service we depend on isn\'t responding. Please try again.',
+    payment_gateway_unavailable: 'PayPal isn\'t responding right now. Nothing was charged or reserved; please try again.',
     invalid_image: 'That image can’t be used. Upload a JPEG, PNG, GIF or WebP file under 5 MB.',
     bad_request: 'That request couldn\'t be completed.',
     conflict: 'That conflicts with existing data.',
