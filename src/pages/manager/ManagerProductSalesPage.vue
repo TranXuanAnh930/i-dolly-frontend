@@ -36,7 +36,7 @@
 
     <div class="pagination" v-if="sales.length || page > 1">
       <button type="button" class="page-btn" :disabled="page <= 1 || loading" @click="goToPage(page - 1)">{{ $t('common.previous') }}</button>
-      <span class="pagination__page">{{ $t('common.pageLabel', { page }) }}</span>
+      <span class="pagination__page">{{ totalPages ? $t('common.pageOfLabel', { page, total: totalPages }) : $t('common.pageLabel', { page }) }}</span>
       <button type="button" class="page-btn" :disabled="!hasNextPage || loading" @click="goToPage(page + 1)">{{ $t('common.next') }}</button>
     </div>
 
@@ -48,6 +48,7 @@
 import { format, parseISO } from 'date-fns'
 
 import { ProductsService } from '@/services/store/products.service'
+import { hasNextPage, totalPagesFrom } from '@/utils/pagination'
 
 const PAGE_SIZE = 10
 
@@ -61,6 +62,9 @@ export default {
   data () {
     return {
       sales: [],
+      // Total matching rows across all pages, from the response's count; null
+      // when the backend didn't send one (see utils/pagination.js).
+      total: null,
       page: 1,
       limit: PAGE_SIZE,
       loading: false,
@@ -69,8 +73,11 @@ export default {
   },
 
   computed: {
+    totalPages () {
+      return totalPagesFrom(this.total, this.limit)
+    },
     hasNextPage () {
-      return this.sales.length === this.limit
+      return hasNextPage({ page: this.page, limit: this.limit, rowCount: this.sales.length, totalPages: this.totalPages })
     },
     // Carried over from the products list link (query.name) so this page
     // doesn't need its own product-name lookup just to render a title.
@@ -90,6 +97,14 @@ export default {
       try {
         const response = await ProductsService.getSalesHistory(this.id, { page: this.page, limit: this.limit })
         this.sales = response.data.data
+        this.total = typeof response.data.count === 'number' ? response.data.count : null
+        // Rows went away since the last page was loaded (e.g. another tab):
+        // land on the new last page instead of an empty one.
+        if (!this.sales.length && this.totalPages && this.page > this.totalPages) {
+          this.page = this.totalPages
+          await this.fetchPage()
+          return
+        }
       } catch (error) {
         this.error = error.message
       } finally {
