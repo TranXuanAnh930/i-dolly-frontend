@@ -22,7 +22,9 @@ describe('toApiError', () => {
     [405, 'method_not_allowed', 'Method Not Allowed'],
     [409, 'duplicate_idempotency_key', 'Already processed'],
     [429, 'rate_limited', 'Too many requests. Please try again after 312 seconds.'],
-    [500, 'internal_error', 'Internal Server Error']
+    [500, 'internal_error', 'Internal Server Error'],
+    [502, 'payment_gateway_unavailable', 'The payment gateway is not responding. Please try again.'],
+    [502, 'bad_gateway', 'Bad Gateway']
   ])('maps a %i %s response', (status, code, detail) => {
     const error = toApiError(httpError(status, { detail, code }))
     expect(error).toBeInstanceOf(ApiError)
@@ -40,6 +42,12 @@ describe('toApiError', () => {
     const error = toApiError(httpError(429, { detail: 'Too many requests. Please try again after 312 seconds.', code: 'rate_limited' }))
     expect(error.retryAfter).toBe(312)
     expect(error.message).toBe('Too many attempts. Try again in 312 s.')
+  })
+
+  it('gives the PayPal-down 502 its own message, not the generic one', () => {
+    const error = toApiError(httpError(502, { detail: 'The payment gateway is not responding. Please try again.', code: 'payment_gateway_unavailable' }))
+    expect(error.message).toBe(i18n.global.t('errors.payment_gateway_unavailable'))
+    expect(error.message).not.toBe(i18n.global.t('errors.internal_error'))
   })
 
   it('falls back to a generic rate-limit message when a 429 gives no seconds', () => {

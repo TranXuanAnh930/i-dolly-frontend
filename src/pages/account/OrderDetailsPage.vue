@@ -42,10 +42,10 @@
 
           <div class="lines">
             <component
-              :is="line.productId ? 'router-link' : 'div'"
+              :is="line.onSale ? 'router-link' : 'div'"
               v-for="line in orderItems"
               :key="line.productId"
-              :to="line.productId ? `/products/${line.productId}` : undefined"
+              :to="line.onSale ? `/products/${line.productId}` : undefined"
               class="line">
               <span class="line__info">
                 <span class="line__name">{{ line.name }}</span>
@@ -109,16 +109,19 @@ export default {
       const key = 'shipping' + status.charAt(0).toUpperCase() + status.slice(1)
       return this.$t(`orderDetails.${key}`)
     },
-    // order.items only carries product_id/quantity/price (see
-    // app/schema/order.py OrderItem) — the name is resolved against the
-    // catalog, same as CartPage/CheckoutPage do for their own lines.
+    // Each item carries its own product_name, kept for a product that was
+    // deactivated since. The catalog (the store-page bundle, active products
+    // only) is just the fallback for an older backend without the field, and
+    // decides whether the line can link to a product page: a deactivated
+    // product's detail page is a 404, so its line is plain text.
     orderItems () {
       const catalog = useCatalogStore()
       return this.order.items.map(item => {
         const product = catalog.productById(item.product_id)
         return {
           productId: item.product_id,
-          name: product ? product.name : this.$t('orderDetails.unknownProduct'),
+          name: item.product_name || (product ? product.name : this.$t('orderDetails.unknownProduct')),
+          onSale: Boolean(product),
           qty: item.quantity,
           price: item.price
         }
