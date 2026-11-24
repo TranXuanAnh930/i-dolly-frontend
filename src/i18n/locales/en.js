@@ -368,6 +368,8 @@ export default {
     failedTitle: 'Payment couldn\'t be completed',
     failedNote: 'PayPal didn\'t confirm this payment, or the item is no longer available. Nothing was charged.',
     missingToken: 'We couldn\'t find your PayPal payment details.',
+    unconfirmedTitle: 'We couldn\'t confirm your payment',
+    unconfirmedNote: 'We lost contact while confirming this payment with PayPal, so it may or may not have gone through. Check History before trying again.',
     viewDetails: 'View details'
   },
 
