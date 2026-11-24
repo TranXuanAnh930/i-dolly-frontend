@@ -171,6 +171,7 @@ export default {
     previous: 'Previous',
     next: 'Next',
     pageLabel: 'Page {page}',
+    pageOfLabel: 'Page {page} of {total}',
     actions: 'Actions'
   },
 

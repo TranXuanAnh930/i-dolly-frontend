@@ -171,6 +171,7 @@ export default {
     previous: '前へ',
     next: '次へ',
     pageLabel: '{page}ページ目',
+    pageOfLabel: '{page} / {total}ページ',
     actions: '操作'
   },
 
